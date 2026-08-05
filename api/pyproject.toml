@@ -11,6 +11,7 @@ dependencies = [
     # psycopg (v3), not psycopg2 — SQLAlchemy 2.0's recommended driver.
     # DATABASE_URL must use the postgresql+psycopg:// scheme to match.
     "psycopg[binary]>=3.1",
+    "alembic>=1.19.0",
 ]
 
 [dependency-groups]

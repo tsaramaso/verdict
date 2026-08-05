@@ -17,7 +17,6 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from sqlmodel import SQLModel
 
 from src.app.routes import router
 from src.db.session import engine
@@ -25,7 +24,6 @@ from src.db.session import engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    SQLModel.metadata.create_all(engine)  # dev-only, see module docstring
     yield
 
 
