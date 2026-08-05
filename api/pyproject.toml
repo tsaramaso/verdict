@@ -12,6 +12,7 @@ dependencies = [
     # DATABASE_URL must use the postgresql+psycopg:// scheme to match.
     "psycopg[binary]>=3.1",
     "alembic>=1.19.0",
+    "gunicorn>=26.0.0",
 ]
 
 [dependency-groups]

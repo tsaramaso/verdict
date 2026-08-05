@@ -13,7 +13,7 @@
 #      local file-backed state at all; Postgres is a separate compose
 #      service, not a mounted volume on this container.
 
-FROM ghcr.io/astral-sh/uv:python3.12-trixie-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Setup a non-root user
 RUN groupadd --system --gid 999 nonroot \
