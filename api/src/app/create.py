@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="GABO — Renaissance Edition (API, Swagger-first milestone)",
+        title="Verdict",
         lifespan=lifespan,
     )
     app.include_router(router)

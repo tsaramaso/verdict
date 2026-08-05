@@ -1,4 +1,4 @@
-# GABO
+# Verdict
 ### Design Reference & Rulebook — Draft v0.1
 
 ---
