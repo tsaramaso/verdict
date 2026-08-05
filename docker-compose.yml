@@ -1,0 +1,51 @@
+# docker-compose.yml — local build & test ONLY.
+#
+# Deliberately NOT the eventual VPS compose file (brief §3.6, not this
+# leg): no `image: ghcr.io/...`, no assumption of an /opt/<app>/ layout,
+# no reverse proxy in front. `build: ./api` here on purpose — building
+# from what's on disk right now (the api/ subfolder, where Dockerfile/
+# pyproject.toml/src actually live), not pulling a pushed image. When
+# the VPS leg happens, that compose file pulls a built image instead;
+# this one stays as the local dev/test file, not replaced by it.
+#
+# Two services where the reference had one: that project's SQLite file
+# was a bind-mounted volume on the single container; Postgres needs to
+# actually run as its own service instead.
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: verdict
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: verdict
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdict"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # No `ports:` entry — only the api service (same compose network)
+    # ever needs to reach this, nothing on the host does.
+
+  api:
+    build: ./api
+    container_name: verdict-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://verdict:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/verdict
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Loopback-only, same habit as the reference project keeps even
+      # for local testing — nothing about "local only, no VPS yet"
+      # changes the reasoning for never binding 0.0.0.0.
+      - "127.0.0.1:8000:8000"
+
+volumes:
+  db-data:

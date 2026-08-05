@@ -1,0 +1,116 @@
+stateDiagram-v2
+    [*] --> NewGame
+    NewGame --> NewRound
+
+    NewRound --> TurnStart : deal hands, InitialGlance x2 per player
+
+    %% ===== TURN =====
+    TurnStart --> Drawing
+
+    Drawing --> CardDrawn_Deck : CardDrawn - source deck
+    Drawing --> CardDrawn_DiscardTop : CardDrawn - source discard pile
+
+    CardDrawn_Deck --> ActionTaken_DiscardImmediate : ActionTaken - discard immediate
+    CardDrawn_Deck --> ActionTaken_Swap : ActionTaken - swap
+
+    CardDrawn_DiscardTop --> ActionTaken_Swap : ActionTaken - swap
+    CardDrawn_DiscardTop --> ActionTaken_PassBack : ActionTaken - pass back
+
+    %% ---- Power sub-flow ----
+    ActionTaken_DiscardImmediate --> RankCheck
+    RankCheck --> SpellInvocationDecision : rank is 7 8 9 10 J or Q
+    RankCheck --> PowerFlowExit : any other rank, no power possible
+
+    SpellInvocationDecision --> PowerFlowExit : declined
+    SpellInvocationDecision --> SpellRevealed : invoked - Glance Spy or Decree
+    SpellInvocationDecision --> SpellSwapDecision_Smuggle : invoked - Smuggle, no reveal step
+
+    SpellRevealed --> PowerFlowExit : Glance or Spy, terminal
+    SpellRevealed --> SpellSwapDecision_Decree : Decree only
+
+    SpellSwapDecision_Decree --> PowerFlowExit : decision swap or none
+    SpellSwapDecision_Smuggle --> PowerFlowExit : swap always executes once invoked
+
+    PowerFlowExit --> QuickDiscardWindow
+    ActionTaken_Swap --> QuickDiscardWindow
+    ActionTaken_PassBack --> QuickDiscardWindow
+
+    QuickDiscardWindow --> EmptyHandCheck : any player, any time, zero or more QuickDiscardPlayed
+
+    EmptyHandCheck --> RoundOver_EmptyHand : HandEmptied fired, a hand reached zero cards
+    EmptyHandCheck --> TrialCallWindow : otherwise
+
+    %% ===== TRIAL =====
+    TrialCallWindow --> CW_Resolve : every player logs TestimonyGiven-first or TestimonyWindowPassed
+    CW_Resolve --> MatchWindow
+
+    MatchWindow --> MW_Resolve : every non caller logs TestimonyGiven-cross or TestimonyWindowPassed-cross
+
+    MW_Resolve --> NextPlayer : zero Testimony given, not last turn, loop
+    MW_Resolve --> ForcedEnd_NoTestimony : zero Testimony given, this was the last turn
+    MW_Resolve --> Verdict : one or more Testimony given
+
+    Verdict --> DuelWindow : VerdictResolved, two or more truly eligible Testimony givers remain
+    Verdict --> FinalPleaWindow : VerdictResolved, otherwise
+
+    DuelWindow --> DW_Resolve : remaining callers log ChallengeGiven or ChallengeWindowPassed, no action for non testimony givers
+    DW_Resolve --> FinalPleaWindow : DuelResolved, real duel if challenged, else plain agreement
+
+    FinalPleaWindow --> ScoringTrial : every player who never gave Testimony and was not removed for Perjury logs PleaTaken or PleaWindowPassed
+
+    NextPlayer --> TurnStart
+
+    ScoringTrial --> UpdateScores
+    RoundOver_EmptyHand --> UpdateScores : everyone scored as true bystander
+    ForcedEnd_NoTestimony --> UpdateScores : everyone scored as true bystander
+
+    UpdateScores --> RenaissanceCheck
+    RenaissanceCheck --> CheckGameOver
+
+    CheckGameOver --> NewRound : all scores under 120
+    CheckGameOver --> GameOver : any score 120 or higher, hard wall
+
+    GameOver --> [*]
+
+    note right of RankCheck
+        Every discarded card that could carry a
+        power gets an explicit SpellInvocationDecision
+        event even if declined, no silent skips.
+    end note
+
+    note right of Verdict
+        Checks first window callers only.
+        A false first window caller commits Perjury,
+        capped plus true hand sum, stacked.
+        Removed from rest of Trial, does not
+        affect anyone else.
+    end note
+
+    note right of DuelWindow
+        Appears only if true eligible count is two or more.
+        Gate is on true count, not public count, intentional.
+        False cross testimony players still get a Challenge
+        button but it resolves as a no op. They already gave
+        Testimony so they never reach FinalPleaWindow, they
+        default straight to the flat false cross testimony
+        penalty regardless of anything else here.
+    end note
+
+    note right of FinalPleaWindow
+        The single point in the Trial where Plea is offered.
+        Only for players who never gave Testimony, first or
+        cross, and were not removed for Perjury. Opens after
+        Verdict and any Duel have fully resolved, so Perjury
+        results and Duel outcome are already public knowledge
+        by the time this choice is made. This is also the
+        exact mechanism behind the true bystander plus
+        Perjury occurred outcome in rules.md, it is the same
+        Plea or Decline decision, not a separate event type.
+    end note
+
+    note right of RenaissanceCheck
+        Only a genuine, non zero, non penalized addition
+        landing exactly on 50 or 100 triggers a reset.
+        Perjury, Plea, false cross testimony, and Duel loss
+        are always blocked. A zero result never retriggers it.
+    end note

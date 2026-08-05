@@ -79,6 +79,14 @@ def get_game_state(
     staleness window is an accepted MVP trade-off, not an oversight.
     Every route that calls an engine function (i.e. mutates state) uses
     get_locked_game_state below instead, never this one.
+
+    NOTE: this 404 path is currently unreachable in practice — every
+    route also depends on auth.get_current_player, which runs first and
+    returns 403 for a nonexistent game_id (no seated-player row exists
+    for it either). That's an intentional decision, not a bug — see
+    auth.py's docstring. This 404 still exists for any future route
+    that might reasonably skip get_current_player (e.g. a public,
+    unauthenticated game-existence check, if one is ever wanted).
     """
     try:
         return registry.get(game_id)

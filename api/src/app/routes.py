@@ -10,21 +10,20 @@ Swagger. Deliberately does NOT include:
     one. Building it here would jump the stated order.
   - GET /games (list games a user belongs to) — no response schema
     for it exists in schemas.py yet; not invented here.
-  - Any write to Game.status / GamePlayer.current_score / final_rank
-    in response to ScoresUpdated/GameEnded/RoundEnded events. This is
-    the same boundary event_log.py's own docstring already draws
-    ("a related but separate concern, not handled here") — kept
-    consistent rather than quietly doing it here instead. Every route
-    below only ever writes the Event log itself, never the thin lookup
-    row's derived fields.
 
 Every mutating route follows the exact same five-step shape:
   1. auth       — get_current_player (401/403 handled by the dependency)
   2. state      — get_locked_game_state (404 handled by the dependency,
                   lock held for the whole request)
   3. engine call — the one function in engine.py this route exists for
-  4. persist    — persist_events(session, events), the ONE place an
-                  in-memory Event becomes a durable row (event_log.py)
+  4. persist    — _persist(session, events), which writes the Event log
+                  itself (event_log.py, the source of truth) and then
+                  syncs the thin Game/GamePlayer lookup rows off the
+                  same batch (lookup_sync.py — Game.status/current_round
+                  /ended_at, GamePlayer.current_score/final_rank). Both
+                  steps land together from every mutating route below;
+                  no route writes the Event log without also syncing
+                  the lookup rows from it.
   5. response   — ActionResult, scoped to the ACTING player only
                   (never a bystander's view of their own action)
 
@@ -47,17 +46,21 @@ from src.app.engine.events import Event as EngineEvent
 from src.app.engine.state import GameState
 from src.app.event_log import persist_events
 from src.app.game_registry import GameRegistry, get_game_state, get_locked_game_state, get_registry
-from src.app.models.db import Game, GamePlayer, User
+from src.app.lookup_sync import sync_lookup_tables
+from src.app.models.db import Event as DBEvent, Game, GamePlayer, User
 from src.app.models.enums import GameStatus
 from src.app.schemas import (
     ActionRequest,
     ActionResult,
     DecreeSwapRequest,
     DrawRequest,
+    EventLogOut,
     EventOut,
     GameCreateRequest,
     GameCreateResult,
+    GameListOut,
     GameStatusOut,
+    GameSummaryOut,
     InvokePowerRequest,
     QuickDiscardRequest,
 )
@@ -84,6 +87,20 @@ def _call(fn, *args, **kwargs) -> list[EngineEvent]:
         return fn(*args, **kwargs)
     except IllegalAction as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+def _persist(session: Session, events: list[EngineEvent]) -> list[DBEvent]:
+    """
+    The one call every route makes after invoking the engine: write the
+    Event log (event_log.py, source of truth), then sync the thin
+    Game/GamePlayer lookup rows off that same batch (lookup_sync.py).
+    A single wrapper rather than two calls repeated at every site below,
+    so there's exactly one place a future third post-persist step would
+    get added, and no route can write the log while forgetting the sync.
+    """
+    rows = persist_events(session, events)
+    sync_lookup_tables(session, events)
+    return rows
 
 
 def _result(state: GameState, events: list[EngineEvent], viewer: str) -> ActionResult:
@@ -172,7 +189,7 @@ def create_game(
     # partial-write failure mode event_log.py's docstring already rules
     # out for event batches; extending that same guarantee to cover the
     # lookup rows created alongside them costs nothing extra here.
-    persist_events(session, events)
+    _persist(session, events)
 
     registry.register(state)
     return GameCreateResult(
@@ -185,6 +202,44 @@ def create_game(
 # ---------------------------------------------------------------------
 # Live status (read-only, unlocked — see game_registry.py's docstring)
 # ---------------------------------------------------------------------
+
+
+@router.get("", response_model=GameListOut)
+def list_games(
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> GameListOut:
+    """
+    Reads the thin DB lookup row (Game + GamePlayer, brief §3.3 layer 3),
+    NOT the in-memory registry — deliberately, so this works for games
+    this process doesn't currently have loaded (finished games; later,
+    once replay exists, games from before a restart too). Auth is
+    get_current_user, not get_current_player, since this spans multiple
+    games and there's no single game_id in the path to scope against —
+    "which games am I in" is a question about the caller's identity
+    alone, not about any one game's membership.
+    """
+    rows = session.exec(
+        select(Game, GamePlayer)
+        .join(GamePlayer, GamePlayer.game_id == Game.id)
+        .where(GamePlayer.user_uuid == user.uuid)
+        .order_by(Game.created_at.desc())
+    ).all()
+    return GameListOut(
+        games=[
+            GameSummaryOut(
+                game_id=game.id,
+                status=game.status,
+                turn_direction=game.turn_direction,
+                current_round=game.current_round,
+                seat_order=player.seat_order,
+                created_at=game.created_at.isoformat(),
+                started_at=game.started_at.isoformat() if game.started_at else None,
+                ended_at=game.ended_at.isoformat() if game.ended_at else None,
+            )
+            for game, player in rows
+        ]
+    )
 
 
 @router.get("/{game_id}/status", response_model=GameStatusOut)
@@ -203,6 +258,35 @@ def get_status(
     )
 
 
+@router.get("/{game_id}/events", response_model=EventLogOut)
+def get_events(
+    game_id: str,
+    player_id: str = Depends(get_current_player),
+    session: Session = Depends(get_session),
+) -> EventLogOut:
+    """
+    The inspect-logs endpoint — handoff doc §0 item 5. Reads the
+    persisted DB log (models/db.py:Event), NOT the in-memory registry —
+    this is deliberately the one route that proves persist_events()
+    actually wrote something durable, rather than another view onto the
+    same live GameState /status already reads. Full log, no pagination
+    yet (flagged, not an oversight — fine at this scale/milestone).
+
+    Scoped the same way every live response is: EventOut.from_db_event
+    filters scoped_fields against the stored {visible_to, value}
+    envelope for THIS caller only — a field with visible_to: [] (e.g.
+    true_eligibility) stays invisible here exactly as it does live, not
+    just at creation time.
+    """
+    rows = session.exec(
+        select(DBEvent).where(DBEvent.game_id == game_id).order_by(DBEvent.sequence)
+    ).all()
+    return EventLogOut(
+        game_id=game_id,
+        events=[EventOut.from_db_event(r, player_id) for r in rows],
+    )
+
+
 # ---------------------------------------------------------------------
 # Turn — draw & action (rules.md §4-5)
 # ---------------------------------------------------------------------
@@ -216,7 +300,7 @@ def draw(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.draw_card, state, player_id, request.source)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -228,7 +312,7 @@ def take_action(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_action, state, player_id, request.choice, request.slot_index)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -244,7 +328,7 @@ def decline_power(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.decline_power, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -263,7 +347,7 @@ def invoke_power(
         request.target_owner,
         request.target_index,
     )
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -277,7 +361,7 @@ def decree_swap(
     events = _call(
         engine.decree_swap_decision, state, player_id, request.swap, request.own_slot_index
     )
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -294,7 +378,7 @@ def quick_discard(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.quick_discard, state, player_id, request.slot_index)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -316,7 +400,7 @@ def close_quick_discard(
     or an explicit close condition for this particular window.
     """
     events = _call(engine.close_quick_discard_window, state)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -332,7 +416,7 @@ def testify_first(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_first, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -343,7 +427,7 @@ def pass_call(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_call_window, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -354,7 +438,7 @@ def testify_cross(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_cross, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -365,7 +449,7 @@ def pass_match(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_match_window, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -376,7 +460,7 @@ def challenge(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_challenge, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -387,7 +471,7 @@ def pass_duel(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_duel_window, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -398,7 +482,7 @@ def plea(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_plea, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)
 
 
@@ -409,5 +493,5 @@ def pass_plea(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_final_plea_window, state, player_id)
-    persist_events(session, events)
+    _persist(session, events)
     return _result(state, events, player_id)

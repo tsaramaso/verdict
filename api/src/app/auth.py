@@ -34,6 +34,17 @@ allowed to act in THIS specific game" are genuinely different checks:
                         function's `player_id` parameter, no further
                         unwrapping needed at the call site.
 
+DECIDED (not an accident): every route depends on get_current_player,
+which runs before game_registry.py's own 404 check ever gets a chance
+to fire — so a genuinely nonexistent game_id returns 403 here, same as
+a real game you're just not seated in. This was flagged as an open
+question and resolved deliberately: reordering so 404 could "win"
+would mean an unauthorized caller could distinguish "doesn't exist"
+from "exists, you're just not in it" — strictly more information
+leaked to someone with no business asking, not less. game_registry.py's
+404 path is intentionally unreachable from any route that also depends
+on get_current_player (currently: every route).
+
 Every action route (draw, take_action, testify, ...) depends on
 get_current_player, never on get_current_user directly — a valid user
 who isn't seated in this game must never reach the engine at all.
