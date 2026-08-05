@@ -35,7 +35,7 @@ The game is played over several rounds. The goal is the **lowest cumulative scor
 
 ## 3. Setup
 
-- **Player count: 2–8 players per game.** These are hard caps — the engine should reject game creation outside this range.
+- **Player count: 2–5 players per game.** These are hard caps — the engine should reject game creation outside this range.
 - **Deck: one standard 52-card deck, no jokers** — the four suits, ranks A through K, exactly as enumerated in Section 4's value table. No additional decks are combined regardless of player count.
 - Each player is dealt 4 cards, arranged face-down in front of them in fixed **slots**.
 - At the start of the round, each player privately views (Glances at) their first 2 dealt slots, then they're placed face-down again. This is a **cosmetic-only** flip — the game continues to track and display that knowledge to the player for the rest of the round regardless of the visual state. There is no "forgetting" in this game; all player knowledge is permanently and accurately tracked and displayed.

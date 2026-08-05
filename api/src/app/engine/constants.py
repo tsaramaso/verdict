@@ -82,7 +82,7 @@ HAND_SIZE = 4  # rules.md §3
 ELIGIBLE_THRESHOLD = 7  # rules.md §1 glossary — "Eligible"
 
 MIN_PLAYERS = 2  # rules.md §3, confirmed
-MAX_PLAYERS = 8  # rules.md §3, confirmed
+MAX_PLAYERS = 5  # rules.md §3, confirmed
 
 PERJURY_PENALTY = 25  # rules.md §6.7 — capped +25, stacked with true sum
 DUEL_LOSS_PENALTY = 50  # rules.md §6.7
