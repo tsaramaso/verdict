@@ -52,8 +52,10 @@ who isn't seated in this game must never reach the engine at all.
 
 from fastapi import Depends, HTTPException, Path, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
 from sqlmodel import Session, select
-
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
 from src.app.models.db import GamePlayer, User
 from src.db.session import get_session
 
@@ -61,6 +63,32 @@ bearer_scheme = HTTPBearer(
     description="Paste a user's uuid (from `python -m src.cli.run add ...`)"
     " as the token."
 )
+
+
+class TokenData(BaseModel):
+    uuid: str
+
+
+def create_access_token(
+    uuid: str, access_token_expire_days: int, secret_key: str, algorithm: str
+) -> str:
+    """Create a JWT token for a user UUID."""
+    to_encode: dict[str, str | datetime] = {"uuid": uuid}
+    expire = datetime.now(timezone.utc) + timedelta(days=access_token_expire_days)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
+    return encoded_jwt
+
+
+def verify_token(token: str, secret_key: str, algorithm: str) -> str | None:
+    """Verify JWT token and return UUID if valid."""
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        if (uuid := payload.get("uuid")) is None:
+            return None
+        return uuid
+    except JWTError:
+        return None
 
 
 def get_current_user(

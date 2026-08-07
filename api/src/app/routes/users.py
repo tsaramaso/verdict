@@ -36,7 +36,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from src.config import ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM, HASH_SECRET_KEY
 from src.app.auth import get_current_user
+from src.app.auth import create_access_token
 from src.app.models.db import User
 from src.db.session import get_session
 
@@ -47,6 +49,10 @@ router = APIRouter(prefix="/users", tags=["users"])
 # Request / response schemas (users-only, kept local — not in
 # schemas.py, which is scoped to game/event shapes)
 # ------------------------------------------------------------------
+
+
+class TokenData(BaseModel):
+    uuid: str
 
 
 class UserCreateRequest(BaseModel):
@@ -84,6 +90,32 @@ class UserListOut(BaseModel):
 # ------------------------------------------------------------------
 # Routes
 # ------------------------------------------------------------------
+
+
+class LoginRequest(BaseModel):
+    uuid: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    uuid: str
+
+
+@router.post("/login", response_model=LoginResponse)
+async def login(request: LoginRequest, session: Session = Depends(get_session)):
+    """Login with UUID, receive JWT token."""
+
+    user = session.exec(select(User).where(User.uuid == request.uuid)).first()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=401, detail="Unknown code. Check and try again."
+        )
+
+    token = create_access_token(
+        user.uuid, ACCESS_TOKEN_EXPIRE_DAYS, HASH_SECRET_KEY, ALGORITHM
+    )
+    return LoginResponse(token=token, uuid=user.uuid)
 
 
 @router.post("", response_model=UserCreateOut, status_code=status.HTTP_201_CREATED)

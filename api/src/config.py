@@ -8,9 +8,10 @@ per the UUID-bearer, no-password auth model in brief §3.2).
 """
 
 import os
+from typing import Any
 
 
-def _require_env(name: str) -> str:
+def _require_env(name: str) -> Any:
     value = os.environ.get(name)
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
@@ -18,3 +19,6 @@ def _require_env(name: str) -> str:
 
 
 DATABASE_URL = _require_env("DATABASE_URL")
+ACCESS_TOKEN_EXPIRE_DAYS = _require_env("ACCESS_TOKEN_EXPIRE_DAYS")
+HASH_SECRET_KEY = _require_env("HASH_SECRET_KEY")
+ALGORITHM = _require_env("ALGORITHM")
