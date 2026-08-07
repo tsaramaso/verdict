@@ -60,7 +60,7 @@ class UserOut(BaseModel):
     created_at: str
 
     @classmethod
-    def from_row(cls, user: User) -> "UserOut":
+    def from_row(cls, user: User) -> UserOut:
         return cls(
             uuid=user.uuid,
             name=user.name,
@@ -115,7 +115,9 @@ def list_users(
     Inactive (soft-deleted) users are excluded: they can no longer auth
     and cannot be seated in new games.
     """
-    rows = session.exec(select(User).where(User.is_active == True).order_by(User.created_at)).all()  # noqa: E712
+    rows = session.exec(
+        select(User).where(User.is_active).order_by(User.created_at)
+    ).all()
     return UserListOut(users=[UserOut.from_row(u) for u in rows])
 
 

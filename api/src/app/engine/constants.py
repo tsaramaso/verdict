@@ -22,7 +22,6 @@ first, not here.
 
 from enum import StrEnum, auto
 
-
 # --- Cards ---------------------------------------------------------------
 
 

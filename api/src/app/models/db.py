@@ -75,7 +75,8 @@ class Game(SQLModel, table=True):
     ended_at: datetime | None = Field(default=None)
 
     players: list["GamePlayer"] = Relationship(
-        back_populates="game", sa_relationship_kwargs={"order_by": "GamePlayer.seat_order"}
+        back_populates="game",
+        sa_relationship_kwargs={"order_by": "GamePlayer.seat_order"},
     )
     events: list["Event"] = Relationship(back_populates="game")
 
@@ -103,7 +104,9 @@ class GamePlayer(SQLModel, table=True):
 
     seat_order: int = Field(nullable=False)  # 0-indexed, fixed turn order
     current_score: int = Field(default=0, nullable=False)
-    final_rank: int | None = Field(default=None)  # standard competition ranking, set at GameEnded
+    final_rank: int | None = Field(
+        default=None
+    )  # standard competition ranking, set at GameEnded
 
     joined_at: datetime = Field(default_factory=_utcnow, nullable=False)
 
@@ -148,7 +151,11 @@ class Event(SQLModel, table=True):
     type: EventType = Field(nullable=False, index=True)
     actor_uuid: str | None = Field(default=None, foreign_key="users.uuid")
 
-    public_fields: dict = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))
-    scoped_fields: dict = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))
+    public_fields: dict = Field(
+        default_factory=dict, sa_column=Column(JSONB, nullable=False)
+    )
+    scoped_fields: dict = Field(
+        default_factory=dict, sa_column=Column(JSONB, nullable=False)
+    )
 
     game: Game = Relationship(back_populates="events")

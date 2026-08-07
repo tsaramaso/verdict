@@ -19,7 +19,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.app.routes import router
-from src.db.session import engine
 
 
 @asynccontextmanager

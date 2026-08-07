@@ -18,7 +18,8 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from src.app.engine.constants import ActionChoice, DrawSource, TurnDirection
-from src.app.engine.events import Event as EngineEvent, EventType
+from src.app.engine.events import Event as EngineEvent
+from src.app.engine.events import EventType
 from src.app.engine.state import Phase
 from src.app.models.db import Event as DBEvent
 from src.app.models.enums import GameStatus
@@ -33,7 +34,7 @@ class EventOut(BaseModel):
     scoped_fields: dict
 
     @classmethod
-    def from_engine_event(cls, event: EngineEvent, viewer: str | None) -> "EventOut":
+    def from_engine_event(cls, event: EngineEvent, viewer: str | None) -> EventOut:
         # payload_for() is the ONE place scoping is enforced for outbound
         # delivery (events.py) — every route response goes through this,
         # never event.to_dict() (that's the DB-persistence shape, which
@@ -41,7 +42,7 @@ class EventOut(BaseModel):
         return cls(**event.payload_for(viewer))
 
     @classmethod
-    def from_db_event(cls, row: DBEvent, viewer: str) -> "EventOut":
+    def from_db_event(cls, row: DBEvent, viewer: str) -> EventOut:
         """
         Same scoping principle as from_engine_event, applied to a
         persisted row instead of the live dataclass. This is exactly
@@ -51,7 +52,9 @@ class EventOut(BaseModel):
         against the spec-shaped structure, every time it's read.
         """
         visible_scoped = {
-            k: v["value"] for k, v in row.scoped_fields.items() if viewer in v.get("visible_to", [])
+            k: v["value"]
+            for k, v in row.scoped_fields.items()
+            if viewer in v.get("visible_to", [])
         }
         return cls(
             event_id=row.event_id,

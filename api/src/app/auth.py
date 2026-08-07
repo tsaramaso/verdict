@@ -58,7 +58,8 @@ from src.app.models.db import GamePlayer, User
 from src.db.session import get_session
 
 bearer_scheme = HTTPBearer(
-    description="Paste a user's uuid (from `python -m src.cli.run add ...`) as the token."
+    description="Paste a user's uuid (from `python -m src.cli.run add ...`)"
+    " as the token."
 )
 
 

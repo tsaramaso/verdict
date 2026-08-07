@@ -65,7 +65,9 @@ def take_action(
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
-    events = _call(engine.take_action, state, player_id, request.choice, request.slot_index)
+    events = _call(
+        engine.take_action, state, player_id, request.choice, request.slot_index
+    )
     _persist(session, events)
     return _result(state, events, player_id)
 
@@ -113,7 +115,11 @@ def decree_swap(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(
-        engine.decree_swap_decision, state, player_id, request.swap, request.own_slot_index
+        engine.decree_swap_decision,
+        state,
+        player_id,
+        request.swap,
+        request.own_slot_index,
     )
     _persist(session, events)
     return _result(state, events, player_id)

@@ -29,7 +29,8 @@ from src.app.engine import engine
 from src.app.engine.errors import IllegalAction
 from src.app.engine.state import GameState
 from src.app.game_registry import GameRegistry, get_game_state, get_registry
-from src.app.models.db import Event as DBEvent, Game, GamePlayer, User
+from src.app.models.db import Event as DBEvent
+from src.app.models.db import Game, GamePlayer, User
 from src.app.models.enums import GameStatus
 from src.app.routes._shared import _persist
 from src.app.schemas import (

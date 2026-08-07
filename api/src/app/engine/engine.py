@@ -49,12 +49,12 @@ from src.app.engine.constants import (
     ActionChoice,
     DrawSource,
     Power,
+    RoundEndReason,
     ScoreBucket,
     SpellDecision,
     SwapDecision,
     TestimonyWindow,
     TrialResolution,
-    RoundEndReason,
     TurnDirection,
     power_for_rank,
 )
@@ -151,9 +151,7 @@ def _start_round(state: GameState) -> list[Event]:
                 "round_number": state.round_number,
                 "dealer": state.player_order[state.dealer_index],
             },
-            scoped_fields={
-                "shuffle_seed": ScopedField(visible_to=[], value=seed)
-            },
+            scoped_fields={"shuffle_seed": ScopedField(visible_to=[], value=seed)},
         )
     ]
 
@@ -207,7 +205,9 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
     if source is DrawSource.DISCARD_PILE and not state.discard_pile:
         raise IllegalAction("Discard pile is empty")
     if source is DrawSource.DECK and not state.deck:
-        raise IllegalAction("Deck is empty")  # should never happen given is_last_turn gating
+        raise IllegalAction(
+            "Deck is empty"
+        )  # should never happen given is_last_turn gating
 
     if source is DrawSource.DECK:
         card = state.deck.pop()
@@ -248,8 +248,13 @@ def take_action(
     choice: ActionChoice,
     slot_index: int | None = None,
 ) -> list[Event]:
-    if choice is ActionChoice.PASS_BACK and state.draw_source is not DrawSource.DISCARD_PILE:
-        raise IllegalAction("pass_back is only legal after drawing from the discard pile")
+    if (
+        choice is ActionChoice.PASS_BACK
+        and state.draw_source is not DrawSource.DISCARD_PILE
+    ):
+        raise IllegalAction(
+            "pass_back is only legal after drawing from the discard pile"
+        )
     if choice is ActionChoice.SWAP and (
         slot_index is None or not (0 <= slot_index < HAND_SIZE)
     ):
@@ -372,7 +377,9 @@ def invoke_power(
             raise IllegalAction("That slot is empty")
         card.known_by.add(player_id)
         events.append(
-            _spell_revealed(state, player_id, power, player_id, own_slot_index, [player_id])
+            _spell_revealed(
+                state, player_id, power, player_id, own_slot_index, [player_id]
+            )
         )
         state.phase = Phase.AWAITING_QUICK_DISCARD
         state.quick_discard_rank = rank
@@ -386,7 +393,9 @@ def invoke_power(
         card.known_by.add(player_id)
         state.players[target_owner].spied_slots.add(target_index)  # type: ignore[arg-type]
         events.append(
-            _spell_revealed(state, player_id, power, target_owner, target_index, [player_id])
+            _spell_revealed(
+                state, player_id, power, target_owner, target_index, [player_id]
+            )
         )
         state.phase = Phase.AWAITING_QUICK_DISCARD
         state.quick_discard_rank = rank
@@ -399,7 +408,9 @@ def invoke_power(
             raise IllegalAction("That slot is empty")
         card.known_by.add(player_id)
         events.append(
-            _spell_revealed(state, player_id, power, target_owner, target_index, [player_id])
+            _spell_revealed(
+                state, player_id, power, target_owner, target_index, [player_id]
+            )
         )
         state.pending_power = PendingPower(
             power=power, target_owner=target_owner, target_index=target_index
@@ -496,12 +507,16 @@ def _spell_revealed(
             "target_slot": {"owner": target_owner, "index": target_index},
         },
         scoped_fields={
-            "revealed_value": ScopedField(visible_to=visible_to, value=card.to_public_dict())
+            "revealed_value": ScopedField(
+                visible_to=visible_to, value=card.to_public_dict()
+            )
         },
     )
 
 
-def _validate_target(state: GameState, target_owner: str | None, target_index: int | None) -> None:
+def _validate_target(
+    state: GameState, target_owner: str | None, target_index: int | None
+) -> None:
     if target_owner is None or target_index is None:
         raise IllegalAction("target_owner and target_index are required")
     if target_owner not in state.players:
@@ -510,7 +525,9 @@ def _validate_target(state: GameState, target_owner: str | None, target_index: i
         raise IllegalAction("target_index out of range")
 
 
-def _swap_slots(state: GameState, a_owner: str, a_index: int, b_owner: str, b_index: int) -> None:
+def _swap_slots(
+    state: GameState, a_owner: str, a_index: int, b_owner: str, b_index: int
+) -> None:
     a_hand = state.players[a_owner].hand
     b_hand = state.players[b_owner].hand
     if a_hand[a_index] is None or b_hand[b_index] is None:
@@ -670,7 +687,9 @@ def _require_eligible_for_match_window(state: GameState, player_id: str) -> None
         raise IllegalAction("Already responded in the Match Window")
 
 
-def _testimony_event(state: GameState, player_id: str, window: TestimonyWindow) -> Event:
+def _testimony_event(
+    state: GameState, player_id: str, window: TestimonyWindow
+) -> Event:
     eligible = state.players[player_id].is_eligible
     return Event(
         type=EventType.TESTIMONY_GIVEN,
@@ -689,7 +708,9 @@ def _maybe_close_match_window(state: GameState) -> list[Event]:
     responded = set(state.trial.cross_callers) | state.trial.passed_cross
     if responded != needed:
         return []
-    total_testimony = len(state.trial.first_window_callers) + len(state.trial.cross_callers)
+    total_testimony = len(state.trial.first_window_callers) + len(
+        state.trial.cross_callers
+    )
     if total_testimony == 0:
         if state.is_last_turn:
             return _end_round_forced_no_testimony(state)
@@ -982,7 +1003,11 @@ def _resolve_scoring(
         old_score = state.scores[player_id]
         new_total = old_score + points
         final_score = new_total
-        if bucket.renaissance_eligible and points > 0 and new_total in RENAISSANCE_THRESHOLDS:
+        if (
+            bucket.renaissance_eligible
+            and points > 0
+            and new_total in RENAISSANCE_THRESHOLDS
+        ):
             final_score = RENAISSANCE_THRESHOLDS[new_total]
             events.append(
                 Event(

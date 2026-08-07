@@ -91,7 +91,9 @@ def get_game_state(
     try:
         return registry.get(game_id)
     except GameNotFoundError:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found") from None
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail="Game not found"
+        ) from None
 
 
 async def get_locked_game_state(
@@ -108,5 +110,7 @@ async def get_locked_game_state(
         try:
             state = registry.get(game_id)
         except GameNotFoundError:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found") from None
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="Game not found"
+            ) from None
         yield state

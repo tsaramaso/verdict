@@ -12,8 +12,8 @@ Sub-module layout:
 
 from fastapi import APIRouter
 
-from src.app.routes.games import router as games_router
 from src.app.routes.gameplay import router as gameplay_router
+from src.app.routes.games import router as games_router
 from src.app.routes.users import router as users_router
 
 router = APIRouter()

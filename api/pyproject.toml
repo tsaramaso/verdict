@@ -21,3 +21,7 @@ dev = [
     "mypy>=2.3.0",
     "ruff>=0.16.1",
 ]
+
+[tool.ruff.lint]
+ignore = ["B008"]
+select = ["E", "F", "W"]  # Include other rules you wan

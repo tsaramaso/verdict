@@ -40,12 +40,15 @@ import sys
 
 from sqlmodel import Session, select
 
-from src.app.engine.events import Event as EngineEvent, EventType
+from src.app.engine.events import Event as EngineEvent
+from src.app.engine.events import EventType
 from src.app.models.db import Game, GamePlayer
 from src.app.models.enums import GameStatus
 
 
-def _standard_competition_ranks(final_scores: dict, final_ranks: list) -> dict[str, int]:
+def _standard_competition_ranks(
+    final_scores: dict, final_ranks: list
+) -> dict[str, int]:
     """
     engine.py:_end_game's `final_ranks` is just player_order sorted
     ascending by score -- it doesn't itself express ties (GABO is
