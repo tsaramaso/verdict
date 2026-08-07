@@ -19,6 +19,6 @@ def _require_env(name: str) -> Any:
 
 
 DATABASE_URL = _require_env("DATABASE_URL")
-ACCESS_TOKEN_EXPIRE_DAYS = _require_env("ACCESS_TOKEN_EXPIRE_DAYS")
+ACCESS_TOKEN_EXPIRE_DAYS = int(_require_env("ACCESS_TOKEN_EXPIRE_DAYS"))
 HASH_SECRET_KEY = _require_env("HASH_SECRET_KEY")
 ALGORITHM = _require_env("ALGORITHM")
