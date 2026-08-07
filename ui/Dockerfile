@@ -4,22 +4,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install bun
 RUN npm install -g bun
 
-# Copy package files
 COPY package.json bun.lock ./
 
-# Install dependencies
 RUN bun install --frozen-lockfile
 
-# Copy source
 COPY . .
 
-# Build the app
 RUN bun run build
 
-# Serve
-EXPOSE 5173
+EXPOSE 4173
 
-CMD ["bun", "run", "preview"]
+CMD ["bun", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]

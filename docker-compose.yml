@@ -33,7 +33,7 @@ services:
     container_name: verdict-ui
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5173:5173"
+      - "127.0.0.1:4173:4173"
     depends_on:
       - api
     environment:
