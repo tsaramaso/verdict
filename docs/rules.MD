@@ -15,10 +15,11 @@ The whole ruleset uses a consistent Renaissance-court theme. These terms are use
 | **Challenge** | Contesting a Testimony (the old "Counter-Gabo"), escalating the situation to a Duel. |
 | **Duel** | The head-to-head comparison of true hand values among everyone still eligible-and-in-play once at least one Challenge has occurred. |
 | **Perjury** | A false Testimony given by a **first-window** caller that nobody managed to Challenge. The harshest outcome in the game. |
-| **Verdict** | The moment the game checks first-window callers for Perjury. |
+| **Perjury Check** | The moment the game validates first-window callers for Perjury; happens mid-Trial. |
+| **Verdict** | The end-of-round moment when scores are finalized, Renaissances are applied, and winners are announced—the suspenseful reveal. |
 | **Plea** | Voluntarily accepting a flat, capped penalty instead of your true hand score (the old "Request Penalty" / Penalty A). |
 | **Renaissance** | The comeback mechanic: landing exactly on 50 or 100 points via a genuine addition resets your score down to 25 or 50. |
-| **Trial** | The entire round-ending decision sequence: Call Window → Match Window → Verdict → Duel Window → Final Plea Window → Scoring. |
+| **Trial** | The entire round-ending decision sequence: Call Window → Match Window → Perjury Check → Duel Window → Final Plea Window → Verdict (Scoring). |
 | **Glance** | The 7/8 self-peek power. |
 | **Spy** | The 9/10 opponent-peek power. |
 | **Smuggle** | The Jack's blind, deliberate-position exchange power. |
@@ -101,23 +102,23 @@ Triggered once per turn, after the Quick-Discard Window closes (assuming no hand
 ### 6.1 Call Window ("Give Testimony")
 Every player sees a single button: **Testimony**. Any player may press it — a public claim of "I'm eligible" — which ends the turn loop and begins the Trial resolution.
 
-A short sub-window (exact length TBD, see Section 12) stays open after the very first press. Anyone pressing Testimony within that sub-window is a **first-window caller**, and their claim is subject to Perjury/Verdict (6.3). Multiple simultaneous first-window callers is a completely valid, intended outcome — two eligible players can peacefully agree and both walk away with 0.
+A short sub-window (exact length TBD, see Section 12) stays open after the very first press. Anyone pressing Testimony within that sub-window is a **first-window caller**, and their claim is subject to Perjury (6.3). Multiple simultaneous first-window callers is a completely valid, intended outcome — two eligible players can peacefully agree and both walk away with 0.
 
 ### 6.2 Match Window (Cross-Testimony)
 Every player who has **not yet** pressed Testimony now sees a single button: **Testimony** (a late, "cross" join). A player who doesn't press it simply passes this window.
 
-- A late Testimony press here is **never** subject to Perjury/Verdict — only first-window callers can commit Perjury.
-- **Plea is not offered here.** It has exactly one home in the Trial: the Final Plea Window (6.5), which comes later, after Verdict and any Duel have resolved — so the decision is always made with full information rather than asked repeatedly at earlier points when less was known.
+- A late Testimony press here is **never** subject to Perjury — only first-window callers can commit Perjury.
+- **Plea is not offered here.** It has exactly one home in the Trial: the Final Plea Window (6.5), which comes later, after Perjury Check and any Duel have resolved — so the decision is always made with full information rather than asked repeatedly at earlier points when less was known.
 
-### 6.3 Verdict
+### 6.3 Perjury Check
 The game checks **first-window callers only**. Any first-window caller who is **not actually eligible** has committed **Perjury**:
 - They receive a capped penalty (+25) **and** their true hand sum, **stacked** — the harshest single outcome in the game.
 - They are immediately and fully resolved — removed from the rest of the Trial. This cannot be Challenged, and does not affect anyone else's fate.
 
-If **two or more** truly-eligible Testimony-givers remain after the Verdict (combining first-window survivors and cross-testimony players), proceed to 6.4. Otherwise, skip directly to the Final Plea Window (6.5).
+If **two or more** truly-eligible Testimony-givers remain after the Perjury Check (combining first-window survivors and cross-testimony players), proceed to 6.4. Otherwise, skip directly to the Final Plea Window (6.5).
 
 ### 6.4 Duel Window (Challenge)
-This window **only appears** if ≥2 truly-eligible Testimony-givers remain post-Verdict.
+This window **only appears** if ≥2 truly-eligible Testimony-givers remain post-Perjury Check.
 
 - **Every remaining Testimony-giver** — genuine and secretly-false cross-testimony players alike, indistinguishable in the UI — gets a **Challenge** button, on a timer.
 - Everyone else has **no action in this window** — they are not Testimony-givers, so there's nothing for them to Challenge or decide here. Their one decision (Plea or not) comes right after, at the Final Plea Window (6.5).
@@ -129,18 +130,18 @@ This window **only appears** if ≥2 truly-eligible Testimony-givers remain post
 - If **at least one** Challenge is pressed, a **Duel** occurs among all truly-eligible Testimony-givers/Challengers: the **lowest true hand sum(s)** win (ties share the win), scoring **0**. Every other eligible Duel participant takes **+50**.
 
 ### 6.5 Final Plea Window
-This is the **one and only** point in the Trial where Plea is offered. It opens once the Verdict has resolved (6.3) and, if applicable, the Duel Window has fully resolved (6.4) — so it always comes last, right before Scoring.
+This is the **one and only** point in the Trial where Plea is offered. It opens once the Perjury Check has resolved (6.3) and, if applicable, the Duel Window has fully resolved (6.4) — so it always comes last, right before Scoring.
 
 - **Who sees it:** every player who is still undetermined at this point — i.e. never gave Testimony (first or cross), and was not just removed for Perjury.
 - **What they see:** two buttons, **Plea** and **Decline**. Declining means being scored as a true bystander (true hand sum).
-- **Why it's placed here, not earlier:** by this point, whether any Perjury occurred is public (from the Verdict), and any Duel outcome is public too. A player deciding Plea vs. their true hand sum is always making that call with the most complete information the round can offer, rather than committing blind earlier and having no way to reconsider.
+- **Why it's placed here, not earlier:** by this point, whether any Perjury occurred is public, and any Duel outcome is public too. A player deciding Plea vs. their true hand sum is always making that call with the most complete information the round can offer, rather than committing blind earlier and having no way to reconsider.
 - This window is also what implements the "true bystander, Perjury occurred this round" choice from the outcome table below (6.6) — it isn't a separate mechanic with its own event type, it's this same Plea/Decline decision, just one made with the knowledge that Perjury happened. A bystander in a Perjury-free round has exactly the same two buttons available; nothing about the window itself changes based on whether Perjury occurred.
 - Every eligible player logs exactly one outcome here — Plea taken, or Plea declined — no silent absence, consistent with every other Trial window.
 
 ### 6.6 Resolving False Cross-Testimony
 A cross-testimony player who turns out **not** to be truly eligible can never become Perjury (only first-window callers can). Regardless of whether they were Challenged, pressed Challenge themselves (always a no-op), or how any Duel among others resolved — they personally default to: **flat +25, no Renaissance this round.**
 
-### 6.7 Scoring — Full Outcome Table
+### 6.7 Verdict, Scoring — Full Outcome Table
 Computed silently once the Trial concludes; never revealed early.
 
 | Outcome | Score effect | Renaissance eligible? |

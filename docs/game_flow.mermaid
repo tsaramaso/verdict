@@ -48,10 +48,11 @@ stateDiagram-v2
 
     MW_Resolve --> NextPlayer : zero Testimony given, not last turn, loop
     MW_Resolve --> ForcedEnd_NoTestimony : zero Testimony given, this was the last turn
-    MW_Resolve --> Verdict : one or more Testimony given
+    MW_Resolve --> PerjuryCheck : one or more Testimony given
 
-    Verdict --> DuelWindow : VerdictResolved, two or more truly eligible Testimony givers remain
-    Verdict --> FinalPleaWindow : VerdictResolved, otherwise
+    %% ===== PERJURY CHECK & RESOLUTION =====
+    PerjuryCheck --> DuelWindow : PerjuryCheckResolved, two or more truly eligible Testimony givers remain
+    PerjuryCheck --> FinalPleaWindow : PerjuryCheckResolved, otherwise
 
     DuelWindow --> DW_Resolve : remaining callers log ChallengeGiven or ChallengeWindowPassed, no action for non testimony givers
     DW_Resolve --> FinalPleaWindow : DuelResolved, real duel if challenged, else plain agreement
@@ -60,26 +61,29 @@ stateDiagram-v2
 
     NextPlayer --> TurnStart
 
-    ScoringTrial --> UpdateScores
-    RoundOver_EmptyHand --> UpdateScores : everyone scored as true bystander
-    ForcedEnd_NoTestimony --> UpdateScores : everyone scored as true bystander
+    %% ===== ALL PATHS CONVERGE TO VERDICT =====
+    ScoringTrial --> VerdictSequence
+    RoundOver_EmptyHand --> VerdictSequence : everyone scored as true bystander
+    ForcedEnd_NoTestimony --> VerdictSequence : everyone scored as true bystander
 
-    UpdateScores --> RenaissanceCheck
-    RenaissanceCheck --> CheckGameOver
+    %% ===== VERDICT: END-OF-ROUND FINALE =====
+    VerdictSequence --> UpdateScores : scores finalized, Renaissances applied, all revealed
+    UpdateScores --> CheckGameOver
 
     CheckGameOver --> NewRound : all scores under 120
     CheckGameOver --> GameOver : any score 120 or higher, hard wall
 
     GameOver --> [*]
 
+    %% ===== NOTES =====
     note right of RankCheck
         Every discarded card that could carry a
         power gets an explicit SpellInvocationDecision
         event even if declined, no silent skips.
     end note
 
-    note right of Verdict
-        Checks first window callers only.
+    note right of PerjuryCheck
+        Validates first window callers only.
         A false first window caller commits Perjury,
         capped plus true hand sum, stacked.
         Removed from rest of Trial, does not
@@ -100,7 +104,7 @@ stateDiagram-v2
         The single point in the Trial where Plea is offered.
         Only for players who never gave Testimony, first or
         cross, and were not removed for Perjury. Opens after
-        Verdict and any Duel have fully resolved, so Perjury
+        PerjuryCheck and any Duel have fully resolved, so Perjury
         results and Duel outcome are already public knowledge
         by the time this choice is made. This is also the
         exact mechanism behind the true bystander plus
@@ -108,9 +112,15 @@ stateDiagram-v2
         Plea or Decline decision, not a separate event type.
     end note
 
-    note right of RenaissanceCheck
-        Only a genuine, non zero, non penalized addition
-        landing exactly on 50 or 100 triggers a reset.
-        Perjury, Plea, false cross testimony, and Duel loss
-        are always blocked. A zero result never retriggers it.
+    note right of VerdictSequence
+        End-of-round finale: all Trial outcomes are resolved,
+        scores are finalized, Renaissances are applied, and all
+        standings are announced simultaneously. The suspenseful
+        reveal that closes the Trial and sets up the next round's stakes.
+    end note
+
+    note right of UpdateScores
+        Scores updated and persisted. Renaissance check already
+        happened as part of VerdictSequence. Game-over threshold
+        (120+) is checked next.
     end note
