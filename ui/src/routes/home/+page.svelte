@@ -2,12 +2,14 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { enhance } from '$app/forms';
+  import { onMount } from 'svelte';
 
   let { data } = $props();
 
   let user = $derived(data?.user);
   let games = $derived(data?.games || []);
   let error = $derived(data?.error);
+  let availableUsers = $derived(data?.users || []);
 
   function getGameStatusLabel(status: string): string {
     const labels: Record<string, string> = {
@@ -22,6 +24,49 @@
     if (status === 'IN_PROGRESS') return 'var(--color-success)';
     if (status === 'FINISHED') return 'var(--color-text-light)';
     return 'var(--color-warning)';
+  }
+
+  // Create Game form state
+  let selectedUsers = $state(new Map<string, { uuid: string; name: string | null; isCreator: boolean }>());
+  let selectedUserId = $state('');
+  let createGameError = $state('');
+  let isCreatingGame = $state(false);
+
+  let selectedPlayers = $derived(Array.from(selectedUsers.values()));
+
+  onMount(() => {
+    // Pre-add current user to selected players
+    if (user) {
+      const newMap = new Map(selectedUsers);
+      newMap.set(user.uuid, {
+        uuid: user.uuid,
+        name: user.name,
+        isCreator: true,
+      });
+      selectedUsers = newMap;
+    }
+  });
+
+  function addPlayer() {
+    if (!selectedUserId || selectedUsers.has(selectedUserId)) return;
+
+    const userToAdd = availableUsers.find((u: any) => u.uuid === selectedUserId);
+    if (!userToAdd) return;
+
+    const newMap = new Map(selectedUsers);
+    newMap.set(selectedUserId, {
+      uuid: selectedUserId,
+      name: userToAdd.name,
+      isCreator: false,
+    });
+    selectedUsers = newMap;
+    selectedUserId = '';
+  }
+
+  function removePlayer(uuid: string) {
+    const newMap = new Map(selectedUsers);
+    newMap.delete(uuid);
+    selectedUsers = newMap;
   }
 </script>
 
@@ -55,10 +100,128 @@
         <section class="section create-game-section">
           <h2>Create Game</h2>
           <div class="section-content">
-            <p class="section-description">Start a new game by selecting players and turn direction.</p>
-            <div class="placeholder">
-              <p>Create game form coming in Phase 3</p>
-            </div>
+            <form method="POST" action="?/createGame" use:enhance={handleCreateGameSubmit} onsubmit={() => { isCreatingGame = true; }}>
+              {#if createGameError}
+                <div class="error-banner">{createGameError}</div>
+              {/if}
+
+              <!-- Players Selection -->
+              <div class="form-group">
+                <label for="player-select">Add Players</label>
+                <div class="player-select-row">
+                  <select
+                    id="player-select"
+                    bind:value={selectedUserId}
+                    disabled={isCreatingGame}
+                  >
+                    <option value="">Select a player...</option>
+                    {#each availableUsers as availUser (availUser.uuid)}
+                      {#if availUser.uuid !== user?.uuid}
+                        <option value={availUser.uuid}>
+                          {availUser.name || 'Unnamed'} ({availUser.uuid.slice(0, 8)})
+                        </option>
+                      {/if}
+                    {/each}
+                  </select>
+                  <button
+                    type="button"
+                    class="btn-add-player"
+                    onclick={addPlayer}
+                    disabled={!selectedUserId || isCreatingGame}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <!-- Selected Players List -->
+              <div class="form-group">
+                <div class="form-header">Selected Players ({selectedPlayers.length})</div>
+                <p class="form-note">You are automatically included as creator and cannot be removed</p>
+                <div class="selected-players">
+                  {#if selectedPlayers.length === 0}
+                    <div class="empty-players">No players selected yet</div>
+                  {:else}
+                    <div class="players-list">
+                      {#each selectedPlayers as player (player.uuid)}
+                        <div class="player-tag">
+                          <span class="player-info">
+                            {#if player.uuid === user?.uuid}
+                              You (creator)
+                            {:else}
+                              {player.name || 'Unnamed'}
+                              {#if player.isCreator}
+                                <span class="creator-badge">creator</span>
+                              {/if}
+                            {/if}
+                          </span>
+                          {#if !player.isCreator}
+                            <button
+                              type="button"
+                              class="btn-remove-player"
+                              onclick={() => removePlayer(player.uuid)}
+                              disabled={isCreatingGame}
+                            >
+                              ✕
+                            </button>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+
+              <!-- Turn Direction -->
+              <div class="form-group">
+                <div class="form-header">Turn Direction</div>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="turnDirection"
+                      value="CW"
+                      checked
+                      disabled={isCreatingGame}
+                    />
+                    Clockwise
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="turnDirection"
+                      value="CCW"
+                      disabled={isCreatingGame}
+                    />
+                    Counter-clockwise
+                  </label>
+                </div>
+              </div>
+
+              <!-- Hidden input to send player IDs -->
+              <div style="display: none;">
+                {#each selectedPlayers as player (player.uuid)}
+                  <input type="hidden" name="playerIds" value={player.uuid} />
+                {/each}
+              </div>
+
+              <!-- Submit Button -->
+              <button
+                type="submit"
+                class="btn-create-game"
+                disabled={selectedPlayers.length < 2 || isCreatingGame}
+              >
+                {isCreatingGame ? 'Creating...' : 'Create Game'}
+              </button>
+
+              <p class="form-hint">
+                {#if selectedPlayers.length < 2}
+                  Select at least 2 players to create a game
+                {:else}
+                  Ready to create game with {selectedPlayers.length} players
+                {/if}
+              </p>
+            </form>
           </div>
         </section>
 
@@ -73,7 +236,7 @@
             {:else}
               <div class="games-list">
                 {#each games as game (game.game_id)}
-                  <button class="game-card" onclick={() => goto(`/game/${game.game_id}`)}>
+                  <button class="game-card" onclick={() => goto(`/game/${game.game_id}/play`)}>
                     <div class="game-header">
                       <span class="game-status" style="color: {getStatusColor(game.status)}">
                         {getGameStatusLabel(game.status)}
@@ -208,24 +371,6 @@
     flex-direction: column;
   }
 
-  .section-description {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-light);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .placeholder {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--color-bg);
-    border-radius: var(--radius-md);
-    border: 2px dashed var(--color-border);
-    color: var(--color-text-light);
-    text-align: center;
-  }
-
   .empty-state {
     flex: 1;
     display: flex;
@@ -233,6 +378,200 @@
     justify-content: center;
     text-align: center;
     color: var(--color-text-light);
+  }
+
+  /* Create Game Form Styles */
+  .player-select-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  select,
+  input[type="radio"] {
+    font-family: inherit;
+  }
+
+  select {
+    flex: 1;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-add-player {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+  }
+
+  .btn-add-player:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+  }
+
+  .btn-add-player:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+  }
+
+  .form-header {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+  }
+
+  .form-note {
+    font-size: var(--font-size-xs, 0.75rem);
+    color: var(--color-text-light);
+    margin: 0 0 var(--spacing-sm) 0;
+    font-style: italic;
+  }
+
+  .selected-players {
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    min-height: 80px;
+  }
+
+  .empty-players {
+    text-align: center;
+    color: var(--color-text-light);
+    padding: var(--spacing-md) 0;
+  }
+
+  .players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .player-tag {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  .player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .creator-badge {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+  .btn-remove-player {
+    background-color: transparent;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    padding: 0;
+    font-size: var(--font-size-base);
+    font-weight: bold;
+  }
+
+  .btn-remove-player:hover:not(:disabled) {
+    color: var(--color-danger);
+  }
+
+  .btn-remove-player:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+  }
+
+  .radio-label input[type="radio"] {
+    cursor: pointer;
+  }
+
+  .radio-label input[type="radio"]:disabled {
+    cursor: not-allowed;
+  }
+
+  .btn-create-game {
+    width: 100%;
+    padding: var(--spacing-md);
+    background-color: var(--color-success);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .btn-create-game:hover:not(:disabled) {
+    background-color: var(--color-success-dark);
+  }
+
+  .btn-create-game:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .form-hint {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    margin: 0;
+  }
+
+  .error-banner {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    border-left: 3px solid var(--color-danger);
   }
 
   .games-list {
