@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: verdict
     volumes:
       - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U verdict"]
       interval: 5s
