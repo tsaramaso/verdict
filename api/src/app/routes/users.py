@@ -138,7 +138,6 @@ def create_user(
 
 @router.get("", response_model=UserListOut)
 def list_users(
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> UserListOut:
     """

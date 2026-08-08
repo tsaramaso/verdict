@@ -225,9 +225,9 @@
           </div>
         </section>
 
-        <!-- Your Games Section -->
+        <!-- Games Section -->
         <section class="section your-games-section">
-          <h2>Your Games</h2>
+          <h2>Games</h2>
           <div class="section-content">
             {#if games.length === 0}
               <div class="empty-state">
