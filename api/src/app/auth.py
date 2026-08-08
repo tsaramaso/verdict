@@ -95,7 +95,20 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     session: Session = Depends(get_session),
 ) -> User:
-    user = session.get(User, credentials.credentials)
+    from src.config import HASH_SECRET_KEY, ALGORITHM
+    
+    # Verify JWT token and extract UUID
+    uuid = verify_token(credentials.credentials, HASH_SECRET_KEY, ALGORITHM)
+    
+    if uuid is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Look up user by UUID
+    user = session.get(User, uuid)
     if user is None or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
