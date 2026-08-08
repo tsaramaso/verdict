@@ -1,10 +1,3 @@
-<script>
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  
-  onMount(() => {
-    goto('/login');
-  });
-</script>
-
-<p>Redirecting to login...</p>
+<!-- ui/src/routes/+page.svelte -->
+<!-- Empty root page -->
+<div></div>
