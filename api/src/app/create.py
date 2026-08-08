@@ -6,6 +6,7 @@ from sqlmodel import SQLModel
 from src.app.routes import router
 from src.db.session import engine
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)
@@ -17,7 +18,7 @@ def create_app() -> FastAPI:
         title="Verdict",
         lifespan=lifespan,
     )
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -26,7 +27,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     app.include_router(router)
     return app
 

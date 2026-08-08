@@ -22,6 +22,21 @@ first, not here.
 
 from enum import StrEnum, auto
 
+from pydantic import BaseModel
+
+RED_KING_VALUE = 0
+BLACK_KING_VALUE = 13
+HAND_SIZE = 4  # rules.md §3
+ELIGIBLE_THRESHOLD = 7  # rules.md §1 glossary — "Eligible"
+MIN_PLAYERS = 2  # rules.md §3, confirmed
+MAX_PLAYERS = 5  # rules.md §3, confirmed
+PERJURY_PENALTY = 25  # rules.md §6.7 — capped +25, stacked with true sum
+DUEL_LOSS_PENALTY = 50  # rules.md §6.7
+FALSE_CROSS_TESTIMONY_PENALTY = 25  # rules.md §6.7
+PLEA_PENALTY = 25  # rules.md §6.7
+RENAISSANCE_THRESHOLDS = {50: 25, 100: 50}  # rules.md §9 — landing on X resets to Y
+GAME_OVER_SCORE = 120  # rules.md §10 — hard wall, no Renaissance protection
+
 # --- Cards ---------------------------------------------------------------
 
 
@@ -70,27 +85,13 @@ RANK_FACE_VALUE: dict[Rank, int] = {
 }
 
 
-def card_value(rank: Rank, suit: Suit) -> int:
+def card_value(
+    rank: Rank, suit: Suit, red_king_value: int, black_king_value: int
+) -> int:
     """rules.md §4: black King = 13, red King = 0, everything else fixed."""
     if rank is Rank.KING:
-        return 0 if suit in RED_SUITS else 13
+        return red_king_value if suit in RED_SUITS else black_king_value
     return RANK_FACE_VALUE[rank]
-
-
-HAND_SIZE = 4  # rules.md §3
-ELIGIBLE_THRESHOLD = 7  # rules.md §1 glossary — "Eligible"
-
-MIN_PLAYERS = 2  # rules.md §3, confirmed
-MAX_PLAYERS = 5  # rules.md §3, confirmed
-
-PERJURY_PENALTY = 25  # rules.md §6.7 — capped +25, stacked with true sum
-DUEL_LOSS_PENALTY = 50  # rules.md §6.7
-FALSE_CROSS_TESTIMONY_PENALTY = 25  # rules.md §6.7
-PLEA_PENALTY = 25  # rules.md §6.7
-
-RENAISSANCE_THRESHOLDS = {50: 25, 100: 50}  # rules.md §9 — landing on X resets to Y
-
-GAME_OVER_SCORE = 120  # rules.md §10 — hard wall, no Renaissance protection
 
 
 # --- Powers (rules.md §7) -------------------------------------------------
@@ -204,6 +205,36 @@ class TurnDirection(StrEnum):
     CLOCKWISE = auto()
     COUNTERCLOCKWISE = auto()
 
+
+class Rules(BaseModel):
+    red_king_value: int
+    black_king_value: int
+    hand_size: int
+    eligible_threshold: int
+    min_players: int
+    max_players: int
+    perjury_penalty: int
+    duel_loss_penalty: int
+    false_cross_testimony_penalty: int
+    plea_penalty: int
+    renaissance_thresholds: dict[int, int]
+    game_over_score: int
+
+
+BASE_RULES = Rules(
+    red_king_value=0,
+    black_king_value=13,
+    hand_size=4,
+    eligible_threshold=7,
+    min_players=2,
+    max_players=5,
+    perjury_penalty=25,
+    duel_loss_penalty=50,
+    false_cross_testimony_penalty=25,
+    plea_penalty=25,
+    renaissance_thresholds={50: 25, 100: 50},
+    game_over_score=120,
+)
 
 # Sanity check, not a runtime guard against user input: every Suit member
 # is classified as exactly one of red/black. Catches a maintenance mistake

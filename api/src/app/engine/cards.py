@@ -21,7 +21,14 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-from src.app.engine.constants import RED_SUITS, Rank, Suit, card_value
+from src.app.engine.constants import (
+    BASE_RULES,
+    RED_SUITS,
+    Rank,
+    Rules,
+    Suit,
+    card_value,
+)
 
 
 @dataclass
@@ -29,6 +36,8 @@ class Card:
     id: str  # stable, unique within one standard 52-card deck
     rank: Rank
     suit: Suit
+    black_king_value: int
+    red_king_value: int
     # Player IDs who currently know this specific card's identity.
     # Persists across swaps (Smuggle/Decree) by design — it's a property
     # of the card, not the slot.
@@ -40,20 +49,28 @@ class Card:
 
     @property
     def value(self) -> int:
-        return card_value(self.rank, self.suit)
+        return card_value(
+            self.rank, self.suit, self.red_king_value, self.black_king_value
+        )
 
     def to_public_dict(self) -> dict:
         return {"rank": self.rank, "suit": self.suit}
 
 
-def build_deck(seed: str) -> list[Card]:
+def build_deck(seed: str, rules: Rules = BASE_RULES) -> list[Card]:
     """
     Deterministically reconstructible from `seed` alone — per
     events_and_logging.md, the shuffle seed is what's stored (scoped to
     nobody), never a materialized card-order array.
     """
     cards = [
-        Card(id=f"{rank.name}-{suit.name}", rank=rank, suit=suit)
+        Card(
+            id=f"{rank.name}-{suit.name}",
+            rank=rank,
+            suit=suit,
+            black_king_value=rules.black_king_value,
+            red_king_value=rules.red_king_value,
+        )
         for suit in Suit
         for rank in Rank
     ]
