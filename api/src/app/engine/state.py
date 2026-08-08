@@ -49,7 +49,9 @@ class PlayerState:
     # Fixed-length, index = slot number. None means quick-discarded away
     # (slot stays but is permanently empty — hand "shrinking" means
     # fewer non-None entries, not a shorter list). rules.md §5.4.
-    hand: list[Card | None] = field(default_factory=lambda: [None] * BASE_RULES.hand_size)
+    hand: list[Card | None] = field(
+        default_factory=lambda: [None] * BASE_RULES.hand_size
+    )
     # Slots of THIS player's hand that have been Spied on by someone, at
     # any point this round — persists in the UI per the resolved open
     # item (rules.md §12 item 2). Purely a display concern; doesn't
