@@ -21,7 +21,7 @@
       });
       
       localStorage.setItem('auth_token', token);
-      await goto('/game');
+      await goto('/home');
     } catch (err) {
       error = 'Unknown code. Check and try again.';
     } finally {
@@ -49,7 +49,6 @@
         autocorrect="off"
         spellcheck="false"
         required
-        autofocus
         disabled={loading}
       />
       <button type="submit" disabled={loading}>
@@ -65,52 +64,54 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: #f5f5f5;
+    background-color: var(--color-bg);
   }
   
   .card {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--color-bg-card);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     width: 100%;
     max-width: 400px;
   }
   
   h1 {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
   }
   
   form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--spacing-md);
   }
   
   label {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
   }
   
   input {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
   }
   
   button {
-    padding: 0.5rem;
-    background: #007bff;
+    padding: var(--spacing-sm);
+    background-color: var(--color-primary);
     color: white;
     border: none;
-    border-radius: 4px;
-    font-weight: 500;
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
   }
   
   button:hover:not(:disabled) {
-    background: #0056b3;
+    background-color: var(--color-primary-dark);
   }
   
   button:disabled {
@@ -119,7 +120,7 @@
   }
   
   .error {
-    color: #d32f2f;
-    font-size: 0.9rem;
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
   }
 </style>
