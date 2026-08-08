@@ -78,7 +78,8 @@ export async function getCurrentUser(): Promise<User> {
 
 export async function listUsers(): Promise<User[]> {
   const data = await apiCall('/users');
-  return data.users;
+  const currentUser = await getCurrentUser();
+  return (data.users || []).filter((u: User) => u.uuid !== currentUser.uuid);
 }
 
 export async function listGames(): Promise<GameSummary[]> {
@@ -90,12 +91,11 @@ export async function getGameStatus(gameId: string) {
   return apiCall(`/games/${gameId}/status`);
 }
 
-export async function createGame(playerIds: string[], turnDirection: string) {
+export async function createGame(playerIds: string[]) {
   return apiCall('/games', {
     method: 'POST',
     body: JSON.stringify({
       player_ids: playerIds,
-      turn_direction: turnDirection,
       rules_config: {},
     }),
   });

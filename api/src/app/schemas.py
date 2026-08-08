@@ -81,7 +81,6 @@ class ActionResult(BaseModel):
 
 class GameCreateRequest(BaseModel):
     player_ids: list[str]
-    turn_direction: TurnDirection
     rules_config: dict = {}
 
 

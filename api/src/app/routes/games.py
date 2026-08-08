@@ -24,6 +24,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
+from src.app.engine.constants import TurnDirection
 from src.app.auth import get_current_player, get_current_user
 from src.app.engine import engine
 from src.app.engine.errors import IllegalAction
@@ -91,7 +92,7 @@ def create_game(
     # teaching _call a second return shape just for this one caller.
     try:
         state, events = engine.new_game(
-            game_id, request.player_ids, request.turn_direction, request.rules_config
+            game_id, request.player_ids, TurnDirection.CLOCKWISE, request.rules_config
         )
     except IllegalAction as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e)) from e
@@ -102,7 +103,7 @@ def create_game(
     game_row = Game(
         id=game_id,
         status=GameStatus.IN_PROGRESS,
-        turn_direction=request.turn_direction,
+        turn_direction=TurnDirection.CLOCKWISE,
         current_round=state.round_number,
         started_at=datetime.now(timezone.utc),
     )

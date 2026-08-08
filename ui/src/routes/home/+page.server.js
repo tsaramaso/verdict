@@ -68,15 +68,10 @@ export const actions = {
     try {
       const formData = await request.formData();
       const playerIds = formData.getAll('playerIds');
-      const turnDirection = formData.get('turnDirection');
 
       // Validation
       if (!playerIds || playerIds.length < 2) {
         return { error: 'At least 2 players required' };
-      }
-
-      if (!turnDirection || !['CW', 'CCW'].includes(turnDirection)) {
-        return { error: 'Invalid turn direction' };
       }
 
       // Create game via API
@@ -88,7 +83,6 @@ export const actions = {
         },
         body: JSON.stringify({
           player_ids: playerIds,
-          turn_direction: turnDirection,
           rules_config: {},
         }),
       });

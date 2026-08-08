@@ -51,7 +51,7 @@
         </div>
       {/if}
 
-      <button class="btn-back" on:click={() => goto('/home')}>
+      <button class="btn-back" onclick={() => goto('/home')}>
         Back to Home
       </button>
     </div>
@@ -62,7 +62,7 @@
     {#if error}
       <div class="error-message">
         <p>{error}</p>
-        <button on:click={() => goto('/home')}>Return to Home</button>
+        <button onclick={() => goto('/home')}>Return to Home</button>
       </div>
     {:else if !gameStatus}
       <div class="loading">

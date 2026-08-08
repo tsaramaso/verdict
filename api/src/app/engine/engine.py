@@ -97,8 +97,8 @@ def require_phase(phase: Phase):
 def new_game(
     game_id: str,
     player_ids: list[str],
-    turn_direction: TurnDirection,
     rules_config: dict,
+    turn_direction: TurnDirection = TurnDirection.CLOCKWISE,
 ) -> tuple[GameState, list[Event]]:
     if not (MIN_PLAYERS <= len(player_ids) <= MAX_PLAYERS):
         raise IllegalAction(

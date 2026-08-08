@@ -37,7 +37,7 @@
 
 **Create Game Dialog:**
 - Player count (2–5)
-- Turn direction (clockwise/counterclockwise)
+- Turn direction (clockwise)
 - Start button
 
 **Next:** Game loads into Round Start

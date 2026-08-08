@@ -1,7 +1,7 @@
 <!-- ui/src/routes/home/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { enhance } from '$app/forms';
+  import { enhance, type ActionResult, applyAction } from '$app/forms';
   import { onMount } from 'svelte';
 
   let { data } = $props();
@@ -26,8 +26,17 @@
     return 'var(--color-warning)';
   }
 
-  // Create Game form state
   let selectedUsers = $state(new Map<string, { uuid: string; name: string | null; isCreator: boolean }>());
+
+  $effect(() => {
+    if (user && selectedUsers.size === 0) {
+      selectedUsers.set(user.uuid, {
+        uuid: user.uuid,
+        name: user.name,
+        isCreator: true,
+      });
+    }
+  });
   let selectedUserId = $state('');
   let createGameError = $state('');
   let isCreatingGame = $state(false);
@@ -68,6 +77,7 @@
     newMap.delete(uuid);
     selectedUsers = newMap;
   }
+
 </script>
 
 <div class="layout">
@@ -100,7 +110,7 @@
         <section class="section create-game-section">
           <h2>Create Game</h2>
           <div class="section-content">
-            <form method="POST" action="?/createGame" use:enhance={handleCreateGameSubmit} onsubmit={() => { isCreatingGame = true; }}>
+          <form method="POST" action="?/createGame" use:enhance>
               {#if createGameError}
                 <div class="error-banner">{createGameError}</div>
               {/if}
@@ -172,32 +182,6 @@
                 </div>
               </div>
 
-              <!-- Turn Direction -->
-              <div class="form-group">
-                <div class="form-header">Turn Direction</div>
-                <div class="radio-group">
-                  <label class="radio-label">
-                    <input
-                      type="radio"
-                      name="turnDirection"
-                      value="CW"
-                      checked
-                      disabled={isCreatingGame}
-                    />
-                    Clockwise
-                  </label>
-                  <label class="radio-label">
-                    <input
-                      type="radio"
-                      name="turnDirection"
-                      value="CCW"
-                      disabled={isCreatingGame}
-                    />
-                    Counter-clockwise
-                  </label>
-                </div>
-              </div>
-
               <!-- Hidden input to send player IDs -->
               <div style="display: none;">
                 {#each selectedPlayers as player (player.uuid)}
@@ -245,7 +229,6 @@
                     </div>
                     <div class="game-details">
                       <p class="game-id">Game: {game.game_id.slice(0, 8)}...</p>
-                      <p class="game-direction">Direction: {game.turn_direction === 'CW' ? 'Clockwise' : 'Counter-clockwise'}</p>
                       <p class="game-date">Created: {new Date(game.created_at).toLocaleDateString()}</p>
                     </div>
                   </button>
