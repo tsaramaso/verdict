@@ -715,10 +715,10 @@ def _maybe_close_match_window(state: GameState) -> list[Event]:
         if state.is_last_turn:
             return _end_round_forced_no_testimony(state)
         return _advance_to_next_player(state)
-    return _resolve_verdict(state)
+    return _resolve_perjury_check(state)
 
 
-def _resolve_verdict(state: GameState) -> list[Event]:
+def _resolve_perjury_check(state: GameState) -> list[Event]:
     results = []
     truly_eligible: list[str] = []
     for player_id in state.trial.first_window_callers:
@@ -735,7 +735,7 @@ def _resolve_verdict(state: GameState) -> list[Event]:
 
     events = [
         Event(
-            type=EventType.VERDICT_RESOLVED,
+            type=EventType.PERJURY_CHECK_RESOLVED,
             game_id=state.game_id,
             round_id=state.round_id,
             turn_id=state.turn_id,

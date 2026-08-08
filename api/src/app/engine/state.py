@@ -93,7 +93,7 @@ class TrialState:
     cross_callers: list[str] = field(default_factory=list)
     passed_cross: set[str] = field(default_factory=set)
     perjury_removed: set[str] = field(default_factory=set)
-    # Truly-eligible Testimony-givers surviving the Verdict (first-window
+    # Truly-eligible Testimony-givers surviving the perjury check (first-window
     # survivors + cross callers who are actually eligible). Determines
     # whether the Duel Window even appears — rules.md §6.4.
     truly_eligible: list[str] = field(default_factory=list)

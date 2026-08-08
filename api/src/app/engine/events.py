@@ -46,7 +46,7 @@ class EventType(StrEnum):
     TESTIMONY_WINDOW_PASSED = auto()
     CHALLENGE_GIVEN = auto()
     CHALLENGE_WINDOW_PASSED = auto()
-    VERDICT_RESOLVED = auto()
+    PERJURY_CHECK_RESOLVED = auto()
     DUEL_RESOLVED = auto()
     PLEA_TAKEN = auto()
     PLEA_WINDOW_PASSED = auto()
