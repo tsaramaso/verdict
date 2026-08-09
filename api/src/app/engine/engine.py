@@ -40,16 +40,13 @@ from uuid import uuid4
 from src.app.engine import scoring
 from src.app.engine.cards import build_deck
 from src.app.engine.constants import (
-    GAME_OVER_SCORE,
-    HAND_SIZE,
-    MAX_PLAYERS,
-    MIN_PLAYERS,
+    BASE_RULES,
     POWER_RANKS,
-    RENAISSANCE_THRESHOLDS,
     ActionChoice,
     DrawSource,
     Power,
     RoundEndReason,
+    Rules,
     ScoreBucket,
     SpellDecision,
     SwapDecision,
@@ -100,16 +97,31 @@ def new_game(
     rules_config: dict,
     turn_direction: TurnDirection = TurnDirection.CLOCKWISE,
 ) -> tuple[GameState, list[Event]]:
-    if not (MIN_PLAYERS <= len(player_ids) <= MAX_PLAYERS):
+    # Convert rules_config dict to Rules object, or use BASE_RULES if empty
+    if rules_config:
+        try:
+            rules = Rules(**rules_config)
+        except Exception as e:
+            raise IllegalAction(f"Invalid rules_config: {e}")
+    else:
+        rules = BASE_RULES
+
+    if not (rules.min_players <= len(player_ids) <= rules.max_players):
         raise IllegalAction(
-            f"Player count must be {MIN_PLAYERS}-{MAX_PLAYERS}, got {len(player_ids)}"
+            f"Player count must be {rules.min_players}-{rules.max_players}, got {len(player_ids)}"
         )
     state = GameState(
-        game_id=game_id, player_order=list(player_ids), turn_direction=turn_direction
+        game_id=game_id,
+        player_order=list(player_ids),
+        turn_direction=turn_direction,
+        rules=rules,
     )
     for p in player_ids:
         state.scores[p] = 0
         state.players[p] = PlayerState(player_id=p)
+
+    # __post_init__ runs after __init__, initializing player hands based on rules
+    state.__post_init__()
 
     ev = Event(
         type=EventType.GAME_STARTED,
@@ -133,7 +145,7 @@ def _start_round(state: GameState) -> list[Event]:
     state.round_id = str(uuid4())
     state.turn_id = None
     seed = uuid4().hex
-    state.deck = build_deck(seed)
+    state.deck = build_deck(seed, state.rules)
     state.discard_pile = []
     state.current_turn_index = state.dealer_index
     state.is_last_turn = False
@@ -156,15 +168,15 @@ def _start_round(state: GameState) -> list[Event]:
     ]
 
     # Deal: deterministic round-robin from the shuffled deck, starting
-    # at the dealer, HAND_SIZE cards each. Deliberately NOT its own
+    # at the dealer, rules.hand_size cards each. Deliberately NOT its own
     # event type — fully reconstructible from RoundStarted's seed plus
     # this fixed dealing order, per events_and_logging.md §1.5.
-    for _ in range(HAND_SIZE):
+    for _ in range(state.rules.hand_size):
         for i in range(len(state.player_order)):
             idx = (state.dealer_index + i) % len(state.player_order)
             player_id = state.player_order[idx]
             player = state.players[player_id]
-            slot = next(s for s in range(HAND_SIZE) if player.hand[s] is None)
+            slot = next(s for s in range(state.rules.hand_size) if player.hand[s] is None)
             player.hand[slot] = state.deck.pop()
 
     # Initial Glance: each player privately views their first two
@@ -256,7 +268,7 @@ def take_action(
             "pass_back is only legal after drawing from the discard pile"
         )
     if choice is ActionChoice.SWAP and (
-        slot_index is None or not (0 <= slot_index < HAND_SIZE)
+        slot_index is None or not (0 <= slot_index < state.rules.hand_size)
     ):
         raise IllegalAction("swap requires a valid slot_index")
 
@@ -370,7 +382,7 @@ def invoke_power(
     ]
 
     if power is Power.GLANCE:
-        if own_slot_index is None or not (0 <= own_slot_index < HAND_SIZE):
+        if own_slot_index is None or not (0 <= own_slot_index < state.rules.hand_size):
             raise IllegalAction("Glance requires own_slot_index")
         card = state.players[player_id].hand[own_slot_index]
         if card is None:
@@ -418,7 +430,7 @@ def invoke_power(
         state.phase = Phase.AWAITING_SPELL_SWAP_DECISION
 
     elif power is Power.SMUGGLE:
-        if own_slot_index is None or not (0 <= own_slot_index < HAND_SIZE):
+        if own_slot_index is None or not (0 <= own_slot_index < state.rules.hand_size):
             raise IllegalAction("Smuggle requires own_slot_index")
         _validate_target(state, target_owner, target_index)
         _swap_slots(state, player_id, own_slot_index, target_owner, target_index)  # type: ignore[arg-type]
@@ -452,7 +464,7 @@ def decree_swap_decision(
     pending = state.pending_power
     assert pending is not None
     if swap:
-        if own_slot_index is None or not (0 <= own_slot_index < HAND_SIZE):
+        if own_slot_index is None or not (0 <= own_slot_index < state.rules.hand_size):
             raise IllegalAction("swap requires own_slot_index")
         _swap_slots(
             state, player_id, own_slot_index, pending.target_owner, pending.target_index  # type: ignore[arg-type]
@@ -521,7 +533,7 @@ def _validate_target(
         raise IllegalAction("target_owner and target_index are required")
     if target_owner not in state.players:
         raise IllegalAction("unknown target_owner")
-    if not (0 <= target_index < HAND_SIZE):
+    if not (0 <= target_index < state.rules.hand_size):
         raise IllegalAction("target_index out of range")
 
 
@@ -543,7 +555,7 @@ def _swap_slots(
 @require_phase(Phase.AWAITING_QUICK_DISCARD)
 def quick_discard(state: GameState, player_id: str, slot_index: int) -> list[Event]:
     player = state.players[player_id]
-    if not (0 <= slot_index < HAND_SIZE):
+    if not (0 <= slot_index < state.rules.hand_size):
         raise IllegalAction("slot_index out of range")
     card = player.hand[slot_index]
     if card is None:
@@ -690,7 +702,7 @@ def _require_eligible_for_match_window(state: GameState, player_id: str) -> None
 def _testimony_event(
     state: GameState, player_id: str, window: TestimonyWindow
 ) -> Event:
-    eligible = state.players[player_id].is_eligible
+    eligible = state.players[player_id].is_eligible(state.rules.eligible_threshold)
     return Event(
         type=EventType.TESTIMONY_GIVEN,
         game_id=state.game_id,
@@ -722,14 +734,14 @@ def _resolve_perjury_check(state: GameState) -> list[Event]:
     results = []
     truly_eligible: list[str] = []
     for player_id in state.trial.first_window_callers:
-        eligible = state.players[player_id].is_eligible
+        eligible = state.players[player_id].is_eligible(state.rules.eligible_threshold)
         results.append({"player": player_id, "perjury": not eligible})
         if eligible:
             truly_eligible.append(player_id)
         else:
             state.trial.perjury_removed.add(player_id)
     for player_id in state.trial.cross_callers:
-        if state.players[player_id].is_eligible:
+        if state.players[player_id].is_eligible(state.rules.eligible_threshold):
             truly_eligible.append(player_id)
     state.trial.truly_eligible = truly_eligible
 
@@ -1006,9 +1018,9 @@ def _resolve_scoring(
         if (
             bucket.renaissance_eligible
             and points > 0
-            and new_total in RENAISSANCE_THRESHOLDS
+            and new_total in state.rules.renaissance_thresholds
         ):
-            final_score = RENAISSANCE_THRESHOLDS[new_total]
+            final_score = state.rules.renaissance_thresholds[new_total]
             events.append(
                 Event(
                     type=EventType.RENAISSANCE_TRIGGERED,
@@ -1027,12 +1039,12 @@ def _resolve_scoring(
 
     state.phase = Phase.ROUND_OVER
 
-    if any(score >= GAME_OVER_SCORE for score in state.scores.values()):
+    if any(score >= state.rules.game_over_score for score in state.scores.values()):
         events += _end_game(state)
     else:
         state.dealer_index = (state.dealer_index + 1) % len(state.player_order)
         for player in state.players.values():
-            player.hand = [None] * HAND_SIZE
+            player.hand = [None] * state.rules.hand_size
             player.spied_slots = set()
         events += _start_round(state)
 

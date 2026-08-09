@@ -7,10 +7,10 @@ from enum import StrEnum, auto
 from src.app.engine.cards import Card
 from src.app.engine.constants import (
     BASE_RULES,
-    ELIGIBLE_THRESHOLD,
     DrawSource,
     Power,
     Rank,
+    Rules,
     TurnDirection,
 )
 
@@ -49,9 +49,8 @@ class PlayerState:
     # Fixed-length, index = slot number. None means quick-discarded away
     # (slot stays but is permanently empty — hand "shrinking" means
     # fewer non-None entries, not a shorter list). rules.md §5.4.
-    hand: list[Card | None] = field(
-        default_factory=lambda: [None] * BASE_RULES.hand_size
-    )
+    # Initialized by GameState.__post_init__ based on rules.hand_size
+    hand: list[Card | None] = field(default_factory=list)
     # Slots of THIS player's hand that have been Spied on by someone, at
     # any point this round — persists in the UI per the resolved open
     # item (rules.md §12 item 2). Purely a display concern; doesn't
@@ -67,9 +66,8 @@ class PlayerState:
     def true_sum(self) -> int:
         return sum(c.value for c in self.hand if c is not None)
 
-    @property
-    def is_eligible(self) -> bool:
-        return self.true_sum <= ELIGIBLE_THRESHOLD
+    def is_eligible(self, eligible_threshold: int) -> bool:
+        return self.true_sum <= eligible_threshold
 
 
 @dataclass
@@ -112,6 +110,7 @@ class GameState:
     game_id: str
     player_order: list[str]
     turn_direction: TurnDirection
+    rules: Rules
     dealer_index: int = 0
     round_number: int = 0
     scores: dict[str, int] = field(default_factory=dict)
@@ -135,6 +134,14 @@ class GameState:
     round_id: str | None = None
     turn_id: str | None = None
     sequence: int = 0  # next sequence number to assign
+
+    def __post_init__(self) -> None:
+        """Initialize player hands after rules are set. Called automatically
+        after dataclass __init__."""
+        for player_id in self.player_order:
+            if player_id in self.players:
+                # Re-initialize hand to have correct size
+                self.players[player_id].hand = [None] * self.rules.hand_size
 
     @property
     def current_player(self) -> str:

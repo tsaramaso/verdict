@@ -9,13 +9,7 @@ emits the ScoresUpdated event from the result.
 
 from __future__ import annotations
 
-from src.app.engine.constants import (
-    DUEL_LOSS_PENALTY,
-    FALSE_CROSS_TESTIMONY_PENALTY,
-    PERJURY_PENALTY,
-    PLEA_PENALTY,
-    ScoreBucket,
-)
+from src.app.engine.constants import ScoreBucket
 from src.app.engine.state import GameState
 
 
@@ -29,7 +23,7 @@ def compute_trial_scores(state: GameState) -> list[tuple[str, ScoreBucket, int]]
         if player_id in trial.perjury_removed:
             # rules.md §6.7 — capped penalty AND true hand sum, stacked.
             results.append(
-                (player_id, ScoreBucket.PERJURY, PERJURY_PENALTY + player.true_sum)
+                (player_id, ScoreBucket.PERJURY, state.rules.perjury_penalty + player.true_sum)
             )
             continue
 
@@ -39,7 +33,7 @@ def compute_trial_scores(state: GameState) -> list[tuple[str, ScoreBucket, int]]
                     results.append((player_id, ScoreBucket.DUEL_WINNER, 0))
                 else:
                     results.append(
-                        (player_id, ScoreBucket.DUEL_LOSER, DUEL_LOSS_PENALTY)
+                        (player_id, ScoreBucket.DUEL_LOSER, state.rules.duel_loss_penalty)
                     )
             else:
                 # Covers both "2+ callers, no Challenge" and the solo
@@ -56,13 +50,13 @@ def compute_trial_scores(state: GameState) -> list[tuple[str, ScoreBucket, int]]
                 (
                     player_id,
                     ScoreBucket.FALSE_CROSS_TESTIMONY,
-                    FALSE_CROSS_TESTIMONY_PENALTY,
+                    state.rules.false_cross_testimony_penalty,
                 )
             )
             continue
 
         if player_id in trial.plea_taken:
-            results.append((player_id, ScoreBucket.PLEA, PLEA_PENALTY))
+            results.append((player_id, ScoreBucket.PLEA, state.rules.plea_penalty))
             continue
 
         # Declined Plea at the Final Plea Window (rules.md §6.5) — scored

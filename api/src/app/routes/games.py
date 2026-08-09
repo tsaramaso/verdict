@@ -92,7 +92,7 @@ def create_game(
     # teaching _call a second return shape just for this one caller.
     try:
         state, events = engine.new_game(
-            game_id, request.player_ids, TurnDirection.CLOCKWISE, request.rules_config
+            game_id, request.player_ids, request.rules_config, TurnDirection.CLOCKWISE
         )
     except IllegalAction as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e)) from e
