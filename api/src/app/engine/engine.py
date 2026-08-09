@@ -184,7 +184,7 @@ def _start_round(state: GameState) -> list[Event]:
     # convention — the two slots dealt to them first.
     for player_id in state.player_order:
         player = state.players[player_id]
-        for slot in (0, 1):
+        for slot in range(state.rules.nb_of_starting_draw):
             card = player.hand[slot]
             assert card is not None
             card.known_by.add(player_id)

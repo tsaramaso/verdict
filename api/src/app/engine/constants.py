@@ -210,6 +210,7 @@ class Rules(BaseModel):
     red_king_value: int
     black_king_value: int
     hand_size: int
+    nb_of_starting_draw: int
     eligible_threshold: int
     min_players: int
     max_players: int
@@ -225,6 +226,7 @@ BASE_RULES = Rules(
     red_king_value=0,
     black_king_value=13,
     hand_size=4,
+    nb_of_starting_draw=2,
     eligible_threshold=7,
     min_players=2,
     max_players=5,
