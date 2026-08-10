@@ -23,7 +23,11 @@ def compute_trial_scores(state: GameState) -> list[tuple[str, ScoreBucket, int]]
         if player_id in trial.perjury_removed:
             # rules.md §6.7 — capped penalty AND true hand sum, stacked.
             results.append(
-                (player_id, ScoreBucket.PERJURY, state.rules.perjury_penalty + player.true_sum)
+                (
+                    player_id,
+                    ScoreBucket.PERJURY,
+                    state.rules.perjury_penalty + player.true_sum,
+                )
             )
             continue
 
@@ -33,7 +37,11 @@ def compute_trial_scores(state: GameState) -> list[tuple[str, ScoreBucket, int]]
                     results.append((player_id, ScoreBucket.DUEL_WINNER, 0))
                 else:
                     results.append(
-                        (player_id, ScoreBucket.DUEL_LOSER, state.rules.duel_loss_penalty)
+                        (
+                            player_id,
+                            ScoreBucket.DUEL_LOSER,
+                            state.rules.duel_loss_penalty,
+                        )
                     )
             else:
                 # Covers both "2+ callers, no Challenge" and the solo

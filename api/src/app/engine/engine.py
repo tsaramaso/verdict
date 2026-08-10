@@ -108,7 +108,8 @@ def new_game(
 
     if not (rules.min_players <= len(player_ids) <= rules.max_players):
         raise IllegalAction(
-            f"Player count must be {rules.min_players}-{rules.max_players}, got {len(player_ids)}"
+            f"Player count must be {rules.min_players}-{rules.max_players}"
+            ", got {len(player_ids)}"
         )
     state = GameState(
         game_id=game_id,
@@ -176,7 +177,9 @@ def _start_round(state: GameState) -> list[Event]:
             idx = (state.dealer_index + i) % len(state.player_order)
             player_id = state.player_order[idx]
             player = state.players[player_id]
-            slot = next(s for s in range(state.rules.hand_size) if player.hand[s] is None)
+            slot = next(
+                s for s in range(state.rules.hand_size) if player.hand[s] is None
+            )
             player.hand[slot] = state.deck.pop()
 
     # Initial Glance: each player privately views their first two

@@ -6,7 +6,6 @@ from enum import StrEnum, auto
 
 from src.app.engine.cards import Card
 from src.app.engine.constants import (
-    BASE_RULES,
     DrawSource,
     Power,
     Rank,

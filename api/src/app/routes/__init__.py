@@ -15,8 +15,10 @@ from fastapi import APIRouter
 from src.app.routes.gameplay import router as gameplay_router
 from src.app.routes.games import router as games_router
 from src.app.routes.users import router as users_router
+from src.app.routes.ws import router as ws_router
 
 router = APIRouter()
 router.include_router(games_router)
 router.include_router(gameplay_router)
 router.include_router(users_router)
+router.include_router(ws_router)

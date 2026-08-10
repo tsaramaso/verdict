@@ -36,9 +36,58 @@ from src.app.schemas import (
     InvokePowerRequest,
     QuickDiscardRequest,
 )
+from src.app.websocket import manager
 from src.db.session import get_session
 
 router = APIRouter(prefix="/games", tags=["gameplay"])
+
+
+# ===== Broadcast Helper =====
+async def broadcast_game_update(game_id: str, game_state, events: list):
+    """Broadcast game state update to all connected players (scoped per player)."""
+    from src.app.websocket_helpers import scope_state_for_player
+
+    # Get all connected players for this game
+    connected_players = manager.get_players_in_game(game_id)
+
+    if not connected_players:
+        print(f"[WS] Broadcast to {game_id[:8]}...: no connected players")
+        return
+
+    # Send scoped message to each player
+    for player_id in connected_players:
+        # Scope events for this player (what they're allowed to see)
+        scoped_events = [event.payload_for(player_id) for event in events]
+
+        # Scope the full state for this player
+        scoped_state = scope_state_for_player(game_state, player_id)
+
+        # Build message with scoped events
+        message = {
+            "type": "game_state_update",
+            "game_id": game_id,
+            "phase": str(game_state.phase),
+            "current_player": game_state.current_player,
+            "round_number": game_state.round_number,
+            "events": scoped_events,
+            # Include updated state snapshot
+            "self": scoped_state["self"],
+            "opponents": scoped_state["opponents"],
+            "discard_pile": scoped_state["discard_pile"],
+        }
+
+        # Send to this specific player
+        try:
+            websocket = manager.active_connections[game_id][player_id]
+            await websocket.send_json(message)
+        except Exception as e:
+            print(f"[WS] Error sending to {player_id[:8]}...: {e}")
+            await manager.disconnect(game_id, player_id)
+
+    print(
+        f"[WS] Broadcast to game {game_id[:8]}...: "
+        f"sent to {len(connected_players)} players"
+    )
 
 
 # ---------------------------------------------------------------------
@@ -47,7 +96,7 @@ router = APIRouter(prefix="/games", tags=["gameplay"])
 
 
 @router.post("/{game_id}/draw", response_model=ActionResult)
-def draw(
+async def draw(
     request: DrawRequest,
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -55,11 +104,15 @@ def draw(
 ) -> ActionResult:
     events = _call(engine.draw_card, state, player_id, request.source)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/action", response_model=ActionResult)
-def take_action(
+async def take_action(
     request: ActionRequest,
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -69,6 +122,10 @@ def take_action(
         engine.take_action, state, player_id, request.choice, request.slot_index
     )
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
@@ -78,18 +135,22 @@ def take_action(
 
 
 @router.post("/{game_id}/power/decline", response_model=ActionResult)
-def decline_power(
+async def decline_power(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.decline_power, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/power/invoke", response_model=ActionResult)
-def invoke_power(
+async def invoke_power(
     request: InvokePowerRequest,
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -104,11 +165,15 @@ def invoke_power(
         request.target_index,
     )
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/power/decree-swap", response_model=ActionResult)
-def decree_swap(
+async def decree_swap(
     request: DecreeSwapRequest,
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -122,6 +187,10 @@ def decree_swap(
         request.own_slot_index,
     )
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
@@ -131,7 +200,7 @@ def decree_swap(
 
 
 @router.post("/{game_id}/quick-discard", response_model=ActionResult)
-def quick_discard(
+async def quick_discard(
     request: QuickDiscardRequest,
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -139,11 +208,15 @@ def quick_discard(
 ) -> ActionResult:
     events = _call(engine.quick_discard, state, player_id, request.slot_index)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/quick-discard/close", response_model=ActionResult)
-def close_quick_discard(
+async def close_quick_discard(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
@@ -160,6 +233,10 @@ def close_quick_discard(
     """
     events = _call(engine.close_quick_discard_window, state)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
@@ -169,88 +246,108 @@ def close_quick_discard(
 
 
 @router.post("/{game_id}/trial/testify-first", response_model=ActionResult)
-def testify_first(
+async def testify_first(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_first, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-call", response_model=ActionResult)
-def pass_call(
+async def pass_call(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_call_window, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/testify-cross", response_model=ActionResult)
-def testify_cross(
+async def testify_cross(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_cross, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-match", response_model=ActionResult)
-def pass_match(
+async def pass_match(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_match_window, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/challenge", response_model=ActionResult)
-def challenge(
+async def challenge(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_challenge, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-duel", response_model=ActionResult)
-def pass_duel(
+async def pass_duel(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_duel_window, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/plea", response_model=ActionResult)
-def plea(
+async def plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_plea, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-plea", response_model=ActionResult)
-def pass_plea(
+async def pass_plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_final_plea_window, state, player_id)
     _persist(session, events)
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
     return _result(state, events, player_id)
