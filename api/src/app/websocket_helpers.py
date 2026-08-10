@@ -9,7 +9,9 @@ Reference: WEBSOCKET_STATE_SCOPING_CORRECTED.md
 from src.app.engine.state import GameState
 
 
-def scope_state_for_player(game_state: GameState, player_id: str) -> dict:
+def scope_state_for_player(
+    game_state: GameState, player_id: str, player_names: dict[str, str] | None = None
+) -> dict:
     """
     Return only what this player should see.
 
@@ -23,6 +25,7 @@ def scope_state_for_player(game_state: GameState, player_id: str) -> dict:
     Args:
         game_state: Full GameState from registry
         player_id: Player UUID receiving this state
+        player_names: Optional dict mapping player_id -> player_name for responses
 
     Returns:
         Dict with structure:
@@ -34,6 +37,8 @@ def scope_state_for_player(game_state: GameState, player_id: str) -> dict:
             "discard_pile": {...}
         }
     """
+    if player_names is None:
+        player_names = {}
 
     # === SELF HAND ===
     # Player knows their own initial glance (slots 0-1)
@@ -92,6 +97,7 @@ def scope_state_for_player(game_state: GameState, player_id: str) -> dict:
         opponents.append(
             {
                 "player_id": opp_id,
+                "player_name": player_names.get(opp_id, "Unknown"),  # Include name
                 "hand_count": opp_player.hand_size,
                 "known_cards": known_opponent_cards,
                 "spied_slots": list(

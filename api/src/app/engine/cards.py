@@ -54,7 +54,7 @@ class Card:
         )
 
     def to_public_dict(self) -> dict:
-        return {"rank": self.rank, "suit": self.suit}
+        return {"rank": self.rank.name, "suit": self.suit.name}
 
 
 def build_deck(seed: str, rules: Rules = BASE_RULES) -> list[Card]:

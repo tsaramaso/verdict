@@ -14,11 +14,13 @@ Connection flow:
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, WebSocketException
 from jose import jwt
+from sqlalchemy import select
 
 from src.app.websocket import manager
+from src.db.session import get_session
 from src.config import HASH_SECRET_KEY, ALGORITHM
 
-router = APIRouter()
+router = APIRouter(prefix="/ws")
 
 
 async def verify_ws_token(token: str) -> str:
@@ -66,6 +68,9 @@ async def websocket_endpoint(
     Path params:
         game_id: The game to connect to
     """
+    print("[WS] DEBUG: websocket_endpoint called!")
+    print(f"[WS] DEBUG: game_id={game_id}")
+    print(f"[WS] DEBUG: token={token[:20]}...")
     player_id = None
 
     try:
@@ -85,11 +90,22 @@ async def websocket_endpoint(
         # Fetch current state from registry and scope it for this player
         from src.app.game_registry import get_registry
         from src.app.websocket_helpers import scope_state_for_player
+        from src.app.models.db import User
 
         registry = get_registry()
         try:
             game_state = registry.get(game_id)
-            scoped_state = scope_state_for_player(game_state, player_id)
+
+            # Get player names for better logging/display
+            player_ids = [player_id] + [
+                pid for pid in game_state.player_order if pid != player_id
+            ]
+            session = get_session().__next__()
+            users = session.exec(select(User).where(User.uuid.in_(player_ids))).all()
+            player_names = {u.uuid: u.name or u.uuid for u in users}
+            session.close()
+
+            scoped_state = scope_state_for_player(game_state, player_id, player_names)
             await websocket.send_json(scoped_state)
         except Exception as e:
             print(f"[WS] Error fetching game state: {e}")
