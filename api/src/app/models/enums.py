@@ -29,3 +29,4 @@ class GameStatus(StrEnum):
     IN_PROGRESS = auto()
     COMPLETED = auto()
     ABANDONED = auto()
+    CANCELLED = auto()

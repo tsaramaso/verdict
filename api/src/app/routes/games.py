@@ -21,7 +21,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Path
+from loguru import logger
 from sqlmodel import Session, select
 
 from src.app.engine.constants import TurnDirection
@@ -137,10 +138,11 @@ def list_games(
     get_current_player, since there's no single game_id in the path to
     scope against.
     """
-    rows = session.exec(
+    games = session.exec(
         select(Game, GamePlayer)
         .join(GamePlayer, GamePlayer.game_id == Game.id)
         .where(GamePlayer.user_uuid == user.uuid)
+        .where(Game.status != GameStatus.CANCELLED)
         .order_by(Game.created_at.desc())
     ).all()
     return GameListOut(
@@ -155,7 +157,7 @@ def list_games(
                 started_at=game.started_at.isoformat() if game.started_at else None,
                 ended_at=game.ended_at.isoformat() if game.ended_at else None,
             )
-            for game, player in rows
+            for game, player in games
         ]
     )
 
@@ -199,3 +201,40 @@ def get_events(
         game_id=game_id,
         events=[EventOut.from_db_event(r, player_id) for r in rows],
     )
+
+@router.delete("/{game_id}", status_code=status.HTTP_200_OK)
+def cancel_game(
+    game_id: str = Path(...),
+    player_id: str = Depends(get_current_player),
+    session: Session = Depends(get_session),
+):
+    game = session.exec(
+        select(Game).where(Game.id == game_id)
+    ).first()
+    
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    if game.status == GameStatus.CANCELLED:
+        raise HTTPException(status_code=409, detail="Game already cancelled")
+    
+    if game.status != GameStatus.WAITING_FOR_PLAYERS:
+        raise HTTPException(status_code=409, detail="Cannot cancel a game in progress")
+    
+    creator = session.exec(
+        select(GamePlayer)
+        .where(GamePlayer.game_id == game_id)
+        .where(GamePlayer.seat_order == 0)
+    ).first()
+    
+    if not creator or creator.user_uuid != player_id:
+        raise HTTPException(status_code=403, detail="Only creator can cancel")
+    
+    # Soft delete
+    game.status = GameStatus.CANCELLED
+    session.add(game)
+    session.commit()
+    
+    logger.info("game_cancelled", game_id=game_id, cancelled_by=player_id)
+    
+    return {"message": "Game cancelled"}
