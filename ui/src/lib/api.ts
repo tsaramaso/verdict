@@ -100,3 +100,7 @@ export async function createGame(playerIds: string[]) {
     }),
   });
 }
+
+export async function getGameRecap(gameId: string) {
+  return apiCall(`/games/${gameId}/recap`);
+}

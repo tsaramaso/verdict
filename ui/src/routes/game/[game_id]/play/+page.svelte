@@ -7,6 +7,13 @@
   let gameId = $derived(data?.gameId);
   let gameStatus = $derived(data?.gameStatus);
   let error = $derived(data?.error);
+
+  // Navigate to recap when game ends
+  $effect(() => {
+    if (gameStatus?.game_over) {
+      goto(`/game/${gameId}/recap`);
+    }
+  });
 </script>
 
 <div class="game-layout">
