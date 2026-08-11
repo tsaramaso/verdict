@@ -101,6 +101,39 @@ export const actions = {
     }
   },
 
+  cancelGame: async ({ request, cookies }) => {
+    const token = cookies.get('auth_token');
+
+    if (!token) {
+      return { error: 'Not authenticated' };
+    }
+
+    try {
+      const formData = await request.formData();
+      const gameId = formData.get('gameId');
+
+      if (!gameId) {
+        return { error: 'Game ID required' };
+      }
+
+      const response = await fetch(`${API_URL}/games/${gameId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        return { error: error.detail || 'Failed to cancel game' };
+      }
+
+      return { success: true, gameId };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to cancel game' };
+    }
+  },
+
   logout: async ({ cookies }) => {
     cookies.delete('auth_token', { path: '/' });
     throw redirect(303, '/login');

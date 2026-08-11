@@ -40,8 +40,10 @@
   let selectedUserId = $state('');
   let createGameError = $state('');
   let isCreatingGame = $state(false);
+  let cancellingGameIds = $state(new Set<string>());
 
   let selectedPlayers = $derived(Array.from(selectedUsers.values()));
+  let filteredGames = $derived(games.filter((g) => !cancellingGameIds.has(g.game_id)));
 
   onMount(() => {
     // Pre-add current user to selected players
@@ -76,6 +78,25 @@
     const newMap = new Map(selectedUsers);
     newMap.delete(uuid);
     selectedUsers = newMap;
+  }
+
+  function handleCancelGame(result: ActionResult) {
+    if (result.type === 'success' && 'gameId' in result.data) {
+      // Keep the game in cancellingGameIds to prevent it from reappearing
+      // It's already hidden from the UI via filteredGames
+    } else if (result.type === 'error' && result.error) {
+      // Remove from cancelling set if there was an error so user can retry
+      const gameId = new FormData(result as any).get('gameId') as string;
+      if (gameId) {
+        cancellingGameIds.delete(gameId);
+      }
+    }
+  }
+
+  function onCancelClick(e: Event, gameId: string) {
+    e.stopPropagation();
+    // Mark game as being cancelled
+    cancellingGameIds.add(gameId);
   }
 
 </script>
@@ -219,19 +240,43 @@
               </div>
             {:else}
               <div class="games-list">
-                {#each games as game (game.game_id)}
-                  <button class="game-card" onclick={() => goto(`/game/${game.game_id}/play`)}>
-                    <div class="game-header">
-                      <span class="game-status" style="color: {getStatusColor(game.status)}">
-                        {getGameStatusLabel(game.status)}
-                      </span>
-                      <span class="game-round">Round {game.current_round}</span>
-                    </div>
-                    <div class="game-details">
-                      <p class="game-id">Game: {game.game_id.slice(0, 8)}...</p>
-                      <p class="game-date">Created: {new Date(game.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </button>
+                {#each filteredGames as game (game.game_id)}
+                  <div class="game-card-wrapper">
+                    <button class="game-card" onclick={() => goto(`/game/${game.game_id}/play`)}>
+                      <div class="game-header">
+                        <span class="game-status" style="color: {getStatusColor(game.status)}">
+                          {getGameStatusLabel(game.status)}
+                        </span>
+                        <span class="game-round">Round {game.current_round}</span>
+                      </div>
+                      <div class="game-details">
+                        <p class="game-id">Game: {game.game_id.slice(0, 8)}...</p>
+                        <p class="game-date">Created: {new Date(game.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </button>
+                    <form
+                      method="POST"
+                      action="?/cancelGame"
+                      use:enhance={() => {
+                        onCancelClick(new Event('click'), game.game_id);
+                        return async ({ result }) => {
+                          handleCancelGame(result);
+                          await applyAction(result);
+                        };
+                      }}
+                      class="cancel-form"
+                    >
+                      <input type="hidden" name="gameId" value={game.game_id} />
+                      <button
+                        type="submit"
+                        class="btn-close-game"
+                        title="Cancel this game"
+                        disabled={cancellingGameIds.has(game.game_id)}
+                      >
+                        ✕
+                      </button>
+                    </form>
+                  </div>
                 {/each}
               </div>
             {/if}
@@ -370,8 +415,7 @@
     margin-bottom: var(--spacing-md);
   }
 
-  select,
-  input[type="radio"] {
+  select{
     font-family: inherit;
   }
 
@@ -497,27 +541,6 @@
     cursor: not-allowed;
   }
 
-  .radio-group {
-    display: flex;
-    gap: var(--spacing-lg);
-  }
-
-  .radio-label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    cursor: pointer;
-    font-size: var(--font-size-base);
-  }
-
-  .radio-label input[type="radio"] {
-    cursor: pointer;
-  }
-
-  .radio-label input[type="radio"]:disabled {
-    cursor: not-allowed;
-  }
-
   .btn-create-game {
     width: 100%;
     padding: var(--spacing-md);
@@ -564,7 +587,14 @@
     overflow-y: auto;
   }
 
+  .game-card-wrapper {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+  }
+
   .game-card {
+    flex: 1;
     background-color: var(--color-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -582,6 +612,44 @@
     border-color: var(--color-primary);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+  }
+
+  .cancel-form {
+    display: flex;
+    align-items: flex-start;
+    padding-top: var(--spacing-xs);
+  }
+
+  .btn-close-game {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    cursor: pointer;
+    color: var(--color-text-light);
+    font-size: var(--font-size-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    padding: 0;
+  }
+
+  .btn-close-game:hover:not(:disabled) {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    background-color: var(--color-danger-light);
+  }
+
+  .btn-close-game:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-close-game:active:not(:disabled) {
+    transform: scale(0.95);
   }
 
   .game-header {
