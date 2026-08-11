@@ -20,6 +20,9 @@ from sqlmodel import Session
 
 from src.app.engine.events import Event as EngineEvent
 from src.app.models.db import Event as DBEvent
+from src.logging_config import get_logger
+
+logger = get_logger("event_log")
 
 
 def _to_db_event(event: EngineEvent) -> DBEvent:
@@ -52,11 +55,29 @@ def persist_events(session: Session, events: list[EngineEvent]) -> list[DBEvent]
     """
     if not events:
         return []
+
     rows = [_to_db_event(e) for e in events]
     session.add_all(rows)
+
     try:
         session.commit()
-    except Exception:
+
+        # Log successful persistence
+        game_id = events[0].game_id if events else "unknown"
+        event_types = [e.type.name for e in events]
+        actor = events[0].actor if events else None
+
+        logger.info(
+            "events_persisted",
+            game_id=str(game_id)[:8],
+            count=len(events),
+            types=event_types,
+            actor=str(actor)[:8] if actor else None,
+            sequence_start=events[0].sequence if events else None,
+            sequence_end=events[-1].sequence if events else None,
+        )
+
+    except Exception as e:
         # Leaving the session in SQLAlchemy's post-failure "aborted
         # transaction" state would break every subsequent operation on
         # it — and routes hold one session for their whole request
@@ -65,7 +86,15 @@ def persist_events(session: Session, events: list[EngineEvent]) -> list[DBEvent]
         # sees (e.g. a 409/500), same "fail loud and stop cleanly"
         # posture as everywhere else in this project.
         session.rollback()
+
+        logger.error(
+            "events_persist_failed",
+            game_id=str(events[0].game_id)[:8] if events else "unknown",
+            count=len(events),
+            error=str(e),
+        )
         raise
+
     for row in rows:
         session.refresh(row)
     return rows

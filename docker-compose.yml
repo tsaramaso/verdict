@@ -24,11 +24,14 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql+psycopg://verdict:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/verdict
+      ENVIRONMENT: production
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      - api-logs:/app/logs
 
   ui:
     build: ./ui
@@ -43,3 +46,4 @@ services:
 
 volumes:
   db-data:
+  api-logs:

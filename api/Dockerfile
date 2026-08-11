@@ -52,8 +52,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 RUN chown -R nonroot:nonroot /app
 
+# Create logs directory for loguru
+RUN mkdir -p /app/logs && chown -R nonroot:nonroot /app/logs
+
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
+
+# Set production environment
+ENV ENVIRONMENT=production
+ENV PYTHONUNBUFFERED=1
 
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []

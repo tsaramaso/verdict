@@ -8,12 +8,12 @@ dependencies = [
     "fastapi[standard]>=0.141.1",
     "sqlalchemy>=2.0.51",
     "sqlmodel>=0.0.39",
-    # psycopg (v3), not psycopg2 — SQLAlchemy 2.0's recommended driver.
-    # DATABASE_URL must use the postgresql+psycopg:// scheme to match.
     "psycopg[binary]>=3.1",
     "alembic>=1.19.0",
     "gunicorn>=26.0.0",
     "python-jose[cryptography]>=3.5.0",
+    "loguru>=0.7.2",
+    "python-json-logger>=2.0.7",
 ]
 
 [dependency-groups]
@@ -25,4 +25,4 @@ dev = [
 
 [tool.ruff.lint]
 ignore = ["B008"]
-select = ["E", "F", "W"]  # Include other rules you wan
+select = ["E", "F", "W"] 

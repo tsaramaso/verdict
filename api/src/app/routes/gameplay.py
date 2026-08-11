@@ -49,12 +49,15 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
     from src.app.models.db import User
     from src.db.session import get_session
     from sqlalchemy import select
+    from src.logging_config import get_logger
+
+    logger = get_logger("broadcast")
 
     # Get all connected players for this game
     connected_players = manager.get_players_in_game(game_id)
 
     if not connected_players:
-        print(f"[WS] Broadcast to {game_id[:8]}...: no connected players")
+        logger.debug("broadcast_no_players", game_id=str(game_id)[:8])
         return
 
     # Get player names for responses
@@ -91,13 +94,27 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
         try:
             websocket = manager.active_connections[game_id][player_id]
             await websocket.send_json(message)
+            logger.debug(
+                "broadcast_sent",
+                game_id=str(game_id)[:8],
+                player=str(player_id)[:8],
+                player_name=player_names.get(player_id, "unknown"),
+                events_count=len(scoped_events),
+            )
         except Exception as e:
-            print(f"[WS] Error sending to {player_id[:8]}...: {e}")
+            logger.error(
+                "broadcast_send_failed",
+                game_id=str(game_id)[:8],
+                player=str(player_id)[:8],
+                error=str(e),
+            )
             await manager.disconnect(game_id, player_id)
 
-    print(
-        f"[WS] Broadcast to game {game_id[:8]}...: "
-        f"sent to {len(connected_players)} players"
+    logger.info(
+        "broadcast_complete",
+        game_id=str(game_id)[:8],
+        players_count=len(connected_players),
+        events_count=len(events),
     )
 
 

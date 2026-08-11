@@ -17,8 +17,12 @@ from jose import jwt
 from sqlalchemy import select
 
 from src.app.websocket import manager
+from src.app.models.db import User
 from src.db.session import get_session
 from src.config import HASH_SECRET_KEY, ALGORITHM
+from src.logging_config import get_logger
+
+logger = get_logger("websocket")
 
 router = APIRouter(prefix="/ws")
 
@@ -68,29 +72,36 @@ async def websocket_endpoint(
     Path params:
         game_id: The game to connect to
     """
-    print("[WS] DEBUG: websocket_endpoint called!")
-    print(f"[WS] DEBUG: game_id={game_id}")
-    print(f"[WS] DEBUG: token={token[:20]}...")
     player_id = None
 
     try:
         # STEP 1: AUTHENTICATE
-        print(f"[WS] Connection attempt to game {game_id[:8]}... with token")
+        logger.debug("ws_connection_attempt", game_id=str(game_id)[:8])
         player_id = await verify_ws_token(token)
-        print(f"[WS] Authenticated: {player_id[:8]}...")
+        logger.info(
+            "ws_authenticated", game_id=str(game_id)[:8], player_id=str(player_id)[:8]
+        )
 
         # STEP 2: ACCEPT CONNECTION
         await websocket.accept()
-        print(f"[WS] Connection accepted for {player_id[:8]}...")
+        logger.debug(
+            "ws_connection_accepted",
+            game_id=str(game_id)[:8],
+            player_id=str(player_id)[:8],
+        )
 
         # STEP 3: REGISTER WITH MANAGER
         await manager.connect(game_id, player_id, websocket)
+        logger.debug(
+            "ws_registered_manager",
+            game_id=str(game_id)[:8],
+            player_id=str(player_id)[:8],
+        )
 
         # STEP 4: SEND INITIAL GAME STATE
         # Fetch current state from registry and scope it for this player
         from src.app.game_registry import get_registry
         from src.app.websocket_helpers import scope_state_for_player
-        from src.app.models.db import User
 
         registry = get_registry()
         try:
@@ -103,12 +114,24 @@ async def websocket_endpoint(
             session = get_session().__next__()
             users = session.exec(select(User).where(User.uuid.in_(player_ids))).all()
             player_names = {u.uuid: u.name or u.uuid for u in users}
+            player_name = player_names.get(player_id, "unknown")
             session.close()
 
             scoped_state = scope_state_for_player(game_state, player_id, player_names)
             await websocket.send_json(scoped_state)
+            logger.info(
+                "ws_initial_state_sent",
+                game_id=str(game_id)[:8],
+                player_id=str(player_id)[:8],
+                player_name=player_name,
+            )
         except Exception as e:
-            print(f"[WS] Error fetching game state: {e}")
+            logger.error(
+                "ws_initial_state_failed",
+                game_id=str(game_id)[:8],
+                player_id=str(player_id)[:8] if player_id else "unknown",
+                error=str(e),
+            )
             await websocket.close(code=1011, reason="Could not load game state")
             return
 
@@ -127,40 +150,65 @@ async def websocket_endpoint(
                 if msg_type == "ping":
                     # Keep-alive ping
                     await websocket.send_json({"type": "pong"})
+                    logger.debug(
+                        "ws_pong_sent",
+                        player_id=str(player_id)[:8] if player_id else "unknown",
+                    )
 
                 elif msg_type == "ready":
                     # Client ready for game state
-                    print(f"[WS] Player {player_id[:8]}... is ready")
+                    logger.debug(
+                        "ws_player_ready",
+                        game_id=str(game_id)[:8],
+                        player_id=str(player_id)[:8] if player_id else "unknown",
+                    )
                     await websocket.send_json(
                         {"type": "ready_ack", "message": "Ready to receive updates"}
                     )
 
                 else:
-                    print(f"[WS] Unknown message type: {msg_type}")
+                    logger.warning(
+                        "ws_unknown_message_type",
+                        msg_type=msg_type,
+                        player_id=str(player_id)[:8] if player_id else "unknown",
+                    )
 
             except json.JSONDecodeError:
-                print(f"[WS] Invalid JSON from {player_id[:8]}...")
+                logger.warning(
+                    "ws_invalid_json",
+                    player_id=str(player_id)[:8] if player_id else "unknown",
+                )
                 await websocket.send_json({"type": "error", "message": "Invalid JSON"})
 
     except WebSocketException as e:
         # Auth failed or other WS error
-        print(f"[WS] WebSocket exception: {e.reason}")
+        logger.warning("ws_exception", game_id=str(game_id)[:8], reason=str(e.reason))
         await websocket.close(code=e.code, reason=e.reason)
 
     except WebSocketDisconnect:
         # Client closed connection normally
         if player_id:
             await manager.disconnect(game_id, player_id)
+            logger.info(
+                "ws_disconnected",
+                game_id=str(game_id)[:8],
+                player_id=str(player_id)[:8],
+            )
 
             # Notify remaining players
             await manager.broadcast(
                 game_id, {"type": "player_disconnected", "player_id": player_id}
             )
-        print(f"[WS] Disconnected: {player_id[:8] if player_id else 'unknown'}...")
 
     except Exception as e:
         # Unexpected error
-        print(f"[WS] Unexpected error: {type(e).__name__}: {e}")
+        logger.error(
+            "ws_unexpected_error",
+            game_id=str(game_id)[:8],
+            player_id=str(player_id)[:8] if player_id else "unknown",
+            error_type=type(e).__name__,
+            error=str(e),
+        )
         if player_id:
             await manager.disconnect(game_id, player_id)
         try:
