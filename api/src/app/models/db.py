@@ -159,3 +159,16 @@ class Event(SQLModel, table=True):
     )
 
     game: Game = Relationship(back_populates="events")
+
+
+class Recap(SQLModel, table=True):
+    """End-game snapshot: final rankings, score progression, player stats."""
+    
+    __tablename__ = "recaps"
+    
+    id: int | None = Field(default=None, primary_key=True)
+    game_id: str = Field(foreign_key="games.id", nullable=False, unique=True, index=True)
+    created_at: datetime = Field(default_factory=_utcnow, nullable=False)
+    
+    # JSON: {"final_rankings": [...], "score_progression": {...}}
+    data: dict = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))

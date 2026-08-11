@@ -32,7 +32,7 @@ from src.app.engine.errors import IllegalAction
 from src.app.engine.state import GameState
 from src.app.game_registry import GameRegistry, get_game_state, get_registry
 from src.app.models.db import Event as DBEvent
-from src.app.models.db import Game, GamePlayer, User
+from src.app.models.db import Game, GamePlayer, User, Recap
 from src.app.models.enums import GameStatus
 from src.app.routes._shared import _persist
 from src.app.schemas import (
@@ -238,3 +238,20 @@ def cancel_game(
     logger.info("game_cancelled", game_id=game_id, cancelled_by=player_id)
     
     return {"message": "Game cancelled"}
+
+
+@router.get("/{game_id}/recap")
+def get_recap(
+    game_id: str = Path(...),
+    player_id: str = Depends(get_current_player),
+    session: Session = Depends(get_session),
+):
+    """Get end-game recap (final rankings, score progression)."""
+    recap = session.exec(
+        select(Recap).where(Recap.game_id == game_id)
+    ).first()
+    
+    if not recap:
+        raise HTTPException(status_code=404, detail="Recap not found")
+    
+    return recap.data
