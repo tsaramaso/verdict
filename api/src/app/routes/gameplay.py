@@ -87,6 +87,8 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
             # Include updated state snapshot
             "self": scoped_state["self"],
             "opponents": scoped_state["opponents"],
+            "my_opponent_knowledge": scoped_state["my_opponent_knowledge"],
+            "trial": scoped_state["trial"],
             "discard_pile": scoped_state["discard_pile"],
         }
 

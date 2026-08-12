@@ -19,7 +19,8 @@ def scope_state_for_player(
     - Self hand: slots 0-1 are "known" (initial glance), others unknown
       unless card.known_by contains this player
     - Opponent hands: only card count visible, no card details
-    - Opponent knowledge: which slots they've spied on THIS player
+    - Opponent knowledge: which opponents know YOUR slots (for 👁️ icon)
+    - Trial state: full trial tracking for button eligibility gating
     - Discard pile: all visible cards shown
 
     Args:
@@ -34,6 +35,8 @@ def scope_state_for_player(
             "game": {...},
             "self": {...},
             "opponents": [...],
+            "my_opponent_knowledge": {...},
+            "trial": {...},
             "discard_pile": {...}
         }
     """
@@ -118,6 +121,43 @@ def scope_state_for_player(
             }
         )
 
+    # === MY OPPONENT KNOWLEDGE ===
+    # Which opponents know about YOUR slots (unified "Opponent Knows" icon)
+    # Scoping rule: For each opponent, if they're in any of your cards' known_by,
+    # they know that slot.
+    my_opponent_knowledge: dict[str, list[int]] = {}
+    self_player = game_state.players[player_id]
+    for slot_idx, card in enumerate(self_player.hand):
+        if card is None:
+            # Empty slot (quick-discarded)
+            continue
+        # Who knows about this slot?
+        for opponent_id in game_state.player_order:
+            if opponent_id == player_id:
+                continue
+            if opponent_id in card.known_by:
+                # This opponent knows this card (hence knows this slot)
+                if opponent_id not in my_opponent_knowledge:
+                    my_opponent_knowledge[opponent_id] = []
+                my_opponent_knowledge[opponent_id].append(slot_idx)
+
+    # === TRIAL STATE ===
+    # Include full trial state for button eligibility gating
+    trial_state = {
+        "first_window_callers": game_state.trial.first_window_callers,
+        "passed_first": list(game_state.trial.passed_first),
+        "cross_callers": game_state.trial.cross_callers,
+        "passed_cross": list(game_state.trial.passed_cross),
+        "perjury_removed": list(game_state.trial.perjury_removed),
+        "truly_eligible": game_state.trial.truly_eligible,
+        "challenged": list(game_state.trial.challenged),
+        "passed_challenge": list(game_state.trial.passed_challenge),
+        "duel_occurred": game_state.trial.duel_occurred,
+        "duel_winners": game_state.trial.duel_winners,
+        "plea_taken": list(game_state.trial.plea_taken),
+        "plea_declined": list(game_state.trial.plea_declined),
+    }
+
     # === ASSEMBLE RESPONSE ===
     return {
         "type": "game_state",
@@ -134,6 +174,8 @@ def scope_state_for_player(
             "position": game_state.player_order.index(player_id),
         },
         "opponents": opponents,
+        "my_opponent_knowledge": my_opponent_knowledge,
+        "trial": trial_state,
         "discard_pile": {
             "count": len(game_state.discard_pile),
             "visible_cards": discard_pile_cards,
