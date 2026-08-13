@@ -55,13 +55,17 @@
   <!-- Card Back Visual (Geometric Rectangle) -->
   {#if !card || !card.known}
     <div class="card-back">
+        <div class="card-back__pattern"></div>
+      </div>
+  {:else}
+    <div class="card-back">
       <div class="card-back__pattern"></div>
     </div>
   {/if}
   <!-- Rank Badge (if known) -->
   {#if card?.known && showRankBadge && card.rank && card.suit}
     <div class="rank-badge">
-      <span class="badge__text">{card.rank}<br/>{card.suit}</span>
+      <span class="badge__text">{RANK_LABELS[card.rank]}<br/>{SUIT_LABELS[card.suit]}</span>
     </div>
   {/if}
 
