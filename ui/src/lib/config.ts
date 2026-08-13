@@ -3,6 +3,10 @@
  * Colors, timings, card definitions, UI settings all in one place
  */
 
+import { CardRank, SUIT_COLORS, SUIT_LABELS, CardSuit, POWER_CARDS } from "./constants/cards";
+import type { CardSlot } from "./stores/gameState";
+
+
 // ============================================
 // TIMERS & GAME TIMING (in seconds)
 // ============================================
@@ -73,66 +77,6 @@ export const COLORS = {
 } as const;
 
 // ============================================
-// GAME CARDS
-// ============================================
-export const CARD_RANKS = [
-  'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K',
-] as const;
-
-export type CardRank = typeof CARD_RANKS[number];
-
-export const CARD_SUITS = ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'] as const;
-
-export type CardSuit = typeof CARD_SUITS[number];
-
-export const CARD_VALUES: Record<CardRank, number> = {
-  A: 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-  '6': 6,
-  '7': 7,
-  '8': 8,
-  '9': 9,
-  '10': 10,
-  J: 10,
-  Q: 10,
-  K: 10,
-} as const;
-
-export const SUIT_SYMBOLS: Record<CardSuit, string> = {
-  HEARTS: '♥',
-  DIAMONDS: '♦',
-  CLUBS: '♣',
-  SPADES: '♠',
-} as const;
-
-export const SUIT_COLORS: Record<CardSuit, string> = {
-  HEARTS: COLORS.hearts,
-  DIAMONDS: COLORS.diamonds,
-  CLUBS: COLORS.clubs,
-  SPADES: COLORS.spades,
-} as const;
-
-// Power cards mapping
-export const POWER_CARDS: Record<CardRank, { name: string; ability: string } | undefined> = {
-  A: undefined,
-  '2': undefined,
-  '3': undefined,
-  '4': undefined,
-  '5': undefined,
-  '6': undefined,
-  '7': { name: 'Glance', ability: 'Peek at your own slot' },
-  '8': { name: 'Glance', ability: 'Peek at your own slot' },
-  '9': { name: 'Spy', ability: 'Peek at opponent slot' },
-  '10': { name: 'Spy', ability: 'Peek at opponent slot' },
-  J: { name: 'Smuggle', ability: 'Blind card exchange' },
-  Q: { name: 'Decree', ability: 'Peek and optional swap' },
-  K: undefined,
-} as const;
-
-// ============================================
 // GAME PHASES
 // ============================================
 export const GAME_PHASES = {
@@ -197,18 +141,6 @@ export const LAYOUT = {
 } as const;
 
 // ============================================
-// RENAISSANCE MECHANICS
-// ============================================
-export const RENAISSANCE = {
-  thresholds: [50, 100] as const,
-  colors: {
-    excellent: COLORS.success, // Green: <20 to Renaissance
-    good: COLORS.warning, // Orange: 20-30
-    warning: COLORS.danger, // Red: >30
-  },
-} as const;
-
-// ============================================
 // UI BEHAVIOR
 // ============================================
 export const UI = {
@@ -255,44 +187,68 @@ export function getSuitColor(suit: CardSuit): string {
 }
 
 export function getSuitSymbol(suit: CardSuit): string {
-  return SUIT_SYMBOLS[suit];
+  return SUIT_LABELS[suit];
 }
 
-export function getCardValue(rank: CardRank): number {
-  return CARD_VALUES[rank];
+export function getCardValue(rank: CardRank, suit: CardSuit, black_king_value: number, red_king_value: number, face_rank_values: Record<CardRank, number>): number {
+  if (rank == CardRank.KING) {
+    return (suit == CardSuit.SPADE || suit == CardSuit.CLUB) ? black_king_value : red_king_value;
+  }
+  return face_rank_values[rank];
 }
 
 export function isPowerCard(rank: CardRank): boolean {
-  return !!POWER_CARDS[rank];
+  return rank in POWER_CARDS;
 }
 
 export function getPowerName(rank: CardRank): string | null {
   return POWER_CARDS[rank]?.name || null;
 }
 
-export function getPointsToRenaissance(score: number): number {
-  for (const target of RENAISSANCE.thresholds) {
+export function getPointsToRenaissance(score: number, thresholds: number[]): number {
+  for (const target of thresholds) {
     if (score < target) {
       return target - score;
     }
   }
-  return Number.MAX_SAFE_INTEGER;
+  throw new Error("Thresholds missing in rules (Status: 404)");
+}
+export function calculateKnownSum(
+  hand: CardSlot[], 
+  black_king_value: number, 
+  red_king_value: number, 
+  face_rank_values: Record<CardRank, number>
+): number {
+  return hand
+    .filter((slot): slot is Required<CardSlot> => 
+      slot.known && slot.rank !== undefined && slot.suit !== undefined
+    )
+    .reduce((total, currentSlot) => {
+      const cardValue = getCardValue(
+        currentSlot.rank, 
+        currentSlot.suit, 
+        black_king_value, 
+        red_king_value, 
+        face_rank_values
+      );
+      return total + cardValue;
+    }, 0); //
 }
 
-export function getRenaissanceColor(pointsToNext: number): string {
-  if (pointsToNext > 30) return RENAISSANCE.colors.warning;
-  if (pointsToNext > 20) return RENAISSANCE.colors.good;
-  return RENAISSANCE.colors.excellent;
+type AutoAdvancePhase = typeof UI.autoAdvancePhases[number];
+
+export function isAutoAdvancePhase(phase: string): phase is AutoAdvancePhase {
+  return (UI.autoAdvancePhases as readonly string[]).includes(phase);
 }
 
-export function isAutoAdvancePhase(phase: string): boolean {
-  return UI.autoAdvancePhases.includes(phase);
+type IsActivePlayerPhase = typeof UI.activePlayerPhases[number];
+
+export function isActivePlayerPhase(phase: string): phase is IsActivePlayerPhase {
+  return (UI.activePlayerPhases as readonly string[]).includes(phase);
 }
 
-export function isActivePlayerPhase(phase: string): boolean {
-  return UI.activePlayerPhases.includes(phase);
-}
+type SimultaneousPhases = typeof UI.simultaneousPhases[number];
 
-export function isSimultaneousPhase(phase: string): boolean {
-  return UI.simultaneousPhases.includes(phase);
+export function isSimultaneousPhase(phase: string): phase is SimultaneousPhases {
+  return (UI.simultaneousPhases as readonly string[]).includes(phase);
 }

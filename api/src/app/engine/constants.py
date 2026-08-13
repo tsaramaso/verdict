@@ -24,19 +24,6 @@ from enum import StrEnum, auto
 
 from pydantic import BaseModel
 
-RED_KING_VALUE = 0
-BLACK_KING_VALUE = 13
-HAND_SIZE = 4  # rules.md §3
-ELIGIBLE_THRESHOLD = 7  # rules.md §1 glossary — "Eligible"
-MIN_PLAYERS = 2  # rules.md §3, confirmed
-MAX_PLAYERS = 5  # rules.md §3, confirmed
-PERJURY_PENALTY = 25  # rules.md §6.7 — capped +25, stacked with true sum
-DUEL_LOSS_PENALTY = 50  # rules.md §6.7
-FALSE_CROSS_TESTIMONY_PENALTY = 25  # rules.md §6.7
-PLEA_PENALTY = 25  # rules.md §6.7
-RENAISSANCE_THRESHOLDS = {50: 25, 100: 50}  # rules.md §9 — landing on X resets to Y
-GAME_OVER_SCORE = 120  # rules.md §10 — hard wall, no Renaissance protection
-
 # --- Cards ---------------------------------------------------------------
 
 
@@ -66,6 +53,8 @@ class Rank(StrEnum):
     QUEEN = auto()
     KING = auto()
 
+BLACK_KING_VALUE = 13
+RED_KING_VALUE = 0
 
 # rules.md §4 — face value per rank. King is excluded here and handled
 # separately in card_value(), since its value depends on suit color too.
@@ -207,8 +196,6 @@ class TurnDirection(StrEnum):
 
 
 class Rules(BaseModel):
-    red_king_value: int
-    black_king_value: int
     hand_size: int
     nb_of_starting_draw: int
     eligible_threshold: int
@@ -220,11 +207,13 @@ class Rules(BaseModel):
     plea_penalty: int
     renaissance_thresholds: dict[int, int]
     game_over_score: int
+    black_king_value: int
+    red_king_value: int
+    face_rank_values: dict[str, int]
+    
 
 
 BASE_RULES = Rules(
-    red_king_value=0,
-    black_king_value=13,
     hand_size=4,
     nb_of_starting_draw=2,
     eligible_threshold=7,
@@ -236,6 +225,9 @@ BASE_RULES = Rules(
     plea_penalty=25,
     renaissance_thresholds={50: 25, 100: 50},
     game_over_score=120,
+    black_king_value=13,
+    red_king_value=0,
+    face_rank_values={rank_enum.name: rank_value for rank_enum, rank_value in RANK_FACE_VALUE.items()}
 )
 
 # Sanity check, not a runtime guard against user input: every Suit member

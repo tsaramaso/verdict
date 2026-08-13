@@ -94,7 +94,7 @@ def require_phase(phase: Phase):
 def new_game(
     game_id: str,
     player_names: dict[str, str],  # {uuid: name}
-    rules_config: dict,
+    rules_config: dict = BASE_RULES.model_dump(),
     turn_direction: TurnDirection = TurnDirection.CLOCKWISE,
 ) -> tuple[GameState, list[Event]]:
     # Convert rules_config dict to Rules object, or use BASE_RULES if empty

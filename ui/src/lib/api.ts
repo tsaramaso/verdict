@@ -1,3 +1,5 @@
+import type { Rules } from "./stores/gameState";
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
@@ -83,6 +85,7 @@ export interface GameSummary {
   created_at: string;
   started_at: string | null;
   ended_at: string | null;
+  rules: Rules
 }
 
 // API Functions

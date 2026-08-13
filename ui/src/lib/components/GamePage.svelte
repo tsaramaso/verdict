@@ -53,6 +53,7 @@
           my_opponent_knowledge: message.my_opponent_knowledge,
           trial: message.trial,
           discard_pile: message.discard_pile,
+          rules: message.rules
         });
       }
     };
