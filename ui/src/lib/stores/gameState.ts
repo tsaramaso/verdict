@@ -32,7 +32,7 @@ export interface OpponentInfo {
   player_id: string;
   player_name: string;
   hand_count: number;
-  known_cards: { slot: number; rank: string; suit: string }[];
+  known_cards: { slot: number; rank: CardRank; suit: CardSuit }[];
   spied_slots: number[];
   score: number;
 }
@@ -43,6 +43,11 @@ export interface SelfInfo {
   hand: CardSlot[];
   score: number;
   position: number;
+}
+
+export interface DiscardPile {
+  count: number;
+  visible_cards: { rank: CardRank; suit: CardSuit }[];
 }
 
 export interface TrialState {

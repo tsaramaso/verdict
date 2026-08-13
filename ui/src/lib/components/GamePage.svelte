@@ -7,6 +7,7 @@
   import CentralArea from './CentralArea.svelte';
   import YourCardsZone from './YourCardsZone.svelte';
   import RightPanel from './RightPanel.svelte';
+	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
 
   interface Props {
     playerId: string;
@@ -38,25 +39,49 @@
       console.log('[WS] Connected to game:', gameId);
     };
 
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
 
-      if (message.type === 'game_state' || message.type === 'game_state_update') {
-        // Update store with new state
-        gameState.set({
-          game_id: message.game_id,
-          phase: message.phase,
-          current_player: message.current_player,
-          round_number: message.round_number,
-          self: message.self,
-          opponents: message.opponents,
-          my_opponent_knowledge: message.my_opponent_knowledge,
-          trial: message.trial,
-          discard_pile: message.discard_pile,
-          rules: message.rules
-        });
-      }
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+
+  if (message.type === 'game_state' || message.type === 'game_state_update') {
+    // Transform card data from API strings to enums
+    const transformedSelf = {
+      ...message.self,
+      hand: transformCardList(message.self.hand)
     };
+    
+    const transformedOpponents = message.opponents.map((opp: any) => ({
+      ...opp,
+      known_cards: opp.known_cards.map((card: any) => ({
+        slot: card.slot,
+        rank: transformRank(card.rank),
+        suit: transformSuit(card.suit)
+      }))
+    }));
+    
+    const transformedDiscard = {
+      ...message.discard_pile,
+      visible_cards: message.discard_pile.visible_cards.map((card: any) => ({
+        rank: transformRank(card.rank),
+        suit: transformSuit(card.suit)
+      }))
+    };
+    
+    // Update store with transformed state
+    gameState.set({
+      game_id: message.game_id,
+      phase: message.phase,
+      current_player: message.current_player,
+      round_number: message.round_number,
+      self: transformedSelf,
+      opponents: transformedOpponents,
+      my_opponent_knowledge: message.my_opponent_knowledge,
+      trial: message.trial,
+      discard_pile: transformedDiscard,
+      rules: message.rules
+    });
+  }
+};
 
     ws.onerror = (error) => {
       console.error('[WS] Error:', error);

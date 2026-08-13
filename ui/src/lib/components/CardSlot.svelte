@@ -1,6 +1,6 @@
 <!-- src/lib/components/CardSlot.svelte -->
 <script lang="ts">
-	import { type CardSuit, type CardRank, type SUIT_COLORS, RANK_LABELS } from '$lib/constants/cards';
+	import { type CardSuit, type CardRank, SUIT_LABELS, RANK_LABELS } from '$lib/constants/cards';
 
   interface CardData {
     known: boolean;
@@ -61,7 +61,7 @@
   <!-- Rank Badge (if known) -->
   {#if card?.known && showRankBadge && card.rank && card.suit}
     <div class="rank-badge">
-      <span class="badge__text">{card.rank}\n{card.suit}</span>
+      <span class="badge__text">{card.rank}<br/>{card.suit}</span>
     </div>
   {/if}
 
