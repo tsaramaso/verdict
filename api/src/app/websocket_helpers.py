@@ -169,6 +169,7 @@ def scope_state_for_player(
         },
         "self": {
             "player_id": player_id,
+            "player_name": game_state.players[player_id].player_name,
             "hand": self_hand,
             "score": game_state.scores.get(player_id, 0),
             "position": game_state.player_order.index(player_id),

@@ -45,6 +45,7 @@ class Phase(StrEnum):
 @dataclass
 class PlayerState:
     player_id: str
+    player_name: str
     # Fixed-length, index = slot number. None means quick-discarded away
     # (slot stays but is permanently empty — hand "shrinking" means
     # fewer non-None entries, not a shorter list). rules.md §5.4.

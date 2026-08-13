@@ -93,11 +93,12 @@ def require_phase(phase: Phase):
 
 def new_game(
     game_id: str,
-    player_ids: list[str],
+    player_names: dict[str, str],  # {uuid: name}
     rules_config: dict,
     turn_direction: TurnDirection = TurnDirection.CLOCKWISE,
 ) -> tuple[GameState, list[Event]]:
     # Convert rules_config dict to Rules object, or use BASE_RULES if empty
+    player_ids = list(player_names.keys())
     if rules_config:
         try:
             rules = Rules(**rules_config)
@@ -119,7 +120,10 @@ def new_game(
     )
     for p in player_ids:
         state.scores[p] = 0
-        state.players[p] = PlayerState(player_id=p)
+        state.players[p] = PlayerState(
+            player_id=p,
+            player_name=player_names.get(p, p[:8])
+        )
 
     # __post_init__ runs after __init__, initializing player hands based on rules
     state.__post_init__()

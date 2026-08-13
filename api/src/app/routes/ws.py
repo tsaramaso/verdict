@@ -103,8 +103,7 @@ async def websocket_endpoint(
         try:
             game_state = registry.get(game_id)
 
-            # Use player_ids directly instead of querying for names
-            player_names = {pid: pid[:8] for pid in game_state.player_order}  # Use UUID prefix as display name
+            player_names = {pid: game_state.players[pid].player_name for pid in game_state.player_order}
 
             scoped_state = scope_state_for_player(game_state, player_id, player_names)
             await websocket.send_json(scoped_state)

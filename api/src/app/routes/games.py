@@ -92,12 +92,16 @@ def create_game(
     # mutating one passed in. Unpacked directly here rather than
     # teaching _call a second return shape just for this one caller.
     try:
+        player_names = {u.uuid: u.name or u.uuid for u in found_users}
         state, events = engine.new_game(
-            game_id, request.player_ids, request.rules_config, TurnDirection.CLOCKWISE
+            game_id, player_names, request.rules_config, TurnDirection.CLOCKWISE
         )
     except IllegalAction as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e)) from e
 
+    # Populate player names from found_users
+    for user in found_users:
+        state.players[user.uuid].player_name = user.name or user.uuid
     # WAITING_FOR_PLAYERS is unused by this creation flow on purpose —
     # every player is supplied up front, so there's no lobby phase.
     # Retained in the enum for a possible future creation path.

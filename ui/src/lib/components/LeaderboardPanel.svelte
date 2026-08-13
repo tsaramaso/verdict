@@ -17,12 +17,11 @@
     // Add self
     standings.push({
       player_id: $gameState.self.player_id,
-      name: 'You',
+      name: `${$gameState.self.player_name} (You)`,
       score: $gameState.self.score,
       pointsToNext: getPointsToRenaissance($gameState.self.score),
       isYou: true,
     });
-
     // Add opponents sorted by score
     for (const opponent of $gameState.opponents) {
       standings.push({

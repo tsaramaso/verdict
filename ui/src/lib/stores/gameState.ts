@@ -21,6 +21,7 @@ export interface OpponentInfo {
 
 export interface SelfInfo {
   player_id: string;
+  player_name: string;
   hand: CardSlot[];
   score: number;
   position: number;
@@ -69,6 +70,7 @@ const DEFAULT_STATE: GameState = {
   round_number: 0,
   self: {
     player_id: '',
+    player_name: '',  
     hand: [],
     score: 0,
     position: 0,
