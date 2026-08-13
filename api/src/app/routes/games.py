@@ -206,41 +206,40 @@ def get_events(
         events=[EventOut.from_db_event(r, player_id) for r in rows],
     )
 
+
 @router.delete("/{game_id}", status_code=status.HTTP_200_OK)
 def cancel_game(
     game_id: str = Path(...),
     player_id: str = Depends(get_current_player),
     session: Session = Depends(get_session),
 ):
-    game = session.exec(
-        select(Game).where(Game.id == game_id)
-    ).first()
-    
+    game = session.exec(select(Game).where(Game.id == game_id)).first()
+
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    
+
     if game.status == GameStatus.CANCELLED:
         raise HTTPException(status_code=409, detail="Game already cancelled")
-    
+
     if game.status != GameStatus.WAITING_FOR_PLAYERS:
         raise HTTPException(status_code=409, detail="Cannot cancel a game in progress")
-    
+
     creator = session.exec(
         select(GamePlayer)
         .where(GamePlayer.game_id == game_id)
         .where(GamePlayer.seat_order == 0)
     ).first()
-    
+
     if not creator or creator.user_uuid != player_id:
         raise HTTPException(status_code=403, detail="Only creator can cancel")
-    
+
     # Soft delete
     game.status = GameStatus.CANCELLED
     session.add(game)
     session.commit()
-    
+
     logger.info("game_cancelled", game_id=game_id, cancelled_by=player_id)
-    
+
     return {"message": "Game cancelled"}
 
 
@@ -251,11 +250,9 @@ def get_recap(
     session: Session = Depends(get_session),
 ):
     """Get end-game recap (final rankings, score progression)."""
-    recap = session.exec(
-        select(Recap).where(Recap.game_id == game_id)
-    ).first()
-    
+    recap = session.exec(select(Recap).where(Recap.game_id == game_id)).first()
+
     if not recap:
         raise HTTPException(status_code=404, detail="Recap not found")
-    
+
     return recap.data

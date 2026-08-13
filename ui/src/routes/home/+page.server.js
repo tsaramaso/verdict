@@ -4,138 +4,138 @@ import { redirect } from '@sveltejs/kit';
 const API_URL = 'http://localhost:8000';
 
 export async function load({ cookies }) {
-  const token = cookies.get('auth_token');
+	const token = cookies.get('auth_token');
 
-  // If no token, redirect to login
-  if (!token) {
-    throw redirect(303, '/login');
-  }
+	// If no token, redirect to login
+	if (!token) {
+		throw redirect(303, '/login');
+	}
 
-  // Fetch user, games, and users list server-side
-  try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    };
+	// Fetch user, games, and users list server-side
+	try {
+		const headers = {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		};
 
-    const [userResponse, gamesResponse, usersResponse] = await Promise.all([
-      fetch(`${API_URL}/users/me`, { headers }),
-      fetch(`${API_URL}/games`, { headers }),
-      fetch(`${API_URL}/users`, { headers }),
-    ]);
+		const [userResponse, gamesResponse, usersResponse] = await Promise.all([
+			fetch(`${API_URL}/users/me`, { headers }),
+			fetch(`${API_URL}/games`, { headers }),
+			fetch(`${API_URL}/users`, { headers })
+		]);
 
-    if (!userResponse.ok) {
-      throw new Error('Failed to fetch user');
-    }
+		if (!userResponse.ok) {
+			throw new Error('Failed to fetch user');
+		}
 
-    if (!gamesResponse.ok) {
-      throw new Error('Failed to fetch games');
-    }
+		if (!gamesResponse.ok) {
+			throw new Error('Failed to fetch games');
+		}
 
-    const user = await userResponse.json();
-    const gamesData = await gamesResponse.json();
-    let users = [];
+		const user = await userResponse.json();
+		const gamesData = await gamesResponse.json();
+		let users = [];
 
-    if (usersResponse.ok) {
-      const usersData = await usersResponse.json();
-      users = usersData.users || [];
-    }
+		if (usersResponse.ok) {
+			const usersData = await usersResponse.json();
+			users = usersData.users || [];
+		}
 
-    return {
-      user,
-      games: gamesData.games || [],
-      users,
-    };
-  } catch (err) {
-    // If API fails, return empty data (client can handle it)
-    return {
-      user: null,
-      games: [],
-      users: [],
-      error: err instanceof Error ? err.message : 'Failed to load data',
-    };
-  }
+		return {
+			user,
+			games: gamesData.games || [],
+			users
+		};
+	} catch (err) {
+		// If API fails, return empty data (client can handle it)
+		return {
+			user: null,
+			games: [],
+			users: [],
+			error: err instanceof Error ? err.message : 'Failed to load data'
+		};
+	}
 }
 
 export const actions = {
-  createGame: async ({ request, cookies }) => {
-    const token = cookies.get('auth_token');
+	createGame: async ({ request, cookies }) => {
+		const token = cookies.get('auth_token');
 
-    if (!token) {
-      return { error: 'Not authenticated' };
-    }
+		if (!token) {
+			return { error: 'Not authenticated' };
+		}
 
-    try {
-      const formData = await request.formData();
-      const playerIds = formData.getAll('playerIds');
+		try {
+			const formData = await request.formData();
+			const playerIds = formData.getAll('playerIds');
 
-      // Validation
-      if (!playerIds || playerIds.length < 2) {
-        return { error: 'At least 2 players required' };
-      }
+			// Validation
+			if (!playerIds || playerIds.length < 2) {
+				return { error: 'At least 2 players required' };
+			}
 
-      // Create game via API
-      const response = await fetch(`${API_URL}/games`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          player_ids: playerIds,
-          rules_config: {},
-        }),
-      });
+			// Create game via API
+			const response = await fetch(`${API_URL}/games`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					player_ids: playerIds,
+					rules_config: {}
+				})
+			});
 
-      if (!response.ok) {
-        const error = await response.json();
-        return { error: error.detail || 'Failed to create game' };
-      }
+			if (!response.ok) {
+				const error = await response.json();
+				return { error: error.detail || 'Failed to create game' };
+			}
 
-      const game = await response.json();
-      throw redirect(303, `/game/${game.game_id}/play`);
-    } catch (err) {
-      // Re-throw redirect errors
-      if (err.status === 303) throw err;
-      return { error: err instanceof Error ? err.message : 'Failed to create game' };
-    }
-  },
+			const game = await response.json();
+			throw redirect(303, `/game/${game.game_id}/play`);
+		} catch (err) {
+			// Re-throw redirect errors
+			if (err.status === 303) throw err;
+			return { error: err instanceof Error ? err.message : 'Failed to create game' };
+		}
+	},
 
-  cancelGame: async ({ request, cookies }) => {
-    const token = cookies.get('auth_token');
+	cancelGame: async ({ request, cookies }) => {
+		const token = cookies.get('auth_token');
 
-    if (!token) {
-      return { error: 'Not authenticated' };
-    }
+		if (!token) {
+			return { error: 'Not authenticated' };
+		}
 
-    try {
-      const formData = await request.formData();
-      const gameId = formData.get('gameId');
+		try {
+			const formData = await request.formData();
+			const gameId = formData.get('gameId');
 
-      if (!gameId) {
-        return { error: 'Game ID required' };
-      }
+			if (!gameId) {
+				return { error: 'Game ID required' };
+			}
 
-      const response = await fetch(`${API_URL}/games/${gameId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+			const response = await fetch(`${API_URL}/games/${gameId}`, {
+				method: 'DELETE',
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
 
-      if (!response.ok) {
-        const error = await response.json();
-        return { error: error.detail || 'Failed to cancel game' };
-      }
+			if (!response.ok) {
+				const error = await response.json();
+				return { error: error.detail || 'Failed to cancel game' };
+			}
 
-      return { success: true, gameId };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Failed to cancel game' };
-    }
-  },
+			return { success: true, gameId };
+		} catch (err) {
+			return { error: err instanceof Error ? err.message : 'Failed to cancel game' };
+		}
+	},
 
-  logout: async ({ cookies }) => {
-    cookies.delete('auth_token', { path: '/' });
-    throw redirect(303, '/login');
-  },
+	logout: async ({ cookies }) => {
+		cookies.delete('auth_token', { path: '/' });
+		throw redirect(303, '/login');
+	}
 };

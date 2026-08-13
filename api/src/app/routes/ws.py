@@ -14,12 +14,9 @@ Connection flow:
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, WebSocketException
 from jose import jwt
-from sqlalchemy import select
 from src.app.game_registry import get_registry
 from src.app.websocket_helpers import scope_state_for_player
 from src.app.websocket import manager
-from src.app.models.db import User
-from src.db.session import get_session
 from src.config import HASH_SECRET_KEY, ALGORITHM
 from src.logging_config import get_logger
 
@@ -103,7 +100,10 @@ async def websocket_endpoint(
         try:
             game_state = registry.get(game_id)
 
-            player_names = {pid: game_state.players[pid].player_name for pid in game_state.player_order}
+            player_names = {
+                pid: game_state.players[pid].player_name
+                for pid in game_state.player_order
+            }
 
             scoped_state = scope_state_for_player(game_state, player_id, player_names)
             await websocket.send_json(scoped_state)
@@ -115,6 +115,7 @@ async def websocket_endpoint(
         except Exception as e:
             print(f"WS INITIAL STATE ERROR: {type(e).__name__}: {e}")  # ADD THIS
             import traceback
+
             print(traceback.format_exc())  # ADD THIS
             logger.error(
                 "ws_initial_state_failed",

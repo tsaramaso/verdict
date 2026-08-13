@@ -6,76 +6,76 @@ import { writable, derived, type Writable, type Readable } from 'svelte/store';
 // ============================================
 
 export interface Rules {
-  red_king_value: number;
-  black_king_value: number;
-  hand_size: number;
-  nb_of_starting_draw: number;
-  eligible_threshold: number;
-  min_players: number;
-  max_players: number;
-  perjury_penalty: number;
-  duel_loss_penalty: number;
-  false_cross_testimony_penalty: number;
-  plea_penalty: number;
-  renaissance_thresholds: Record<number, number>;
-  game_over_score: number;
-  rank_values: Record<string, number>;
+	red_king_value: number;
+	black_king_value: number;
+	hand_size: number;
+	nb_of_starting_draw: number;
+	eligible_threshold: number;
+	min_players: number;
+	max_players: number;
+	perjury_penalty: number;
+	duel_loss_penalty: number;
+	false_cross_testimony_penalty: number;
+	plea_penalty: number;
+	renaissance_thresholds: Record<number, number>;
+	game_over_score: number;
+	rank_values: Record<string, number>;
 }
 
 export interface CardSlot {
-  known: boolean;
-  rank?: CardRank;
-  suit?: CardSuit;
+	known: boolean;
+	rank?: CardRank;
+	suit?: CardSuit;
 }
 
 export interface OpponentInfo {
-  player_id: string;
-  player_name: string;
-  hand_count: number;
-  known_cards: { slot: number; rank: CardRank; suit: CardSuit }[];
-  spied_slots: number[];
-  score: number;
+	player_id: string;
+	player_name: string;
+	hand_count: number;
+	known_cards: { slot: number; rank: CardRank; suit: CardSuit }[];
+	spied_slots: number[];
+	score: number;
 }
 
 export interface SelfInfo {
-  player_id: string;
-  player_name: string;
-  hand: CardSlot[];
-  score: number;
-  position: number;
+	player_id: string;
+	player_name: string;
+	hand: CardSlot[];
+	score: number;
+	position: number;
 }
 
 export interface DiscardPile {
-  count: number;
-  visible_cards: { rank: CardRank; suit: CardSuit }[];
+	count: number;
+	visible_cards: { rank: CardRank; suit: CardSuit }[];
 }
 
 export interface TrialState {
-  first_window_callers: string[];
-  passed_first: string[];
-  cross_callers: string[];
-  passed_cross: string[];
-  perjury_removed: string[];
-  truly_eligible: string[];
-  challenged: string[];
-  passed_challenge: string[];
-  duel_occurred: boolean;
-  duel_winners: string[];
-  plea_taken: string[];
-  plea_declined: string[];
+	first_window_callers: string[];
+	passed_first: string[];
+	cross_callers: string[];
+	passed_cross: string[];
+	perjury_removed: string[];
+	truly_eligible: string[];
+	challenged: string[];
+	passed_challenge: string[];
+	duel_occurred: boolean;
+	duel_winners: string[];
+	plea_taken: string[];
+	plea_declined: string[];
 }
 
 export interface GameState {
-  game_id: string;
-  phase: string;
-  current_player: string;
-  round_number: number;
-  self: SelfInfo;
-  opponents: OpponentInfo[];
-  my_opponent_knowledge: Record<string, number[]>;
-  trial: TrialState;
-  discard_pile: DiscardPile;
-  rules: Rules
+	game_id: string;
+	phase: string;
+	current_player: string;
+	round_number: number;
+	self: SelfInfo;
+	opponents: OpponentInfo[];
+	my_opponent_knowledge: Record<string, number[]>;
+	trial: TrialState;
+	discard_pile: DiscardPile;
+	rules: Rules;
 }
 
 // ============================================
@@ -83,66 +83,66 @@ export interface GameState {
 // ============================================
 
 const DEFAULT_STATE: GameState = {
-  game_id: '',
-  phase: 'TURN_START',
-  current_player: '',
-  round_number: 0,
-  self: {
-    player_id: '',
-    player_name: '',  
-    hand: [],
-    score: 0,
-    position: 0,
-  },
-  opponents: [],
-  my_opponent_knowledge: {},
-  trial: {
-    first_window_callers: [],
-    passed_first: [],
-    cross_callers: [],
-    passed_cross: [],
-    perjury_removed: [],
-    truly_eligible: [],
-    challenged: [],
-    passed_challenge: [],
-    duel_occurred: false,
-    duel_winners: [],
-    plea_taken: [],
-    plea_declined: [],
-  },
-  discard_pile: {
-    count: 0,
-    visible_cards: [],
-  },
-  rules: {
-    red_king_value:0,
-    black_king_value:0,
-    hand_size:0,
-    nb_of_starting_draw:0,
-    eligible_threshold:0,
-    min_players:0,
-    max_players:0,
-    perjury_penalty:0,
-    duel_loss_penalty:0,
-    false_cross_testimony_penalty:0,
-    plea_penalty:0,
-    renaissance_thresholds: {0:0},
-    game_over_score:0,
-    rank_values: {
-        [CardRank.ACE] : 1,
-        [CardRank.TWO] : 1,
-        [CardRank.THREE] : 1,
-        [CardRank.FOUR] : 1,
-        [CardRank.FIVE] : 1,
-        [CardRank.SIX] : 1,
-        [CardRank.SEVEN] : 1,
-        [CardRank.EIGHT] : 1,
-        [CardRank.NINE] : 1,
-        [CardRank.TEN] : 1,
-        [CardRank.JACK] : 11,
-        [CardRank.QUEEN] : 12,
-},
-  }
+	game_id: '',
+	phase: 'TURN_START',
+	current_player: '',
+	round_number: 0,
+	self: {
+		player_id: '',
+		player_name: '',
+		hand: [],
+		score: 0,
+		position: 0
+	},
+	opponents: [],
+	my_opponent_knowledge: {},
+	trial: {
+		first_window_callers: [],
+		passed_first: [],
+		cross_callers: [],
+		passed_cross: [],
+		perjury_removed: [],
+		truly_eligible: [],
+		challenged: [],
+		passed_challenge: [],
+		duel_occurred: false,
+		duel_winners: [],
+		plea_taken: [],
+		plea_declined: []
+	},
+	discard_pile: {
+		count: 0,
+		visible_cards: []
+	},
+	rules: {
+		red_king_value: 0,
+		black_king_value: 0,
+		hand_size: 0,
+		nb_of_starting_draw: 0,
+		eligible_threshold: 0,
+		min_players: 0,
+		max_players: 0,
+		perjury_penalty: 0,
+		duel_loss_penalty: 0,
+		false_cross_testimony_penalty: 0,
+		plea_penalty: 0,
+		renaissance_thresholds: { 0: 0 },
+		game_over_score: 0,
+		rank_values: {
+			[CardRank.ACE]: 1,
+			[CardRank.TWO]: 1,
+			[CardRank.THREE]: 1,
+			[CardRank.FOUR]: 1,
+			[CardRank.FIVE]: 1,
+			[CardRank.SIX]: 1,
+			[CardRank.SEVEN]: 1,
+			[CardRank.EIGHT]: 1,
+			[CardRank.NINE]: 1,
+			[CardRank.TEN]: 1,
+			[CardRank.JACK]: 11,
+			[CardRank.QUEEN]: 12
+		}
+	}
 };
 
 // ============================================
@@ -155,11 +155,11 @@ export const gameState: Writable<GameState> = writable(DEFAULT_STATE);
 let currentPlayerId: string = '';
 
 export function setCurrentPlayerId(playerId: string): void {
-  currentPlayerId = playerId;
+	currentPlayerId = playerId;
 }
 
 export function getCurrentPlayerId(): string {
-  return currentPlayerId;
+	return currentPlayerId;
 }
 
 // ============================================
@@ -167,38 +167,35 @@ export function getCurrentPlayerId(): string {
 // ============================================
 
 export const canTestifyFirst: Readable<boolean> = derived(gameState, ($state) => {
-  return (
-    !$state.trial.first_window_callers.includes(currentPlayerId) &&
-    !$state.trial.passed_first.includes(currentPlayerId)
-  );
+	return (
+		!$state.trial.first_window_callers.includes(currentPlayerId) &&
+		!$state.trial.passed_first.includes(currentPlayerId)
+	);
 });
 
 export const canTestifyCross: Readable<boolean> = derived(gameState, ($state) => {
-  return (
-    $state.trial.passed_first.includes(currentPlayerId) &&
-    !$state.trial.cross_callers.includes(currentPlayerId) &&
-    !$state.trial.passed_cross.includes(currentPlayerId)
-  );
+	return (
+		$state.trial.passed_first.includes(currentPlayerId) &&
+		!$state.trial.cross_callers.includes(currentPlayerId) &&
+		!$state.trial.passed_cross.includes(currentPlayerId)
+	);
 });
 
 export const canChallenge: Readable<boolean> = derived(gameState, ($state) => {
-  return (
-    $state.trial.truly_eligible.includes(currentPlayerId) &&
-    !$state.trial.challenged.includes(currentPlayerId) &&
-    !$state.trial.passed_challenge.includes(currentPlayerId)
-  );
+	return (
+		$state.trial.truly_eligible.includes(currentPlayerId) &&
+		!$state.trial.challenged.includes(currentPlayerId) &&
+		!$state.trial.passed_challenge.includes(currentPlayerId)
+	);
 });
 
 export const canPlea: Readable<boolean> = derived(gameState, ($state) => {
-  const testified = new Set([
-    ...$state.trial.first_window_callers,
-    ...$state.trial.cross_callers,
-  ]);
-  return (
-    !testified.has(currentPlayerId) &&
-    !$state.trial.plea_taken.includes(currentPlayerId) &&
-    !$state.trial.plea_declined.includes(currentPlayerId)
-  );
+	const testified = new Set([...$state.trial.first_window_callers, ...$state.trial.cross_callers]);
+	return (
+		!testified.has(currentPlayerId) &&
+		!$state.trial.plea_taken.includes(currentPlayerId) &&
+		!$state.trial.plea_declined.includes(currentPlayerId)
+	);
 });
 
 // ============================================
@@ -206,23 +203,23 @@ export const canPlea: Readable<boolean> = derived(gameState, ($state) => {
 // ============================================
 
 export const isActivePlayer: Readable<boolean> = derived(gameState, ($state) => {
-  return $state.current_player === currentPlayerId;
+	return $state.current_player === currentPlayerId;
 });
 
 export const isGameInProgress: Readable<boolean> = derived(gameState, ($state) => {
-  return $state.phase !== 'GAME_OVER' && $state.phase !== 'ROUND_OVER';
+	return $state.phase !== 'GAME_OVER' && $state.phase !== 'ROUND_OVER';
 });
 
 export const deckSize: Readable<number> = derived(gameState, ($state) => {
-  const numPlayers = 1 + $state.opponents.length;
-  const dealtCards = 4 * numPlayers;
-  const discardCount = $state.discard_pile.count;
-  return 52 - dealtCards - discardCount;
+	const numPlayers = 1 + $state.opponents.length;
+	const dealtCards = 4 * numPlayers;
+	const discardCount = $state.discard_pile.count;
+	return 52 - dealtCards - discardCount;
 });
 
 export const myOpponentKnowledge: Readable<Record<string, number[]>> = derived(
-  gameState,
-  ($state) => $state.my_opponent_knowledge
+	gameState,
+	($state) => $state.my_opponent_knowledge
 );
 
 export const trialState: Readable<TrialState> = derived(gameState, ($state) => $state.trial);
@@ -232,18 +229,18 @@ export const trialState: Readable<TrialState> = derived(gameState, ($state) => $
 // ============================================
 
 export function getOpponentById(state: GameState, opponentId: string): OpponentInfo | undefined {
-  return state.opponents.find((opp) => opp.player_id === opponentId);
+	return state.opponents.find((opp) => opp.player_id === opponentId);
 }
 
 export function getOpponentsThatKnowSlot(
-  opponentKnowledge: Record<string, number[]>,
-  slotIndex: number
+	opponentKnowledge: Record<string, number[]>,
+	slotIndex: number
 ): string[] {
-  const opponents: string[] = [];
-  for (const [opponentId, slotIndices] of Object.entries(opponentKnowledge)) {
-    if (slotIndices.includes(slotIndex)) {
-      opponents.push(opponentId);
-    }
-  }
-  return opponents;
+	const opponents: string[] = [];
+	for (const [opponentId, slotIndices] of Object.entries(opponentKnowledge)) {
+		if (slotIndices.includes(slotIndex)) {
+			opponents.push(opponentId);
+		}
+	}
+	return opponents;
 }

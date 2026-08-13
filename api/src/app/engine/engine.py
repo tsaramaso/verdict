@@ -121,8 +121,7 @@ def new_game(
     for p in player_ids:
         state.scores[p] = 0
         state.players[p] = PlayerState(
-            player_id=p,
-            player_name=player_names.get(p, p[:8])
+            player_id=p, player_name=player_names.get(p, p[:8])
         )
 
     # __post_init__ runs after __init__, initializing player hands based on rules

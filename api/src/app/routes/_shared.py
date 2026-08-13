@@ -35,7 +35,7 @@ def _build_recap(session: Session, game_id: str, events: list[EngineEvent]) -> N
     game_ended_event = next((e for e in events if e.type == EventType.GAME_ENDED), None)
     if not game_ended_event:
         return
-    
+
     try:
         # Get final rankings with player names
         game_players = session.exec(
@@ -44,7 +44,7 @@ def _build_recap(session: Session, game_id: str, events: list[EngineEvent]) -> N
             .where(GamePlayer.game_id == game_id)
             .order_by(GamePlayer.final_rank)
         ).all()
-        
+
         final_rankings = [
             {
                 "rank": gp.final_rank,
@@ -54,7 +54,7 @@ def _build_recap(session: Session, game_id: str, events: list[EngineEvent]) -> N
             }
             for gp, user in game_players
         ]
-        
+
         # Build score progression from SCORES_UPDATED events
         score_events = session.exec(
             select(DBEvent)
@@ -62,7 +62,7 @@ def _build_recap(session: Session, game_id: str, events: list[EngineEvent]) -> N
             .where(DBEvent.type == EventType.SCORES_UPDATED)
             .order_by(DBEvent.sequence)
         ).all()
-        
+
         score_progression = {}
         for event in score_events:
             for result in event.public_fields.get("results", []):
@@ -71,13 +71,13 @@ def _build_recap(session: Session, game_id: str, events: list[EngineEvent]) -> N
                 if player_uuid not in score_progression:
                     score_progression[player_uuid] = []
                 score_progression[player_uuid].append(score)
-        
+
         recap = Recap(
             game_id=game_id,
             data={
                 "final_rankings": final_rankings,
                 "score_progression": score_progression,
-            }
+            },
         )
         session.add(recap)
         session.commit()
