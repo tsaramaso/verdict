@@ -1,21 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
- * Get auth token from cookie
+ * Get auth token from localStorage
  */
 function getAuthToken(): string | null {
-  const name = 'auth_token=';
-  const decodedCookie = decodeURIComponent(document.cookie);
-  const cookieArray = decodedCookie.split(';');
-  
-  for (let cookie of cookieArray) {
-    cookie = cookie.trim();
-    if (cookie.indexOf(name) === 0) {
-      return cookie.substring(name.length);
-    }
-  }
-  
-  return null;
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('auth_token');
 }
 
 export async function apiCall(
@@ -46,10 +36,17 @@ export async function apiCall(
 }
 
 export async function login(uuid: string) {
-  return apiCall('/users/login', {
+  const response = await apiCall('/users/login', {
     method: 'POST',
     body: JSON.stringify({ uuid }),
   });
+  
+  // Store token in localStorage for subsequent requests
+  if (response.token) {
+    localStorage.setItem('auth_token', response.token);
+  }
+  
+  return response;
 }
 
 // Types
