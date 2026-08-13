@@ -15,7 +15,8 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, WebSocketException
 from jose import jwt
 from sqlalchemy import select
-
+from src.app.game_registry import get_registry
+from src.app.websocket_helpers import scope_state_for_player
 from src.app.websocket import manager
 from src.app.models.db import User
 from src.db.session import get_session
@@ -98,24 +99,12 @@ async def websocket_endpoint(
             player_id=str(player_id)[:8],
         )
 
-        # STEP 4: SEND INITIAL GAME STATE
-        # Fetch current state from registry and scope it for this player
-        from src.app.game_registry import get_registry
-        from src.app.websocket_helpers import scope_state_for_player
-
         registry = get_registry()
         try:
             game_state = registry.get(game_id)
 
-            # Get player names for better logging/display
-            player_ids = [player_id] + [
-                pid for pid in game_state.player_order if pid != player_id
-            ]
-            session = get_session().__next__()
-            users = session.exec(select(User).where(User.uuid.in_(player_ids))).all()
-            player_names = {u.uuid: u.name or u.uuid for u in users}
-            player_name = player_names.get(player_id, "unknown")
-            session.close()
+            # Use player_ids directly instead of querying for names
+            player_names = {pid: pid[:8] for pid in game_state.player_order}  # Use UUID prefix as display name
 
             scoped_state = scope_state_for_player(game_state, player_id, player_names)
             await websocket.send_json(scoped_state)
@@ -123,14 +112,17 @@ async def websocket_endpoint(
                 "ws_initial_state_sent",
                 game_id=str(game_id)[:8],
                 player_id=str(player_id)[:8],
-                player_name=player_name,
             )
         except Exception as e:
+            print(f"WS INITIAL STATE ERROR: {type(e).__name__}: {e}")  # ADD THIS
+            import traceback
+            print(traceback.format_exc())  # ADD THIS
             logger.error(
                 "ws_initial_state_failed",
                 game_id=str(game_id)[:8],
                 player_id=str(player_id)[:8] if player_id else "unknown",
                 error=str(e),
+                exc_info=True,
             )
             await websocket.close(code=1011, reason="Could not load game state")
             return

@@ -24,11 +24,15 @@
   });
 
   function initWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const token = getTokenFromStorage(); // You'll need to get this from auth
-    const url = `${protocol}//${window.location.host}/ws/games/${gameId}?token=${token}`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const token = getTokenFromStorage();
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const apiHost = new URL(apiUrl).host;
+  const url = `${protocol}//${apiHost}/ws/games/${gameId}?token=${token}`;
 
-    const ws = new WebSocket(url);
+    console.log('WebSocket URL:', url);  // ADD THIS
+
+  const ws = new WebSocket(url);
 
     ws.onopen = () => {
       console.log('[WS] Connected to game:', gameId);

@@ -31,6 +31,12 @@
   }: Props = $props();
 
   let isHovered = $state(false);
+
+  function getKnowledgeTooltip(opponents: string[]): string {
+    if (opponents.length === 0) return 'No one knows';
+    if (opponents.length === 1) return `1 opponent knows`;
+    return `${opponents.length} opponents know`;
+  }
 </script>
 
 <div
@@ -38,6 +44,12 @@
   role="button"
   tabindex={isClickable ? 0 : -1}
   onclick={onClick}
+  onkeydown={(e) => {
+    if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick?.();
+    }
+  }}
   onmouseenter={() => (isHovered = true)}
   onmouseleave={() => (isHovered = false)}
 >
@@ -80,14 +92,6 @@
     </div>
   {/if}
 </div>
-
-<script lang="ts">
-  function getKnowledgeTooltip(opponents: string[]): string {
-    if (opponents.length === 0) return 'No one knows';
-    if (opponents.length === 1) return `1 opponent knows`;
-    return `${opponents.length} opponents know`;
-  }
-</script>
 
 <style>
   .card-slot {

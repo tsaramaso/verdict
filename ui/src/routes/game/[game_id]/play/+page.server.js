@@ -7,7 +7,6 @@ export async function load({ params, cookies }) {
   const token = cookies.get('auth_token');
   const gameId = params.game_id;
 
-  // If no token, redirect to login
   if (!token) {
     throw redirect(303, '/login');
   }
@@ -17,6 +16,17 @@ export async function load({ params, cookies }) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     };
+
+    // Fetch current user to get player ID
+    const userResponse = await fetch(`${API_URL}/users/me`, {
+      headers,
+    });
+
+    if (!userResponse.ok) {
+      throw redirect(303, '/login');
+    }
+
+    const user = await userResponse.json();
 
     // Fetch game status
     const statusResponse = await fetch(`${API_URL}/games/${gameId}/status`, {
@@ -30,17 +40,15 @@ export async function load({ params, cookies }) {
       throw new Error('Failed to fetch game status');
     }
 
-    const gameStatus = await statusResponse.json();
-
     return {
       gameId,
-      gameStatus,
+      playerId: user.uuid,
+      gameStatus: await statusResponse.json(),
     };
   } catch (err) {
-    if (err.status === 303) throw err; // Re-throw redirects
+    if (err.status === 303) throw err;
     return {
       gameId,
-      gameStatus: null,
       error: err instanceof Error ? err.message : 'Failed to load game',
     };
   }
