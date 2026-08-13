@@ -1,13 +1,31 @@
+import { CardRank, CardSuit } from '$lib/constants/cards';
 import { writable, derived, type Writable, type Readable } from 'svelte/store';
 
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
 
+export interface Rules {
+  red_king_value: number;
+  black_king_value: number;
+  hand_size: number;
+  nb_of_starting_draw: number;
+  eligible_threshold: number;
+  min_players: number;
+  max_players: number;
+  perjury_penalty: number;
+  duel_loss_penalty: number;
+  false_cross_testimony_penalty: number;
+  plea_penalty: number;
+  renaissance_thresholds: Record<number, number>;
+  game_over_score: number;
+  rank_values: Record<CardRank, number>;
+}
+
 export interface CardSlot {
   known: boolean;
-  rank?: string;
-  suit?: string;
+  rank?: CardRank;
+  suit?: CardSuit;
 }
 
 export interface OpponentInfo {
@@ -57,6 +75,7 @@ export interface GameState {
   my_opponent_knowledge: Record<string, number[]>;
   trial: TrialState;
   discard_pile: DiscardPile;
+  rules: Rules
 }
 
 // ============================================
@@ -95,6 +114,22 @@ const DEFAULT_STATE: GameState = {
     count: 0,
     visible_cards: [],
   },
+  rules: {
+    red_king_value:0,
+    black_king_value:0,
+    hand_size:0,
+    nb_of_starting_draw:0,
+    eligible_threshold:0,
+    min_players:0,
+    max_players:0,
+    perjury_penalty:0,
+    duel_loss_penalty:0,
+    false_cross_testimony_penalty:0,
+    plea_penalty:0,
+    renaissance_thresholds: {0:0},
+    game_over_score:0,
+    rank_values: {CardRank.ACE : 1}
+  }
 };
 
 // ============================================
@@ -198,45 +233,4 @@ export function getOpponentsThatKnowSlot(
     }
   }
   return opponents;
-}
-
-export function calculateKnownSum(hand: CardSlot[]): number {
-  let sum = 0;
-  for (const slot of hand) {
-    if (slot.known && slot.rank) {
-      const values: Record<string, number> = {
-        A: 1,
-        '2': 2,
-        '3': 3,
-        '4': 4,
-        '5': 5,
-        '6': 6,
-        '7': 7,
-        '8': 8,
-        '9': 9,
-        '10': 10,
-        J: 10,
-        Q: 10,
-        K: 10,
-      };
-      sum += values[slot.rank] || 0;
-    }
-  }
-  return sum;
-}
-
-export function isPowerCardRank(rank: string): boolean {
-  return ['7', '8', '9', '10', 'J', 'Q'].includes(rank);
-}
-
-export function getPowerCardName(rank: string): string {
-  const powers: Record<string, string> = {
-    '7': 'Glance',
-    '8': 'Glance',
-    '9': 'Spy',
-    '10': 'Spy',
-    J: 'Smuggle',
-    Q: 'Decree',
-  };
-  return powers[rank] || '';
 }

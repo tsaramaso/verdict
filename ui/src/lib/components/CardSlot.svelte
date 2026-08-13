@@ -1,11 +1,11 @@
 <!-- src/lib/components/CardSlot.svelte -->
 <script lang="ts">
-  import { SUIT_COLORS, COLORS, getSuitSymbol, LAYOUT } from '$lib/config';
+	import { type CardSuit, type CardRank, type SUIT_COLORS, RANK_LABELS } from '$lib/constants/cards';
 
   interface CardData {
     known: boolean;
-    rank?: string;
-    suit?: string;
+    rank?: CardRank;
+    suit?: CardSuit;
   }
 
   interface Props {
@@ -34,8 +34,7 @@
 
   function getKnowledgeTooltip(opponents: string[]): string {
     if (opponents.length === 0) return 'No one knows';
-    if (opponents.length === 1) return `1 opponent knows`;
-    return `${opponents.length} opponents know`;
+    return `${opponents.length} opponent(s) know`;
   }
 </script>
 
@@ -52,24 +51,17 @@
   }}
   onmouseenter={() => (isHovered = true)}
   onmouseleave={() => (isHovered = false)}
->
+   >
   <!-- Card Back Visual (Geometric Rectangle) -->
   {#if !card || !card.known}
     <div class="card-back">
       <div class="card-back__pattern"></div>
     </div>
-  {:else}
-    <!-- Card Face (Known Card) -->
-    <div class="card-face" style="--suit-color: {SUIT_COLORS[card.suit]}">
-      <div class="card-face__rank">{card.rank}</div>
-      <div class="card-face__suit">{getSuitSymbol(card.suit)}</div>
-    </div>
   {/if}
-
-  <!-- Rank Badge (if visible) -->
-  {#if card?.known && showRankBadge && card.rank}
+  <!-- Rank Badge (if known) -->
+  {#if card?.known && showRankBadge && card.rank && card.suit}
     <div class="rank-badge">
-      <span class="rank-badge__text">{card.rank}</span>
+      <span class="badge__text">{card.rank}\n{card.suit}</span>
     </div>
   {/if}
 
@@ -92,7 +84,6 @@
     </div>
   {/if}
 </div>
-
 <style>
   .card-slot {
     position: relative;
@@ -189,9 +180,11 @@
     z-index: 10;
   }
 
-  .rank-badge__text {
+  .badge__text {
     font-family: monospace;
+    color: var(--suit-color)
   }
+
 
   /* Opponent Knows Icon (Unified 👁️) */
   .opponent-knows-icon {
