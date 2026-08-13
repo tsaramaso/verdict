@@ -19,7 +19,7 @@ export interface Rules {
   plea_penalty: number;
   renaissance_thresholds: Record<number, number>;
   game_over_score: number;
-  rank_values: Record<CardRank, number>;
+  rank_values: Record<string, number>;
 }
 
 export interface CardSlot {
@@ -133,7 +133,20 @@ const DEFAULT_STATE: GameState = {
     plea_penalty:0,
     renaissance_thresholds: {0:0},
     game_over_score:0,
-    rank_values: {CardRank.ACE : 1}
+    rank_values: {
+        [CardRank.ACE] : 1,
+        [CardRank.TWO] : 1,
+        [CardRank.THREE] : 1,
+        [CardRank.FOUR] : 1,
+        [CardRank.FIVE] : 1,
+        [CardRank.SIX] : 1,
+        [CardRank.SEVEN] : 1,
+        [CardRank.EIGHT] : 1,
+        [CardRank.NINE] : 1,
+        [CardRank.TEN] : 1,
+        [CardRank.JACK] : 11,
+        [CardRank.QUEEN] : 12,
+},
   }
 };
 
