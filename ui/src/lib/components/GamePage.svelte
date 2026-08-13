@@ -66,7 +66,7 @@
   }
 
   function getTokenFromStorage(): string {
-    // TODO: Get token from localStorage or auth context
+    if (typeof window === 'undefined') return '';
     return localStorage.getItem('auth_token') || '';
   }
 
