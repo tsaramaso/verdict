@@ -1,13 +1,11 @@
 <!-- src/lib/components/LeaderboardPanel.svelte -->
 <script lang="ts">
   import { gameState } from '$lib/stores/gameState';
-  import { getPointsToRenaissance, getRenaissanceColor, RENAISSANCE } from '$lib/config';
 
   interface PlayerStanding {
     player_id: string;
     name: string;
     score: number;
-    pointsToNext: number;
     isYou: boolean;
   }
 
@@ -19,7 +17,6 @@
       player_id: $gameState.self.player_id,
       name: `${$gameState.self.player_name} (You)`,
       score: $gameState.self.score,
-      pointsToNext: getPointsToRenaissance($gameState.self.score),
       isYou: true,
     });
     // Add opponents sorted by score
@@ -28,7 +25,6 @@
         player_id: opponent.player_id,
         name: opponent.player_name,
         score: opponent.score,
-        pointsToNext: getPointsToRenaissance(opponent.score),
         isYou: false,
       });
     }
@@ -46,34 +42,16 @@
 
   <div class="leaderboard-table">
     {#each standings as player, idx}
-      {@const color = getRenaissanceColor(player.pointsToNext)}
       <div class={`leaderboard-row ${player.isYou ? 'leaderboard-row--you' : ''}`}>
         <div class="place">#{idx + 1}</div>
         <div class="player-name">{player.name}</div>
         <div class="score">
           <span class="score-value">{player.score}</span>
-          <span class="points-to-next" style="color: {color}">
-            +{player.pointsToNext}
-          </span>
         </div>
       </div>
     {/each}
   </div>
 
-  <div class="renaissance-legend">
-    <div class="legend-item">
-      <span class="legend-color" style="background-color: {RENAISSANCE.colors.excellent}"></span>
-      <span class="legend-text">&lt;20 to Renaissance</span>
-    </div>
-    <div class="legend-item">
-      <span class="legend-color" style="background-color: {RENAISSANCE.colors.good}"></span>
-      <span class="legend-text">20-30 to Renaissance</span>
-    </div>
-    <div class="legend-item">
-      <span class="legend-color" style="background-color: {RENAISSANCE.colors.warning}"></span>
-      <span class="legend-text">&gt;30 to Renaissance</span>
-    </div>
-  </div>
 </div>
 
 <style>
@@ -162,16 +140,6 @@
     min-width: 35px;
     text-align: right;
     font-family: monospace;
-  }
-
-  .renaissance-legend {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--color-border-light);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-light);
   }
 
   .legend-item {
