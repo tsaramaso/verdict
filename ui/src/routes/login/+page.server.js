@@ -23,10 +23,11 @@ export const actions = {
 
       const { token } = await response.json();
 
-      // Set token in cookie (server-side)
+      // Set token in non-httpOnly cookie so client-side JS can access it
       cookies.set('auth_token', token, {
         path: '/',
         maxAge: 60 * 60 * 24 * 100, // 100 days
+        httpOnly: false, // Allow client-side JS access (for WebSocket)
       });
 
       // Redirect to home

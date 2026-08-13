@@ -1,11 +1,28 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
- * Get auth token from localStorage
+ * Get auth token from localStorage or cookie
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token');
+  
+  // Try localStorage first
+  const token = localStorage.getItem('auth_token');
+  if (token) return token;
+  
+  // Fall back to cookie
+  const name = 'auth_token=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookieArray = decodedCookie.split(';');
+  
+  for (let cookie of cookieArray) {
+    cookie = cookie.trim();
+    if (cookie.indexOf(name) === 0) {
+      return cookie.substring(name.length);
+    }
+  }
+  
+  return null;
 }
 
 export async function apiCall(
