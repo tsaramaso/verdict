@@ -190,7 +190,7 @@ export function getSuitSymbol(suit: CardSuit): string {
   return SUIT_LABELS[suit];
 }
 
-export function getCardValue(rank: CardRank, suit: CardSuit, black_king_value: number, red_king_value: number, face_rank_values: Record<CardRank, number>): number {
+export function getCardValue(rank: CardRank, suit: CardSuit, black_king_value: number, red_king_value: number, face_rank_values: Record<string, number>): number {
   if (rank == CardRank.KING) {
     return (suit == CardSuit.SPADE || suit == CardSuit.CLUB) ? black_king_value : red_king_value;
   }
@@ -217,7 +217,7 @@ export function calculateKnownSum(
   hand: CardSlot[], 
   black_king_value: number, 
   red_king_value: number, 
-  face_rank_values: Record<CardRank, number>
+  face_rank_values: Record<string, number>
 ): number {
   return hand
     .filter((slot): slot is Required<CardSlot> => 

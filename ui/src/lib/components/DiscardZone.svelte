@@ -1,7 +1,8 @@
 <!-- src/lib/components/DiscardZone.svelte -->
 <script lang="ts">
   import { gameState } from '$lib/stores/gameState';
-  import { SUIT_COLORS, getSuitSymbol } from '$lib/config';
+  import { getSuitSymbol } from '$lib/config';
+	import { SUIT_COLORS } from '$lib/constants/cards';
 
   interface Props {
     isClickable?: boolean;

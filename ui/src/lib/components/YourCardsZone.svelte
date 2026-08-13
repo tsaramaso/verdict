@@ -1,7 +1,7 @@
 <!-- src/lib/components/YourCardsZone.svelte -->
 <script lang="ts">
   import CardSlot from './CardSlot.svelte';
-  import { gameState, calculateKnownSum, getOpponentsThatKnowSlot, myOpponentKnowledge } from '$lib/stores/gameState';
+  import { gameState, getOpponentsThatKnowSlot, myOpponentKnowledge } from '$lib/stores/gameState';
 
   interface Props {
     onCardClick?: (slotIndex: number) => void;
@@ -26,10 +26,6 @@
         onClick={() => onCardClick?.(slotIdx)}
       />
     {/each}
-  </div>
-
-  <div class="known-sum">
-    Sum: <span class="sum-value">{calculateKnownSum($gameState.self.hand)}</span>
   </div>
 </div>
 

@@ -65,11 +65,6 @@ export interface TrialState {
   plea_declined: string[];
 }
 
-export interface DiscardPile {
-  count: number;
-  visible_cards: { rank: string; suit: string }[];
-}
-
 export interface GameState {
   game_id: string;
   phase: string;
