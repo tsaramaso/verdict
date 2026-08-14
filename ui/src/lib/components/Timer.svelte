@@ -1,13 +1,14 @@
 <!-- src/lib/components/Timer.svelte -->
 <script lang="ts">
-	import { TIMERS, COLORS } from '$lib/config';
+	import { TIMERS } from '$lib/config';
+	import type { GamePhase } from '$lib/stores/gameState';
 
 	interface Props {
-		phase: string;
+		phase: GamePhase;
 		onTimeOut?: () => void;
 	}
 
-	let { phase = 'TURN_START', onTimeOut }: Props = $props();
+	let { phase = 'TURN_START' as GamePhase, onTimeOut }: Props = $props();
 
 	let remainingSeconds = $state(0);
 	let timerInterval: ReturnType<typeof setInterval> | null = $state.snapshot(null);

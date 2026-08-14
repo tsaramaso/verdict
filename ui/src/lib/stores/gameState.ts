@@ -1,5 +1,12 @@
 import { CardRank, CardSuit } from '$lib/constants/cards';
 import { writable, derived, type Writable, type Readable } from 'svelte/store';
+import { GAME_PHASES } from '$lib/config';
+
+// ============================================
+// PHASE TYPE - Global solution for phase typing
+// ============================================
+
+export type GamePhase = typeof GAME_PHASES[keyof typeof GAME_PHASES];
 
 // ============================================
 // TYPE DEFINITIONS
@@ -67,7 +74,7 @@ export interface TrialState {
 
 export interface GameState {
 	game_id: string;
-	phase: string;
+	phase: GamePhase;
 	current_player: string;
 	round_number: number;
 	self: SelfInfo;
@@ -84,7 +91,7 @@ export interface GameState {
 
 const DEFAULT_STATE: GameState = {
 	game_id: '',
-	phase: 'TURN_START',
+	phase: GAME_PHASES.TURN_START,
 	current_player: '',
 	round_number: 0,
 	self: {
@@ -207,7 +214,7 @@ export const isActivePlayer: Readable<boolean> = derived(gameState, ($state) => 
 });
 
 export const isGameInProgress: Readable<boolean> = derived(gameState, ($state) => {
-	return $state.phase !== 'GAME_OVER' && $state.phase !== 'ROUND_OVER';
+	return $state.phase !== GAME_PHASES.GAME_OVER && $state.phase !== GAME_PHASES.ROUND_OVER;
 });
 
 export const deckSize: Readable<number> = derived(gameState, ($state) => {

@@ -4,7 +4,7 @@
  */
 
 import { CardRank, SUIT_COLORS, SUIT_LABELS, CardSuit, POWER_CARDS } from './constants/cards';
-import type { CardSlot } from './stores/gameState';
+import type { CardSlot, GamePhase } from './stores/gameState';
 
 // ============================================
 // TIMERS & GAME TIMING (in seconds)
@@ -171,7 +171,7 @@ export const UI = {
 // HELPER FUNCTIONS
 // ============================================
 
-export function getTimerDuration(phase: string): number {
+export function getTimerDuration(phase: GamePhase): number {
 	return (TIMERS as Record<string, number>)[phase] || TIMERS.DRAWING;
 }
 
@@ -237,18 +237,18 @@ export function calculateKnownSum(
 
 type AutoAdvancePhase = (typeof UI.autoAdvancePhases)[number];
 
-export function isAutoAdvancePhase(phase: string): phase is AutoAdvancePhase {
+export function isAutoAdvancePhase(phase: GamePhase): phase is AutoAdvancePhase {
 	return (UI.autoAdvancePhases as readonly string[]).includes(phase);
 }
 
 type IsActivePlayerPhase = (typeof UI.activePlayerPhases)[number];
 
-export function isActivePlayerPhase(phase: string): phase is IsActivePlayerPhase {
+export function isActivePlayerPhase(phase: GamePhase): phase is IsActivePlayerPhase {
 	return (UI.activePlayerPhases as readonly string[]).includes(phase);
 }
 
 type SimultaneousPhases = (typeof UI.simultaneousPhases)[number];
 
-export function isSimultaneousPhase(phase: string): phase is SimultaneousPhases {
+export function isSimultaneousPhase(phase: GamePhase): phase is SimultaneousPhases {
 	return (UI.simultaneousPhases as readonly string[]).includes(phase);
 }

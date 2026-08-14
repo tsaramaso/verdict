@@ -2,11 +2,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { gameState, setCurrentPlayerId } from '$lib/stores/gameState';
-  import TopBanner from './TopBanner.svelte';
+  import RightPanel from './RightPanel.svelte';
+  import BottomBar from './BottomBar.svelte';
   import OpponentZonesContainer from './OpponentZonesContainer.svelte';
   import CentralArea from './CentralArea.svelte';
   import YourCardsZone from './YourCardsZone.svelte';
-  import RightPanel from './RightPanel.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
 
   interface Props {
@@ -68,17 +68,33 @@ ws.onmessage = (event) => {
     };
     
     // Update store with transformed state
+    // Note: game fields are nested under message.game from the API
     gameState.set({
-      game_id: message.game_id,
-      phase: message.phase,
-      current_player: message.current_player,
-      round_number: message.round_number,
+      game_id: message.game.game_id,
+      phase: message.game.phase,
+      current_player: message.game.current_player,
+      round_number: message.game.round_number,
       self: transformedSelf,
       opponents: transformedOpponents,
       my_opponent_knowledge: message.my_opponent_knowledge,
       trial: message.trial,
       discard_pile: transformedDiscard,
-      rules: message.rules
+      rules: message.rules || {
+        red_king_value: 0,
+        black_king_value: 0,
+        hand_size: 0,
+        nb_of_starting_draw: 0,
+        eligible_threshold: 0,
+        min_players: 0,
+        max_players: 0,
+        perjury_penalty: 0,
+        duel_loss_penalty: 0,
+        false_cross_testimony_penalty: 0,
+        plea_penalty: 0,
+        renaissance_thresholds: { 0: 0 },
+        game_over_score: 0,
+        rank_values: {}
+      }
     });
   }
 };
@@ -221,7 +237,7 @@ ws.onmessage = (event) => {
 </script>
 
 <div class="game-page">
-  <TopBanner
+  <RightPanel
     gameState={$gameState}
     onTimeOut={handlePhaseTimeout}
   />
@@ -243,7 +259,7 @@ ws.onmessage = (event) => {
     </div>
   </div>
 
-  <RightPanel
+  <BottomBar
     onSkip={handleSkip}
     onTestifyFirst={handleTestifyFirst}
     onTestifyCross={handleTestifyCross}
@@ -265,26 +281,25 @@ ws.onmessage = (event) => {
     background: var(--color-bg);
     overflow: hidden;
   }
+.game-page {
+  display: grid;
+  grid-template-columns: 1fr 200px;  /* ← FLIP THIS */
+  grid-template-rows: 1fr auto;
+  height: 100vh;
+  width: 100vw;
+  background: var(--color-bg);
+  overflow: hidden;
+}
 
-  .game-page {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    grid-template-rows: auto 1fr;
-    height: 100vh;
-    width: 100vw;
-    background: var(--color-bg);
-    overflow: hidden;
-  }
-
-  TopBanner {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    flex-shrink: 0;
-  }
+:global(.right-panel) {
+  grid-column: 2;  /* ← CHANGE TO 2 */
+  grid-row: 1 / -1;
+  flex-shrink: 0;
+}
 
   .play-area {
-    grid-column: 1;
-    grid-row: 2;
+    grid-column: 1;  /* ← CHANGE TO 1 */
+    grid-row: 1;
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 2fr 1fr 1fr;
@@ -326,54 +341,63 @@ ws.onmessage = (event) => {
     min-width: 0;
   }
 
-  :global(.right-panel) {
-    grid-column: 2;
-    grid-row: 2 / -1;
-    overflow-y: auto;
+  :global(.bottom-bar) {
+    grid-column: 1 / -1;
+    grid-row: 2;
     flex-shrink: 0;
   }
 
   @media (max-width: 1024px) {
     .game-page {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 160px 1fr;
+      grid-template-rows: 1fr auto;
     }
 
     .play-area {
-      grid-column: 1;
-      grid-row: 2;
+      grid-column: 2;
+      grid-row: 1;
       grid-template-columns: 1fr;
       grid-template-rows: 2fr 1fr 1fr;
     }
 
-    .opponent-zones {
-      grid-column: 1;
-      grid-row: 1;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-    }
-
-    .central-section {
-      grid-column: 1;
-      grid-row: 2;
-    }
-
-    .your-zone {
-      grid-column: 1;
-      grid-row: 3;
-    }
-
     :global(.right-panel) {
       grid-column: 1;
-      grid-row: 3;
-      max-height: auto;
-      overflow: visible;
-      flex-direction: column;
+      grid-row: 1 / -1;
+      min-width: 160px;
+      max-width: 160px;
+    }
+
+    :global(.bottom-bar) {
+      grid-column: 1 / -1;
+      grid-row: 2;
     }
   }
 
   @media (max-width: 768px) {
+    .game-page {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    :global(.right-panel) {
+      grid-column: 1;
+      grid-row: 1;
+      grid-template-rows: auto auto auto;
+      max-width: 100%;
+      min-width: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--color-border);
+      overflow: visible;
+      max-height: auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+    }
+
     .play-area {
+      grid-column: 1;
+      grid-row: 2;
       padding: var(--spacing-md);
       gap: var(--spacing-md);
       grid-template-rows: 1.5fr 1fr 1fr;
@@ -381,6 +405,11 @@ ws.onmessage = (event) => {
 
     .opponent-zones {
       gap: var(--spacing-sm);
+    }
+
+    :global(.bottom-bar) {
+      grid-column: 1;
+      grid-row: 3;
     }
   }
 </style>
