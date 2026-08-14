@@ -82,5 +82,7 @@
     overflow: hidden;
     /* Constrain width to roughly one opponent card zone */
     max-width: clamp(150px, 25vw, 280px);
+    width: 100%;       /* Force it to fill up to the max-width */
+    margin: 0 auto; 
   }
 </style>

@@ -1,8 +1,7 @@
 <!-- src/lib/components/CardContainer.svelte -->
 <script lang="ts">
-  import CardSlot from './CardSlot.svelte';
+  import CardSlot, { type CardData} from './CardSlot.svelte';
   import { getOpponentsThatKnowSlot, myOpponentKnowledge } from '$lib/stores/gameState';
-  import type { CardData } from '$lib/stores/gameState';
 
   interface Props {
     cards?: (CardData | undefined)[];

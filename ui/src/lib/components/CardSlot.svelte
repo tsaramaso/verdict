@@ -8,7 +8,7 @@
 		SUIT_COLORS
 	} from '$lib/constants/cards';
 
-	interface CardData {
+	export interface CardData {
 		known: boolean;
 		rank?: CardRank;
 		suit?: CardSuit;

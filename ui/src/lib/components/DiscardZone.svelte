@@ -40,7 +40,7 @@
 <style>
 	.discard-zone {
 		position: relative;
-		width: 100%;
+		/* width: 100%; */
 		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
 		border-radius: var(--radius-md);
@@ -51,6 +51,10 @@
 		cursor: default;
 		transition: all 0.2s ease;
 		border: 2px solid transparent;
+		    /* Constrain width to roughly one opponent card zone */
+		max-width: clamp(150px, 25vw, 280px);
+		width: 100%;       /* Force it to fill up to the max-width */
+		margin: 0 auto; 
 	}
 
 	.discard-zone--clickable {

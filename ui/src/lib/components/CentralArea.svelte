@@ -55,7 +55,7 @@
 
   .card-pair > :global(*) {
     flex: 0 1 auto;
-    max-width: 50%;
+    max-width: 100%;
     max-height: 100%;
   }
 </style>
