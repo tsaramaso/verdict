@@ -241,13 +241,12 @@
 		font-family: monospace;
 	}
 
-	/* Your Cards styling */
+	/* Cards scale proportionally with container */
 	.card-slot--your {
-		min-width: 100px;
+		width: 100%;
 	}
 
-	/* Opponent Cards styling (smaller) */
 	.card-slot--opponent {
-		min-width: 80px;
+		width: 100%;
 	}
 </style>

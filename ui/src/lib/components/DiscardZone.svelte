@@ -40,8 +40,8 @@
 <style>
 	.discard-zone {
 		position: relative;
-		width: 120px;
-		height: 180px;
+		width: 100%;
+		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
@@ -81,14 +81,14 @@
 	}
 
 	.card-rank {
-		font-size: var(--font-size-lg);
+		font-size: clamp(0.875rem, 2.5vw, 1.5rem);
 		font-weight: var(--font-weight-bold);
 		line-height: 1;
 	}
 
 	.card-suit {
-		font-size: var(--font-size-base);
-		margin-top: 4px;
+		font-size: clamp(0.75rem, 2vw, 1.25rem);
+		margin-top: clamp(2px, 1.5%, 6px);
 	}
 
 	.discard-empty {
@@ -117,13 +117,13 @@
 
 	.discard-count {
 		position: absolute;
-		bottom: 8px;
-		right: 8px;
+		bottom: clamp(4px, 3%, 12px);
+		right: clamp(4px, 3%, 12px);
 		background: rgba(0, 0, 0, 0.2);
 		color: var(--color-text);
-		padding: 4px 8px;
+		padding: clamp(2px, 1.5%, 6px) clamp(4px, 2%, 8px);
 		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
+		font-size: clamp(0.65rem, 1.5vw, 0.875rem);
 		font-weight: var(--font-weight-bold);
 		font-family: monospace;
 	}

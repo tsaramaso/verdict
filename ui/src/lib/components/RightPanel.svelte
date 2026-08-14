@@ -131,13 +131,13 @@
 		display: grid;
 		grid-template-columns: 1fr;
 		grid-template-rows: auto auto auto 1fr;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-md);
+		gap: clamp(0.5rem, 1vw, 0.75rem);
+		padding: clamp(0.5rem, 1vw, 1rem);
 		background: var(--color-bg);
 		border-left: 1px solid var(--color-border);
 		overflow-y: auto;
 		flex-shrink: 0;
-		min-width: 180px;
+		min-width: 160px;
 		max-width: 200px;
 	}
 

@@ -4,7 +4,6 @@
   import DiscardZone from './DiscardZone.svelte';
   import { gameState, isActivePlayer } from '$lib/stores/gameState';
   import { GAME_PHASES } from '$lib/config';
-  import CardSlot from './CardSlot.svelte';
 
   interface Props {
     onDeckClick?: () => void;
@@ -24,33 +23,39 @@
 </script>
 
 <div class="central-area">
-  <DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
-
-  <DiscardZone isClickable={isDiscardClickable} onClick={onDiscardClick} />
+  <div class="card-pair">
+    <DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
+    <DiscardZone isClickable={isDiscardClickable} onClick={onDiscardClick} />
+  </div>
 </div>
 
 <style>
   .central-area {
     display: flex;
-    gap: var(--spacing-xl);
+    gap: 0;
     justify-content: center;
     align-items: center;
-    padding: var(--spacing-lg);
-    background: var(--color-bg-card);
-    border-radius: var(--radius-md);
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
     flex-shrink: 0;
     width: 100%;
     height: 100%;
-    max-width: 400px;
-    max-height: 250px;
   }
 
-  @media (max-width: 768px) {
-    .central-area {
-      gap: var(--spacing-lg);
-      padding: var(--spacing-md);
-      max-width: 100%;
-      max-height: 200px;
-    }
+  .card-pair {
+    display: flex;
+    gap: clamp(0.75rem, 2vw, 2rem);
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .card-pair > :global(*) {
+    flex: 0 1 auto;
+    max-width: 50%;
+    max-height: 100%;
   }
 </style>

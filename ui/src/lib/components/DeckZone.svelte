@@ -29,8 +29,8 @@
 <style>
 	.deck-zone {
 		position: relative;
-		width: 120px;
-		height: 180px;
+		width: 100%;
+		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
@@ -80,13 +80,13 @@
 
 	.deck-count {
 		position: absolute;
-		bottom: 8px;
-		right: 8px;
+		bottom: clamp(4px, 3%, 12px);
+		right: clamp(4px, 3%, 12px);
 		background: rgba(0, 0, 0, 0.3);
 		color: white;
-		padding: 4px 8px;
+		padding: clamp(2px, 1.5%, 6px) clamp(4px, 2%, 8px);
 		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
+		font-size: clamp(0.65rem, 1.5vw, 0.875rem);
 		font-weight: var(--font-weight-bold);
 		font-family: monospace;
 	}

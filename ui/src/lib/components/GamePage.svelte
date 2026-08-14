@@ -1,12 +1,10 @@
-<!-- src/lib/components/GamePage.svelte -->
+<!-- src/lib/components/GamePage.svelte (MODIFIED) -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { gameState, setCurrentPlayerId } from '$lib/stores/gameState';
   import RightPanel from './RightPanel.svelte';
   import BottomBar from './BottomBar.svelte';
-  import OpponentZonesContainer from './OpponentZonesContainer.svelte';
-  import CentralArea from './CentralArea.svelte';
-  import YourCardsZone from './YourCardsZone.svelte';
+  import PlayArea from './PlayArea.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
 
   interface Props {
@@ -242,22 +240,11 @@ ws.onmessage = (event) => {
     onTimeOut={handlePhaseTimeout}
   />
 
-  <div class="play-area">
-    <div class="opponent-zones">
-      <OpponentZonesContainer />
-    </div>
-
-    <div class="central-section">
-      <CentralArea
-        onDeckClick={handleDeckClick}
-        onDiscardClick={handleDiscardClick}
-      />
-    </div>
-
-    <div class="your-zone">
-      <YourCardsZone onCardClick={handleCardClick} />
-    </div>
-  </div>
+  <PlayArea
+    onDeckClick={handleDeckClick}
+    onDiscardClick={handleDiscardClick}
+    onCardClick={handleCardClick}
+  />
 
   <BottomBar
     onSkip={handleSkip}
@@ -281,9 +268,10 @@ ws.onmessage = (event) => {
     background: var(--color-bg);
     overflow: hidden;
   }
+
 .game-page {
   display: grid;
-  grid-template-columns: 1fr 200px;  /* ← FLIP THIS */
+  grid-template-columns: 1fr minmax(160px, 200px);
   grid-template-rows: 1fr auto;
   height: 100vh;
   width: 100vw;
@@ -291,125 +279,23 @@ ws.onmessage = (event) => {
   overflow: hidden;
 }
 
+:global(.play-area) {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+}
+
 :global(.right-panel) {
-  grid-column: 2;  /* ← CHANGE TO 2 */
+  grid-column: 2;
   grid-row: 1 / -1;
   flex-shrink: 0;
 }
 
-  .play-area {
-    grid-column: 1;  /* ← CHANGE TO 1 */
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 2fr 1fr 1fr;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-lg);
-    overflow: hidden;
-    min-height: 0;
-    min-width: 0;
-  }
-
-  .opponent-zones {
-    grid-column: 1;
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: var(--spacing-md);
-    min-height: 0;
-    min-width: 0;
-  }
-
-  .central-section {
-    grid-column: 1;
-    grid-row: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-    min-width: 0;
-  }
-
-  .your-zone {
-    grid-column: 1;
-    grid-row: 3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 0;
-    min-width: 0;
-  }
-
-  :global(.bottom-bar) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 1024px) {
-    .game-page {
-      grid-template-columns: 160px 1fr;
-      grid-template-rows: 1fr auto;
-    }
-
-    .play-area {
-      grid-column: 2;
-      grid-row: 1;
-      grid-template-columns: 1fr;
-      grid-template-rows: 2fr 1fr 1fr;
-    }
-
-    :global(.right-panel) {
-      grid-column: 1;
-      grid-row: 1 / -1;
-      min-width: 160px;
-      max-width: 160px;
-    }
-
-    :global(.bottom-bar) {
-      grid-column: 1 / -1;
-      grid-row: 2;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .game-page {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr auto;
-    }
-
-    :global(.right-panel) {
-      grid-column: 1;
-      grid-row: 1;
-      grid-template-rows: auto auto auto;
-      max-width: 100%;
-      min-width: auto;
-      border-right: none;
-      border-bottom: 1px solid var(--color-border);
-      overflow: visible;
-      max-height: auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md);
-    }
-
-    .play-area {
-      grid-column: 1;
-      grid-row: 2;
-      padding: var(--spacing-md);
-      gap: var(--spacing-md);
-      grid-template-rows: 1.5fr 1fr 1fr;
-    }
-
-    .opponent-zones {
-      gap: var(--spacing-sm);
-    }
-
-    :global(.bottom-bar) {
-      grid-column: 1;
-      grid-row: 3;
-    }
-  }
+:global(.bottom-bar) {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  flex-shrink: 0;
+}
 </style>
