@@ -45,7 +45,7 @@
 
   .cards-container {
     display: grid;
-    grid-template-columns: repeat(4, minmax(80px, 1fr));
+    grid-template-columns: repeat(2, minmax(80px, 1fr));
     gap: var(--spacing-md);
     width: 100%;
     max-width: 600px;
@@ -55,7 +55,7 @@
   @media (max-width: 768px) {
     .cards-container {
       max-width: 100%;
-      grid-template-columns: repeat(4, minmax(60px, 1fr));
+      grid-template-columns: repeat(2, minmax(60px, 1fr));
     }
 
     .your-cards-zone {

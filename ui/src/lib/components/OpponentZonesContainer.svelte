@@ -16,11 +16,10 @@
   }
 
   const numOpponents = $derived($gameState.opponents.length);
-  const maxOpponents = 4; // Always allocate space for 4 positions
 </script>
 
 <div class="opponent-zones-container">
-  {#each Array(maxOpponents) as _, idx}
+  {#each Array(numOpponents) as _, idx}
     {@const opponent = $gameState.opponents[idx]}
     {@const pos = getGridPosition(idx)}
     <div
@@ -29,10 +28,6 @@
     >
       {#if opponent}
         <OpponentCardsZone {opponent} />
-      {:else}
-        <div class="empty-seat">
-          <div class="empty-seat__label">Empty Seat</div>
-        </div>
       {/if}
     </div>
   {/each}
@@ -61,26 +56,8 @@
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    /* padding: var(--spacing-md); */
     overflow: auto;
-  }
-
-  .empty-seat {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    color: var(--color-text-light);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-    border-radius: var(--radius-sm);
-  }
-
-  .empty-seat__label {
-    font-size: var(--font-size-sm);
-    text-align: center;
-    opacity: 0.4;
-    font-style: italic;
   }
 
   @media (max-width: 768px) {
