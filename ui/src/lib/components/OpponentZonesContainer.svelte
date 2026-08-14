@@ -1,117 +1,96 @@
 <!-- src/lib/components/OpponentZonesContainer.svelte -->
 <script lang="ts">
-	import { gameState } from '$lib/stores/gameState';
-	import OpponentCardsZone from './OpponentCardsZone.svelte';
-	import { LAYOUT } from '$lib/config';
+  import { gameState } from '$lib/stores/gameState';
+  import OpponentCardsZone from './OpponentCardsZone.svelte';
 
-	interface Position {
-		x: number;
-		y: number;
-		angle: number;
-	}
+  // Map to ensure opponents are positioned correctly by index
+  // Even with fewer opponents, maintain their grid positions
+  function getGridPosition(index: number): { col: number; row: number } {
+    const positions = [
+      { col: 1, row: 1 }, // Top-left (opponent 0 / position 1)
+      { col: 2, row: 1 }, // Top-right (opponent 1 / position 2)
+      { col: 1, row: 2 }, // Bottom-left (opponent 2 / position 3)
+      { col: 2, row: 2 }, // Bottom-right (opponent 3 / position 0, wraps)
+    ];
+    return positions[index] || positions[0];
+  }
 
-	function getOpponentPositions(numOpponents: number): Position[] {
-		const positions: Position[] = [];
-
-		if (numOpponents === 0) return positions;
-
-		// Get responsive radius based on viewport
-		let radius = LAYOUT.circleRadius;
-		if (typeof window !== 'undefined') {
-			const width = window.innerWidth;
-			if (width < 768) {
-				radius = LAYOUT.circleRadiusMobile;
-			} else if (width < 1024) {
-				radius = LAYOUT.circleRadiusTablet;
-			}
-		}
-
-		// Distribute opponents around circle, excluding player position (270° / bottom)
-		// Start from top (0°) and go clockwise
-		const availableAngles = 360 - 60; // Reserve 60° for player zone
-		const angleStep = availableAngles / numOpponents;
-
-		for (let i = 0; i < numOpponents; i++) {
-			let angle = i * angleStep; // Start from top, 0°
-
-			// Skip the bottom area (240° to 300°) reserved for player
-			if (angle >= 240) {
-				angle += 60;
-			}
-
-			const radians = (angle * Math.PI) / 180;
-			const x = Math.cos(radians) * radius;
-			const y = Math.sin(radians) * radius;
-
-			positions.push({ x, y, angle });
-		}
-
-		return positions;
-	}
-
-	let windowWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 1024);
-
-	$effect(() => {
-		if (typeof window === 'undefined') return;
-
-		const handleResize = () => {
-			windowWidth = window.innerWidth;
-		};
-
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	});
-
-	const positions = $derived(getOpponentPositions($gameState.opponents.length));
+  const numOpponents = $derived($gameState.opponents.length);
+  const maxOpponents = 4; // Always allocate space for 4 positions
 </script>
 
 <div class="opponent-zones-container">
-	{#each $gameState.opponents as opponent, idx}
-		{@const pos = positions[idx]}
-		<div class="opponent-zone" style="--x: {pos.x}px; --y: {pos.y}px;">
-			<OpponentCardsZone {opponent} />
-		</div>
-	{/each}
+  {#each Array(maxOpponents) as _, idx}
+    {@const opponent = $gameState.opponents[idx]}
+    {@const pos = getGridPosition(idx)}
+    <div
+      class="opponent-zone"
+      style="--col: {pos.col}; --row: {pos.row};"
+    >
+      {#if opponent}
+        <OpponentCardsZone {opponent} />
+      {:else}
+        <div class="empty-seat">
+          <div class="empty-seat__label">Empty Seat</div>
+        </div>
+      {/if}
+    </div>
+  {/each}
 </div>
 
 <style>
-	.opponent-zones-container {
-		position: relative;
-		width: 100%;
-		height: 500px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
+  .opponent-zones-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+  }
 
-	.opponent-zone {
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
-		z-index: 10;
-	}
+  .opponent-zone {
+    grid-column: var(--col);
+    grid-row: var(--row);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    min-width: 0;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    overflow: auto;
+  }
 
-	@media (max-width: 1024px) {
-		.opponent-zones-container {
-			height: 400px;
-		}
-	}
+  .empty-seat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--color-text-light);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    border-radius: var(--radius-sm);
+  }
 
-	@media (max-width: 768px) {
-		.opponent-zones-container {
-			height: 300px;
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: var(--spacing-md);
-			position: relative;
-		}
+  .empty-seat__label {
+    font-size: var(--font-size-sm);
+    text-align: center;
+    opacity: 0.4;
+    font-style: italic;
+  }
 
-		.opponent-zone {
-			position: static;
-			transform: none;
-			left: auto;
-			top: auto;
-		}
-	}
+  @media (max-width: 768px) {
+    .opponent-zones-container {
+      gap: var(--spacing-sm);
+    }
+
+    .opponent-zone {
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-sm);
+    }
+  }
 </style>
