@@ -99,7 +99,6 @@
     align-items: center;
     height: 100%;
     min-height: 0;
-    background-color: rgba(124, 71, 3, 0.096);
     border-radius: 5%;
     /* Base size calculated from zone height via aspect-ratio */
     /* Width = height × (2.5/3.5) for card aspect ratio */
