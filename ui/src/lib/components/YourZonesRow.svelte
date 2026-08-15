@@ -15,7 +15,7 @@
 
   <div class="your-zones-container">
     <div class="player-info-label">
-  <div class="player-name">{$gameState.self.score}<br/> (You)</div>
+  <div class="player-name">{$gameState.self.player_name}<br/> (You)</div>
   <div class="player-meta">
     <span class="score">Score:<br/>{$gameState.self.score}</span>
     <span class="score">Known Sum:<br/>{calculateKnownSum($gameState.self.hand, $gameState.rules.black_king_value, $gameState.rules.red_king_value, $gameState.rules.rank_values )}</span>

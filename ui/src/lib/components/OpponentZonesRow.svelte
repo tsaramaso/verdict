@@ -9,25 +9,46 @@
 <div class="opponent-zones-row">
   <div class="opponent-zones-container">
     {#each Array(numOpponents) as _, idx (idx)}
-      {@const opponent = $gameState.opponents[idx]}
-      <div class="player-info-label">
+    {@const opponent = $gameState.opponents[idx]}
+    <div class="player-box">
+    <div class="player-info-label">
   <div class="player-name">{opponent.player_name}</div>
   <div class="player-meta">
     <span class="score">Score: {opponent.score}</span>
   </div>
 </div>
-      <div class="opponent-zone">
-        {#if opponent}
-          <OpponentCardsZone {opponent} />
-        {/if}
-      </div>
+<div class="opponent-zone">
+  {#if opponent}
+  <OpponentCardsZone {opponent} />
+  {/if}
+</div>
+</div>
     {/each}
   </div>
 </div>
 
 
 <style>
-  .player-info-label {
+  .player-box {
+    border-color: black;
+    display: flex;
+    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    min-height: 0;
+    background-color: rgba(255, 42, 0, 0.371);
+    border-radius: 5%;
+    /* Base size calculated from zone height via aspect-ratio */
+    /* Width = height × (2.5/3.5) for card aspect ratio */
+    /* Minimum width based on zone height */
+    min-width: fit-content;
+    /* If all zones overflow, scale down uniformly */
+    max-width: 100%;
+    overflow: hidden;
+    
+  }
+    .player-info-label {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -36,6 +57,7 @@
     text-align: center;
     margin-left: 5%;
   }
+
 
   .player-name {
     font-weight: var(--font-weight-bold);
@@ -70,13 +92,14 @@
   }
 
   .opponent-zones-container {
+    border-color: black;
     display: flex;
     gap: clamp(0.5rem, 1.5vw, 1.5rem);
     justify-content: center;
     align-items: center;
     height: 100%;
     min-height: 0;
-    background-color: rgba(255, 42, 0, 0.371);
+    background-color: rgba(124, 71, 3, 0.096);
     border-radius: 5%;
     /* Base size calculated from zone height via aspect-ratio */
     /* Width = height × (2.5/3.5) for card aspect ratio */
@@ -85,6 +108,7 @@
     /* If all zones overflow, scale down uniformly */
     max-width: 100%;
     overflow: hidden;
+    padding: 0.5%;
   }
 
   .opponent-zone {
