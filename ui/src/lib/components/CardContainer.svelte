@@ -39,7 +39,7 @@
   .card-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: clamp(0.5rem, 1.5vw, 1rem);
+    gap: clamp(0.1rem, 0.1vw, 0.1rem);
     width: 100%;
     height: 100%;
     min-height: 0;
