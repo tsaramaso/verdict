@@ -81,7 +81,7 @@ class ActionResult(BaseModel):
 
 class GameCreateRequest(BaseModel):
     player_ids: list[str]
-    rules_config: dict[str, str]
+    rules_config: dict | None = None  # Optional rules override, None defaults to BASE_RULES
 
 
 class GameCreateResult(ActionResult):

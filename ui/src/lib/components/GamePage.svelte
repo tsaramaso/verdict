@@ -6,6 +6,7 @@
   import BottomBar from './BottomBar.svelte';
   import PlayArea from './PlayArea.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
+	import { transformRules } from '$lib/utils/rulesTransform';
 
   interface Props {
     playerId: string;
@@ -67,6 +68,7 @@ ws.onmessage = (event) => {
     
     // Update store with transformed state
     // Note: game fields are nested under message.game from the API
+    // Rules are transformed from backend format to UI format
     gameState.set({
       game_id: message.game.game_id,
       phase: message.game.phase,
@@ -77,22 +79,7 @@ ws.onmessage = (event) => {
       my_opponent_knowledge: message.my_opponent_knowledge,
       trial: message.trial,
       discard_pile: transformedDiscard,
-      rules: message.rules || {
-        red_king_value: 0,
-        black_king_value: 0,
-        hand_size: 0,
-        nb_of_starting_draw: 0,
-        eligible_threshold: 0,
-        min_players: 0,
-        max_players: 0,
-        perjury_penalty: 0,
-        duel_loss_penalty: 0,
-        false_cross_testimony_penalty: 0,
-        plea_penalty: 0,
-        renaissance_thresholds: { 0: 0 },
-        game_over_score: 0,
-        rank_values: {}
-      }
+      rules: transformRules(message.rules)
     });
   }
 };

@@ -1,6 +1,7 @@
 import { CardRank, CardSuit } from '$lib/constants/cards';
 import { writable, derived, type Writable, type Readable } from 'svelte/store';
 import { GAME_PHASES } from '$lib/config';
+import { getHardcodedBaseRules } from '$lib/utils/baseRules';
 
 // ============================================
 // PHASE TYPE - Global solution for phase typing
@@ -121,35 +122,7 @@ const DEFAULT_STATE: GameState = {
 		count: 0,
 		visible_cards: []
 	},
-	rules: {
-		red_king_value: 0,
-		black_king_value: 0,
-		hand_size: 0,
-		nb_of_starting_draw: 0,
-		eligible_threshold: 0,
-		min_players: 0,
-		max_players: 0,
-		perjury_penalty: 0,
-		duel_loss_penalty: 0,
-		false_cross_testimony_penalty: 0,
-		plea_penalty: 0,
-		renaissance_thresholds: { 0: 0 },
-		game_over_score: 0,
-		rank_values: {
-			[CardRank.ACE]: 1,
-			[CardRank.TWO]: 2,
-			[CardRank.THREE]: 3,
-			[CardRank.FOUR]: 4,
-			[CardRank.FIVE]: 5,
-			[CardRank.SIX]: 6,
-			[CardRank.SEVEN]: 7,
-			[CardRank.EIGHT]: 8,
-			[CardRank.NINE]: 9,
-			[CardRank.TEN]: 10,
-			[CardRank.JACK]: 11,
-			[CardRank.QUEEN]: 12
-		}
-	}
+	rules: getHardcodedBaseRules()
 };
 
 // ============================================

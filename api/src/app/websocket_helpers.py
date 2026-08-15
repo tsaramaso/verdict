@@ -158,6 +158,25 @@ def scope_state_for_player(
         "plea_declined": list(game_state.trial.plea_declined),
     }
 
+    # === RULES ===
+    # Include the game rules for UI initialization and card value lookup
+    rules_dict = game_state.rules.model_dump() if hasattr(game_state.rules, 'model_dump') else {
+        "red_king_value": game_state.rules.red_king_value,
+        "black_king_value": game_state.rules.black_king_value,
+        "hand_size": game_state.rules.hand_size,
+        "nb_of_starting_draw": game_state.rules.nb_of_starting_draw,
+        "eligible_threshold": game_state.rules.eligible_threshold,
+        "min_players": game_state.rules.min_players,
+        "max_players": game_state.rules.max_players,
+        "perjury_penalty": game_state.rules.perjury_penalty,
+        "duel_loss_penalty": game_state.rules.duel_loss_penalty,
+        "false_cross_testimony_penalty": game_state.rules.false_cross_testimony_penalty,
+        "plea_penalty": game_state.rules.plea_penalty,
+        "renaissance_thresholds": game_state.rules.renaissance_thresholds,
+        "game_over_score": game_state.rules.game_over_score,
+        "face_rank_values": game_state.rules.face_rank_values,
+    }
+
     # === ASSEMBLE RESPONSE ===
     return {
         "type": "game_state",
@@ -181,4 +200,5 @@ def scope_state_for_player(
             "count": len(game_state.discard_pile),
             "visible_cards": discard_pile_cards,
         },
+        "rules": rules_dict,
     }

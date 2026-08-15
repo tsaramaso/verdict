@@ -25,7 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Path
 from loguru import logger
 from sqlmodel import Session, select
 
-from src.app.engine.constants import TurnDirection
+from src.app.engine.constants import TurnDirection, BASE_RULES
 from src.app.auth import get_current_player, get_current_user
 from src.app.engine import engine
 from src.app.engine.errors import IllegalAction
@@ -127,6 +127,16 @@ def create_game(
         phase=state.phase,
         events=[EventOut.from_engine_event(e, user.uuid) for e in events],
     )
+
+
+@router.get("/base-rules")
+def get_base_rules() -> dict:
+    """
+    Returns the BASE_RULES constant from the engine.
+    Used by frontend to initialize DEFAULT_STATE with correct values.
+    No auth required - this is game configuration, not user data.
+    """
+    return BASE_RULES.model_dump()
 
 
 @router.get("", response_model=GameListOut)

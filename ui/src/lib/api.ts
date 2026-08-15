@@ -105,12 +105,12 @@ export async function getGameStatus(gameId: string) {
 	return apiCall(`/games/${gameId}/status`);
 }
 
-export async function createGame(playerIds: string[]) {
+export async function createGame(playerIds: string[], rulesConfig?: Record<string, any>) {
 	return apiCall('/games', {
 		method: 'POST',
 		body: JSON.stringify({
 			player_ids: playerIds,
-			rules_config: {}
+			rules_config: rulesConfig || {}
 		})
 	});
 }
