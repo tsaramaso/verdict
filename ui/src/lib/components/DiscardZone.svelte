@@ -84,6 +84,10 @@
 		align-items: center;
 		justify-content: center;
 		color: var(--suit-color);
+		width: 85%;
+		height: 85%;
+		background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+		border-radius: clamp(2px, 3%, 4px);
 	}
 
 	.card-rank {

@@ -1,7 +1,8 @@
 <!-- src/lib/components/CardContainer.svelte -->
 <script lang="ts">
-  import CardSlot, { type CardData} from './CardSlot.svelte';
+  import CardSlot from './CardSlot.svelte';
   import { getOpponentsThatKnowSlot, myOpponentKnowledge } from '$lib/stores/gameState';
+  import type { CardData } from '$lib/components/CardSlot.svelte';
 
   interface Props {
     cards?: (CardData | undefined)[];
@@ -39,7 +40,7 @@
   .card-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: clamp(0.1rem, 0.1vw, 0.1rem);
+    gap: clamp(0.25rem, 0.5vw, 0.5rem);
     width: 100%;
     height: 100%;
     min-height: 0;

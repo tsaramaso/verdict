@@ -2,7 +2,7 @@
 <script lang="ts">
   import OpponentZonesRow from './OpponentZonesRow.svelte';
   import CentralArea from './CentralArea.svelte';
-  import YourCardsZone from './YourCardsZone.svelte';
+  import YourZonesRow from './YourZonesRow.svelte';
 
   interface Props {
     onDeckClick?: () => void;
@@ -22,8 +22,8 @@
     <CentralArea {onDeckClick} {onDiscardClick} />
   </div>
 
-  <div class="your-zone">
-    <YourCardsZone {onCardClick} />
+  <div class="your-zones-row">
+    <YourZonesRow {onCardClick} />
   </div>
 </div>
 
@@ -33,8 +33,8 @@
     grid-row: 1;
     display: grid;
     grid-template-rows: 1fr 0.5fr 1fr;
-    gap: clamp(0.5rem, 1.5vw, 1.5rem);
-    padding: clamp(0.5rem, 1.5vw, 1.5rem);
+    gap: clamp(0.25rem, 0.75vw, 0.75rem);
+    padding: clamp(0.25rem, 0.75vw, 0.75rem);
     overflow: hidden;
     min-height: 0;
     min-width: 0;
@@ -68,11 +68,11 @@
     overflow: hidden;
   }
 
-  .your-zone {
+  .your-zones-row {
     grid-row: 3;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     min-height: 0;
     min-width: 0;
     background: var(--color-bg-card);
@@ -80,9 +80,5 @@
     border-radius: var(--radius-md);
     padding: clamp(0.5rem, 1vw, 1rem);
     overflow: hidden;
-        /* Constrain width to roughly one opponent card zone */
-    max-width: clamp(150px, 25vw, 280px);
-    width: 100%;       /* Force it to fill up to the max-width */
-    margin: 0 auto; 
   }
 </style>

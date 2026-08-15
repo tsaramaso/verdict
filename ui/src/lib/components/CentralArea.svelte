@@ -45,7 +45,7 @@
 
   .central-cards-container {
     display: flex;
-    gap: clamp(0.75rem, 2vw, 2rem);
+    gap: clamp(0.25rem, 0.75vw, 0.75rem);
     justify-content: center;
     align-items: center;
     height: 100%;

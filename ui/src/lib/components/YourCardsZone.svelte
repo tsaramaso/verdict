@@ -13,38 +13,26 @@
 </script>
 
 <div class="your-cards-zone">
-  <div class="your-zone-container">
-    <CardContainer 
-      cards={yourCards}
-      isYourCards={true}
-      {onCardClick}
-      showKnowledge={true}
-    />
-  </div>
+  <CardContainer 
+    cards={yourCards}
+    isYourCards={true}
+    {onCardClick}
+    showKnowledge={true}
+  />
 </div>
 
 <style>
   .your-cards-zone {
     display: flex;
+    flex-direction: column;
+    gap: clamp(0.25rem, 0.8vw, 0.5rem);
     align-items: center;
-    justify-content: center;
     padding: 0;
     background: transparent;
+    border-radius: 0;
+    border: none;
     width: 100%;
     height: 100%;
     min-height: 0;
-    min-width: 0;
-  }
-
-  .your-zone-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Fixed size matching opponent zones */
-    aspect-ratio: 2.5 / 3.5;
-    height: 100%;
-    width: auto;
-    min-height: 0;
-    min-width: 0;
   }
 </style>

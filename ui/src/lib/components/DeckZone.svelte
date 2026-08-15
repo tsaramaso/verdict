@@ -37,9 +37,10 @@
 				45deg,
 				transparent,
 				transparent 10px,
-				rgba(255, 255, 255, 0.03) 10px,
-				rgba(255, 255, 255, 0.03) 20px
+				rgba(12, 196, 233, 0.05) 10px,
+				rgba(255, 255, 255, 0.05) 20px
 			);
+		border: 2px solid rgba(255, 255, 255, 0.1);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
 		display: flex;
@@ -47,7 +48,6 @@
 		justify-content: center;
 		cursor: default;
 		transition: all 0.2s ease;
-		border: 2px solid transparent;
 	}
 
 	.deck-zone:disabled {
