@@ -1,35 +1,32 @@
-<!-- src/lib/components/DeckZone.svelte -->
+<!-- src/lib/components/DeckZone.svelte (FINAL) -->
 <script lang="ts">
-	import { deckSize } from '$lib/stores/gameState';
+  interface Props {
+    isClickable?: boolean;
+    onClick?: () => void;
+  }
 
-	interface Props {
-		isClickable?: boolean;
-		onClick?: () => void;
-	}
+  let { isClickable = false, onClick }: Props = $props();
 
-	let { isClickable = false, onClick }: Props = $props();
+  import { deckSize } from '$lib/stores/gameState';
 
-	let isHovered = $state(false);
+  const deckCount = $derived(deckSize);
 </script>
 
-<div
-	class={`deck-zone ${isClickable ? 'deck-zone--clickable' : ''} ${isHovered ? 'deck-zone--hovered' : ''}`}
-	role="button"
-	tabindex={isClickable ? 0 : -1}
-	onclick={onClick}
-	onmouseenter={() => (isHovered = true)}
-	onmouseleave={() => (isHovered = false)}
+<button
+  class="deck-zone"
+  disabled={!isClickable}
+  onclick={onClick}
+  title="Draw a card from the deck"
 >
-	<div class="deck-back">
-		<div class="deck-pattern"></div>
-	</div>
-	<div class="deck-count">{$deckSize}</div>
-</div>
+  <div class="deck-pattern">
+    <div class="deck-label">Deck</div>
+  </div>
+</button>
 
 <style>
 	.deck-zone {
 		position: relative;
-		width: 100%;
+		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
 		border-radius: var(--radius-md);
@@ -42,31 +39,25 @@
 		border: 2px solid transparent;
 	}
 
-	.deck-zone--clickable {
+	.deck-zone:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	.deck-zone:not(:disabled) {
 		cursor: pointer;
 	}
 
-	.deck-zone--clickable:hover {
-		border-color: var(--color-primary);
-		box-shadow:
-			0 0 0 2px rgba(0, 123, 255, 0.2),
-			var(--shadow-md);
+	.deck-zone:not(:disabled):hover {
+		border-color: #4a9eff;
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-lg), 0 0 12px rgba(74, 158, 255, 0.3);
 	}
 
-	.deck-zone--hovered {
-		transform: scale(1.05);
+	.deck-zone:not(:disabled):active {
+		transform: translateY(0);
 	}
-
-	.deck-back {
-		width: 100%;
-		height: 100%;
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: var(--radius-sm);
-		position: relative;
-		overflow: hidden;
-	}
-
-	.deck-pattern {
+		.deck-pattern {
 		width: 100%;
 		height: 100%;
 		background: repeating-linear-gradient(
@@ -76,6 +67,26 @@
 			rgba(255, 255, 255, 0.05) 10px,
 			rgba(255, 255, 255, 0.05) 20px
 		);
+	}
+
+	.deck-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+				background: repeating-linear-gradient(
+			45deg,
+			transparent,
+			transparent 10px,
+			rgba(255, 255, 255, 0.05) 10px,
+			rgba(255, 255, 255, 0.05) 20px
+		);
+		font-size: clamp(0.875rem, 2.5vw, 1.5rem);
+		font-weight: var(--font-weight-bold);
+	}
+
+	.deck-label {
+		letter-spacing: 2px;
 	}
 
 	.deck-count {
@@ -90,7 +101,5 @@
 		font-weight: var(--font-weight-bold);
 		font-family: monospace;
 	}
-
-
 	
 </style>

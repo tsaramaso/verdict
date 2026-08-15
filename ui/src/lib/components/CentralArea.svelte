@@ -1,4 +1,4 @@
-<!-- src/lib/components/CentralArea.svelte -->
+<!-- src/lib/components/CentralArea.svelte (FINAL - Cards fill zone height) -->
 <script lang="ts">
   import DeckZone from './DeckZone.svelte';
   import DiscardZone from './DiscardZone.svelte';
@@ -32,7 +32,7 @@
 <style>
   .central-area {
     display: flex;
-    gap: 0;
+    gap: clamp(0.75rem, 2vw, 2rem);
     justify-content: center;
     align-items: center;
     padding: 0;
@@ -54,8 +54,9 @@
   }
 
   .card-pair > :global(*) {
-    flex: 0 1 auto;
-    max-width: 100%;
+    flex: 0 0 auto;
+    height: 100%;
+    aspect-ratio: 2.5 / 3.5;
     max-height: 100%;
   }
 </style>

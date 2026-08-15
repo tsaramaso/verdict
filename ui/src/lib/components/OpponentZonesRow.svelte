@@ -36,7 +36,6 @@
     min-height: 0;
     min-width: 0;
     flex: 1;
-    max-width: 200px;
     height: 100%;
   }
 </style>

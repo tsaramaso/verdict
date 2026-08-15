@@ -1,4 +1,4 @@
-<!-- src/lib/components/PlayArea.svelte (UPDATED) -->
+<!-- src/lib/components/PlayArea.svelte -->
 <script lang="ts">
   import OpponentZonesRow from './OpponentZonesRow.svelte';
   import CentralArea from './CentralArea.svelte';
@@ -32,7 +32,7 @@
     grid-column: 1;
     grid-row: 1;
     display: grid;
-    grid-template-rows: 1fr 0.3fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
     gap: clamp(0.5rem, 1.5vw, 1.5rem);
     padding: clamp(0.5rem, 1.5vw, 1.5rem);
     overflow: hidden;
@@ -80,7 +80,7 @@
     border-radius: var(--radius-md);
     padding: clamp(0.5rem, 1vw, 1rem);
     overflow: hidden;
-    /* Constrain width to roughly one opponent card zone */
+        /* Constrain width to roughly one opponent card zone */
     max-width: clamp(150px, 25vw, 280px);
     width: 100%;       /* Force it to fill up to the max-width */
     margin: 0 auto; 
