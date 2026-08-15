@@ -9,7 +9,6 @@
   }
 
   let { onCardClick }: Props = $props();
-  console.log($gameState)
 </script>
 
 <div class="your-zones-row">
