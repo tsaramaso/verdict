@@ -10,6 +10,12 @@
   <div class="opponent-zones-container">
     {#each Array(numOpponents) as _, idx (idx)}
       {@const opponent = $gameState.opponents[idx]}
+      <div class="player-info-label">
+  <div class="player-name">{opponent.player_name}</div>
+  <div class="player-meta">
+    <span class="score">Score: {opponent.score}</span>
+  </div>
+</div>
       <div class="opponent-zone">
         {#if opponent}
           <OpponentCardsZone {opponent} />
@@ -19,7 +25,40 @@
   </div>
 </div>
 
+
 <style>
+  .player-info-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    text-align: center;
+    margin-left: 5%;
+  }
+
+  .player-name {
+    font-weight: var(--font-weight-bold);
+    font-size: clamp(0.75rem, 1vw, 1rem);
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .player-meta {
+    display: flex;
+    gap: clamp(0.5rem, 1vw, 1rem);
+    font-size: clamp(0.65rem, 0.8vw, 0.875rem);
+    color: var(--color-text-light);
+  }
+
+  .score {
+    white-space: nowrap;
+  }
+
+
   .opponent-zones-row {
     display: flex;
     width: 100%;
@@ -37,6 +76,8 @@
     align-items: center;
     height: 100%;
     min-height: 0;
+    background-color: rgba(255, 42, 0, 0.371);
+    border-radius: 5%;
     /* Base size calculated from zone height via aspect-ratio */
     /* Width = height × (2.5/3.5) for card aspect ratio */
     /* Minimum width based on zone height */

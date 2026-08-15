@@ -21,13 +21,7 @@
 </script>
 
 <div class="opponent-cards-zone">
-  <div class="opponent-header">
-    <div class="opponent-name">{opponent.player_name}</div>
-    <div class="opponent-meta">
-      <span class="score">Score: {opponent.score}</span>
-    </div>
-  </div>
-
+  
   <CardContainer 
     cards={opponentCards}
     isYourCards={false}
@@ -48,37 +42,8 @@
     width: 100%;
     height: 100%;
     min-height: 0;
-  }
+    margin-top: 5%;
+    margin-right: 5%;
 
-  .opponent-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-    text-align: center;
-    border-bottom: 1px solid var(--color-border-light);
-    padding-bottom: clamp(0.25rem, 0.5vw, 0.5rem);
-    margin-bottom: clamp(0.25rem, 0.8vw, 0.5rem);
-  }
-
-  .opponent-name {
-    font-weight: var(--font-weight-bold);
-    font-size: clamp(0.75rem, 1vw, 1rem);
-    color: var(--color-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .opponent-meta {
-    display: flex;
-    gap: clamp(0.5rem, 1vw, 1rem);
-    font-size: clamp(0.65rem, 0.8vw, 0.875rem);
-    color: var(--color-text-light);
-  }
-
-  .score {
-    white-space: nowrap;
   }
 </style>

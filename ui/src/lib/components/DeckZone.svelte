@@ -21,7 +21,7 @@
 	title="Draw a card from the deck"
 >
 	<div class="deck-content">
-		<div class="deck-label">DECK</div>
+		<div class="deck-label">Deck</div>
 	</div>
 	<div class="deck-count">{$deckSize}</div>
 </button>
