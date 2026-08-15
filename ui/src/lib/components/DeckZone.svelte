@@ -1,26 +1,29 @@
-<!-- src/lib/components/DeckZone.svelte (FINAL) -->
+<!-- src/lib/components/DeckZone.svelte -->
 <script lang="ts">
-  interface Props {
-    isClickable?: boolean;
-    onClick?: () => void;
-  }
+	import { deckSize } from '$lib/stores/gameState';
 
-  let { isClickable = false, onClick }: Props = $props();
+	interface Props {
+		isClickable?: boolean;
+		onClick?: () => void;
+	}
 
-  import { deckSize } from '$lib/stores/gameState';
+	let { isClickable = false, onClick }: Props = $props();
 
-  const deckCount = $derived(deckSize);
+	let isHovered = $state(false);
 </script>
 
 <button
-  class="deck-zone"
-  disabled={!isClickable}
-  onclick={onClick}
-  title="Draw a card from the deck"
+	class={`deck-zone ${isClickable ? 'deck-zone--clickable' : ''} ${isHovered ? 'deck-zone--hovered' : ''}`}
+	disabled={!isClickable}
+	onclick={onClick}
+	onmouseenter={() => (isHovered = true)}
+	onmouseleave={() => (isHovered = false)}
+	title="Draw a card from the deck"
 >
-  <div class="deck-pattern">
-    <div class="deck-label">Deck</div>
-  </div>
+	<div class="deck-content">
+		<div class="deck-label">DECK</div>
+	</div>
+	<div class="deck-count">{$deckSize}</div>
 </button>
 
 <style>
@@ -29,6 +32,14 @@
 		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
+		background-image: 
+			repeating-linear-gradient(
+				45deg,
+				transparent,
+				transparent 10px,
+				rgba(255, 255, 255, 0.03) 10px,
+				rgba(255, 255, 255, 0.03) 20px
+			);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
 		display: flex;
@@ -48,25 +59,15 @@
 		cursor: pointer;
 	}
 
-	.deck-zone:not(:disabled):hover {
-		border-color: #4a9eff;
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-lg), 0 0 12px rgba(74, 158, 255, 0.3);
+	.deck-zone--clickable:hover {
+		border-color: var(--color-primary);
+		box-shadow:
+			0 0 0 2px rgba(0, 123, 255, 0.2),
+			var(--shadow-md);
 	}
 
-	.deck-zone:not(:disabled):active {
-		transform: translateY(0);
-	}
-		.deck-pattern {
-		width: 100%;
-		height: 100%;
-		background: repeating-linear-gradient(
-			45deg,
-			transparent,
-			transparent 10px,
-			rgba(255, 255, 255, 0.05) 10px,
-			rgba(255, 255, 255, 0.05) 20px
-		);
+	.deck-zone--hovered {
+		transform: scale(1.05);
 	}
 
 	.deck-content {
@@ -74,32 +75,25 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-				background: repeating-linear-gradient(
-			45deg,
-			transparent,
-			transparent 10px,
-			rgba(255, 255, 255, 0.05) 10px,
-			rgba(255, 255, 255, 0.05) 20px
-		);
-		font-size: clamp(0.875rem, 2.5vw, 1.5rem);
+		color: #8892b0;
+		font-size: clamp(0.75rem, 2.5vw, 1.25rem);
 		font-weight: var(--font-weight-bold);
 	}
 
 	.deck-label {
-		letter-spacing: 2px;
+		letter-spacing: clamp(1px, 1vw, 2px);
 	}
 
 	.deck-count {
 		position: absolute;
-		bottom: clamp(4px, 3%, 12px);
-		right: clamp(4px, 3%, 12px);
+		bottom: clamp(2px, 3%, 8px);
+		right: clamp(2px, 3%, 8px);
 		background: rgba(0, 0, 0, 0.3);
 		color: white;
-		padding: clamp(2px, 1.5%, 6px) clamp(4px, 2%, 8px);
-		border-radius: var(--radius-sm);
+		padding: clamp(1px, 1.5%, 4px) clamp(2px, 2%, 6px);
+		border-radius: clamp(2px, 3%, 4px);
 		font-size: clamp(0.65rem, 1.5vw, 0.875rem);
 		font-weight: var(--font-weight-bold);
 		font-family: monospace;
 	}
-	
 </style>

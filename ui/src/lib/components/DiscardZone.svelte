@@ -1,35 +1,37 @@
-<!-- src/lib/components/DiscardZone.svelte (FINAL) -->
+<!-- src/lib/components/DiscardZone.svelte -->
 <script lang="ts">
-  interface Props {
-    isClickable?: boolean;
-    onClick?: () => void;
-  }
+	import { gameState } from '$lib/stores/gameState';
+	import { getSuitSymbol } from '$lib/config';
+	import { SUIT_COLORS } from '$lib/constants/cards';
 
-  let { isClickable = false, onClick }: Props = $props();
+	interface Props {
+		isClickable?: boolean;
+		onClick?: () => void;
+	}
 
-  import { gameState } from '$lib/stores/gameState';
+	let { isClickable = false, onClick }: Props = $props();
 
-  const topCard = $derived($gameState.discard_pile.visible_cards[0]);
-  const discardCount = $derived($gameState.discard_pile.count ?? 0);
+	let isHovered = $state(false);
 </script>
 
 <button
-  class="discard-zone"
-  disabled={!isClickable}
-  onclick={onClick}
-  title={topCard ? `${topCard.rank}${topCard.suit}` : 'Empty discard pile'}
+	class={`discard-zone ${isClickable ? 'discard-zone--clickable' : ''} ${isHovered ? 'discard-zone--hovered' : ''}`}
+	disabled={!isClickable}
+	onclick={onClick}
+	onmouseenter={() => (isHovered = true)}
+	onmouseleave={() => (isHovered = false)}
+	title={$gameState.discard_pile.visible_cards.length > 0 ? `${$gameState.discard_pile.visible_cards[0].rank}${getSuitSymbol($gameState.discard_pile.visible_cards[0].suit)}` : 'Empty discard pile'}
 >
-  {#if topCard}
-    <div class="card-display">
-      <div class="card-rank">{topCard.rank}</div>
-      <div class="card-suit">{topCard.suit}</div>
-    </div>
-  {:else}
-    <div class="card-display">
-      <div class="empty-text">No card</div>
-    </div>
-  {/if}
-  <div class="discard-count">{discardCount}</div>
+	{#if $gameState.discard_pile.visible_cards.length > 0}
+		{@const topCard = $gameState.discard_pile.visible_cards[0]}
+		<div class="card-display" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
+			<div class="card-rank">{topCard.rank}</div>
+			<div class="card-suit">{getSuitSymbol(topCard.suit)}</div>
+		</div>
+	{:else}
+		<div class="empty-label">No card</div>
+	{/if}
+	<div class="discard-count">{$gameState.discard_pile.count}</div>
 </button>
 
 <style>
@@ -37,7 +39,15 @@
 		position: relative;
 		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
-		background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
+		background-image: 
+			repeating-linear-gradient(
+				45deg,
+				transparent,
+				transparent 10px,
+				rgba(255, 255, 255, 0.03) 10px,
+				rgba(255, 255, 255, 0.03) 20px
+			);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
 		display: flex;
@@ -57,14 +67,15 @@
 		cursor: pointer;
 	}
 
-	.discard-zone:not(:disabled):hover {
-		border-color: #4a9eff;
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-lg), 0 0 12px rgba(74, 158, 255, 0.3);
+	.discard-zone--clickable:hover {
+		border-color: var(--color-primary);
+		box-shadow:
+			0 0 0 2px rgba(0, 123, 255, 0.2),
+			var(--shadow-md);
 	}
 
-	.discard-zone:not(:disabled):active {
-		transform: translateY(0);
+	.discard-zone--hovered {
+		transform: scale(1.05);
 	}
 
 	.card-display {
@@ -72,7 +83,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		color: var(--color-text);
+		color: var(--suit-color);
 	}
 
 	.card-rank {
@@ -86,19 +97,20 @@
 		margin-top: clamp(2px, 1.5%, 6px);
 	}
 
-	.empty-text {
+	.empty-label {
 		font-size: clamp(0.75rem, 1.5vw, 1rem);
-		color: var(--color-text-light);
+		color: #8892b0;
+		font-weight: var(--font-weight-bold);
 	}
 
 	.discard-count {
 		position: absolute;
-		bottom: clamp(4px, 3%, 12px);
-		right: clamp(4px, 3%, 12px);
-		background: rgba(0, 0, 0, 0.2);
-		color: var(--color-text);
-		padding: clamp(2px, 1.5%, 6px) clamp(4px, 2%, 8px);
-		border-radius: var(--radius-sm);
+		bottom: clamp(2px, 3%, 8px);
+		right: clamp(2px, 3%, 8px);
+		background: rgba(0, 0, 0, 0.3);
+		color: white;
+		padding: clamp(1px, 1.5%, 4px) clamp(2px, 2%, 6px);
+		border-radius: clamp(2px, 3%, 4px);
 		font-size: clamp(0.65rem, 1.5vw, 0.875rem);
 		font-weight: var(--font-weight-bold);
 		font-family: monospace;

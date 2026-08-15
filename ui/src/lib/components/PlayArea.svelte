@@ -32,7 +32,7 @@
     grid-column: 1;
     grid-row: 1;
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 0.5fr 1fr;
     gap: clamp(0.5rem, 1.5vw, 1.5rem);
     padding: clamp(0.5rem, 1.5vw, 1.5rem);
     overflow: hidden;

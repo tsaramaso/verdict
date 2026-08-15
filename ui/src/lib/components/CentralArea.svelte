@@ -1,9 +1,10 @@
-<!-- src/lib/components/CentralArea.svelte (FINAL - Cards fill zone height) -->
+<!-- src/lib/components/CentralArea.svelte -->
 <script lang="ts">
   import DeckZone from './DeckZone.svelte';
   import DiscardZone from './DiscardZone.svelte';
   import { gameState, isActivePlayer } from '$lib/stores/gameState';
   import { GAME_PHASES } from '$lib/config';
+  import CardSlot from './CardSlot.svelte';
 
   interface Props {
     onDeckClick?: () => void;
@@ -23,7 +24,7 @@
 </script>
 
 <div class="central-area">
-  <div class="card-pair">
+  <div class="central-cards-container">
     <DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
     <DiscardZone isClickable={isDiscardClickable} onClick={onDiscardClick} />
   </div>
@@ -32,31 +33,33 @@
 <style>
   .central-area {
     display: flex;
-    gap: clamp(0.75rem, 2vw, 2rem);
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     padding: 0;
     background: transparent;
-    border-radius: 0;
-    flex-shrink: 0;
     width: 100%;
     height: 100%;
+    min-height: 0;
+    min-width: 0;
   }
 
-  .card-pair {
+  .central-cards-container {
     display: flex;
     gap: clamp(0.75rem, 2vw, 2rem);
     justify-content: center;
     align-items: center;
     height: 100%;
-    width: auto;
+    min-height: 0;
+    /* Two cards side-by-side, each with aspect-ratio 2.5/3.5 */
+    /* Width: (height × 2.5/3.5) × 2 + gap */
     max-width: 100%;
+    overflow: hidden;
   }
 
-  .card-pair > :global(*) {
-    flex: 0 0 auto;
+  .central-cards-container > :global(*) {
+    /* Each card fills zone height, width from aspect-ratio */
     height: 100%;
     aspect-ratio: 2.5 / 3.5;
-    max-height: 100%;
+    flex: 0 0 auto;
   }
 </style>

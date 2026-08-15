@@ -177,16 +177,17 @@
 	/* Rank Badge (for known opponent cards) */
 	.rank-badge {
 		position: absolute;
-		top: 4px;
-		right: 4px;
+		top: clamp(2px, 5%, 8px);
+		right: clamp(2px, 5%, 8px);
 		background: var(--suit-color);
 		color: white;
-		padding: 2px 6px;
-		border-radius: 4px;
-		font-size: 30px;
+		padding: clamp(1px, 2%, 4px) clamp(2px, 4%, 6px);
+		border-radius: clamp(2px, 3%, 4px);
+		font-size: clamp(0.75rem, 10vw, 1.5rem);
 		font-weight: var(--font-weight-bold);
 		pointer-events: none;
 		z-index: 10;
+		min-width: max-content;
 	}
 
 	.badge__text {
