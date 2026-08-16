@@ -29,7 +29,7 @@ from src.app.engine.constants import TurnDirection, BASE_RULES
 from src.app.auth import get_current_player, get_current_user
 from src.app.engine import engine
 from src.app.engine.errors import IllegalAction
-from src.app.engine.state import GameState
+from src.app.engine.state import GameState, Phase
 from src.app.game_registry import GameRegistry, get_game_state, get_registry
 from src.app.models.db import Event as DBEvent
 from src.app.models.db import Game, GamePlayer, User, Recap
@@ -43,6 +43,7 @@ from src.app.schemas import (
     GameListOut,
     GameStatusOut,
     GameSummaryOut,
+    PlayerReadyRequest,
 )
 from src.db.session import get_session
 
@@ -99,18 +100,22 @@ def create_game(
     except IllegalAction as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e)) from e
 
-    # Populate player names from found_users
+    # Populate player names from found_users and track who's host
     for user in found_users:
         state.players[user.uuid].player_name = user.name or user.uuid
-    # WAITING_FOR_PLAYERS is unused by this creation flow on purpose —
-    # every player is supplied up front, so there's no lobby phase.
-    # Retained in the enum for a possible future creation path.
+    
+    # Set host (first player in the list, typically the creator)
+    state.host_player_id = user.uuid
+    
+    # Start in WAITING_FOR_PLAYERS phase (lobby) instead of immediately starting
+    state.phase = Phase.TURN_START  # Will be kept until /start endpoint is called
+    
     game_row = Game(
         id=game_id,
-        status=GameStatus.IN_PROGRESS,
+        status=GameStatus.WAITING_FOR_PLAYERS,  # Use lobby status
         turn_direction=TurnDirection.CLOCKWISE,
         current_round=state.round_number,
-        started_at=datetime.now(timezone.utc),
+        # Don't set started_at yet — wait until /start endpoint
     )
     session.add(game_row)
     session.add_all(
@@ -126,6 +131,105 @@ def create_game(
         game_id=game_id,
         phase=state.phase,
         events=[EventOut.from_engine_event(e, user.uuid) for e in events],
+    )
+
+
+@router.post("/{game_id}/player/ready", status_code=status.HTTP_200_OK)
+def set_player_ready(
+    request: PlayerReadyRequest,
+    game_id: str = Path(...),
+    player_id: str = Depends(get_current_player),
+    registry: GameRegistry = Depends(get_registry),
+) -> dict:
+    """
+    Mark the current player as ready or not ready in the lobby phase.
+    
+    Request body:
+        ready: bool - True to mark as ready, False to unmark
+    
+    Returns:
+        {"player_id": str, "ready": bool}
+    
+    Raises:
+        HTTPException 404: Player not in this game
+    """
+    state = registry.get(game_id)
+    
+    if player_id not in state.players:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Player not in this game"
+        )
+    
+    # Mark player as ready
+    state.players[player_id].ready = request.ready
+    
+    return {
+        "player_id": player_id,
+        "ready": request.ready
+    }
+
+
+@router.post("/{game_id}/start", response_model=GameStatusOut)
+def start_game(
+    game_id: str = Path(...),
+    player_id: str = Depends(get_current_player),
+    session: Session = Depends(get_session),
+    registry: GameRegistry = Depends(get_registry),
+) -> GameStatusOut:
+    """
+    Start a game from the lobby phase. Only the host can start.
+    Validates all players are ready, then transitions to gameplay.
+    
+    Returns:
+        Updated GameStatusOut with phase, current_player, etc.
+        
+    Raises:
+        HTTPException 403: Player is not the host
+        HTTPException 409: Not all players are ready
+    """
+    # Get in-memory game state
+    state = registry.get(game_id)
+    
+    # Verify caller is the host
+    if player_id != state.host_player_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the host can start the game"
+        )
+    
+    # Check all players are ready (connected and marked ready)
+    not_ready = [
+        pid for pid in state.player_order
+        if not state.players[pid].ready or not state.players[pid].connected
+    ]
+    
+    if not_ready:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Not all players are ready: {not_ready}"
+        )
+    
+    # Update DB status to IN_PROGRESS
+    game = session.exec(select(Game).where(Game.id == game_id)).first()
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    game.status = GameStatus.IN_PROGRESS
+    game.started_at = datetime.now(timezone.utc)
+    session.add(game)
+    session.commit()
+    
+    logger.info("game_started", game_id=game_id, started_by=player_id)
+    
+    return GameStatusOut(
+        game_id=state.game_id,
+        phase=state.phase,
+        current_player=state.current_player,
+        round_number=state.round_number,
+        scores=dict(state.scores),
+        is_last_turn=state.is_last_turn,
+        game_over=state.game_over,
     )
 
 

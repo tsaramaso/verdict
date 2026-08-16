@@ -93,7 +93,7 @@ export const actions = {
 			}
 
 			const game = await response.json();
-			throw redirect(303, `/game/${game.game_id}/play`);
+			throw redirect(303, `/game/${game.game_id}/lobby`);
 		} catch (err) {
 			// Re-throw redirect errors
 			if (err.status === 303) throw err;

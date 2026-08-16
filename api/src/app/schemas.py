@@ -146,3 +146,8 @@ class GameSummaryOut(BaseModel):
 
 class GameListOut(BaseModel):
     games: list[GameSummaryOut]
+
+
+class PlayerReadyRequest(BaseModel):
+    """Mark player as ready or not ready in lobby phase."""
+    ready: bool

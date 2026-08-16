@@ -57,6 +57,7 @@ class PlayerState:
     # affect legality of anything.
     spied_slots: set[int] = field(default_factory=set)
     connected: bool = True
+    ready: bool = False  # Lobby phase: is this player ready to start?
 
     @property
     def hand_size(self) -> int:
@@ -122,6 +123,9 @@ class GameState:
     is_last_turn: bool = False
     game_over: bool = False
 
+    # Lobby phase tracking
+    host_player_id: str | None = None  # Who created the game
+    
     # Turn-scoped scratch state
     drawn_card: Card | None = None
     draw_source: DrawSource | None = None
