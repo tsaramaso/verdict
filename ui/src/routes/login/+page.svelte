@@ -1,11 +1,25 @@
 <!-- ui/src/routes/login/+page.svelte -->
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	let isLoading = false;
+	import type { SubmitFunction } from '@sveltejs/kit';
 
-	function handleSubmit() {
+	let isLoading = $state(false);
+	let error = $state('');
+
+	const handleSubmit: SubmitFunction = async () => {
 		isLoading = true;
-	}
+		error = '';
+
+		return async ({ result }) => {
+			isLoading = false;
+
+			if (result.type === 'error') {
+				error = result.data?.error || 'An error occurred';
+			} else if (result.data?.error) {
+				error = result.data.error;
+			}
+		};
+	};
 </script>
 
 <main>
@@ -25,6 +39,9 @@
 			<button type="submit" disabled={isLoading}>
 				{isLoading ? 'Logging in...' : 'Log in'}
 			</button>
+			{#if error}
+				<div class="error-message">{error}</div>
+			{/if}
 		</form>
 	</div>
 </main>
@@ -88,5 +105,14 @@
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.error-message {
+		background-color: var(--color-danger-light);
+		color: var(--color-danger);
+		padding: var(--spacing-sm);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-sm);
+		border: 1px solid var(--color-danger);
 	}
 </style>

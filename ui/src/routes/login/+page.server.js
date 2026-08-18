@@ -1,6 +1,15 @@
 // ui/src/routes/login/+page.server.js
 import { redirect } from '@sveltejs/kit';
 
+export function load({ cookies }) {
+	const token = cookies.get('auth_token');
+	
+	// If already logged in, redirect to home
+	if (token) {
+		throw redirect(303, '/home');
+	}
+}
+
 export const actions = {
 	default: async ({ request, cookies }) => {
 		const data = await request.formData();
