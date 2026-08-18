@@ -59,7 +59,8 @@ export const actions = {
 			const response = await fetch(`${API_URL}/lobbies/create`, {
 				method: 'POST',
 				headers: {
-					Authorization: `Bearer ${token}`
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
 				}
 			});
 

@@ -25,10 +25,10 @@ def generate_short_id(length: int = 6) -> str:
 
 @router.post("/create")
 def create_lobby(
-    player_id: str = Depends(get_current_player),
     user = Depends(get_current_user)
 ) -> dict:
     """Create ephemeral lobby. Returns short ID."""
+    player_id = user.uuid
     short_id = generate_short_id()
     
     while short_id in lobbies:
@@ -57,13 +57,14 @@ def create_lobby(
 @router.get("/{lobby_id}")
 def get_lobby(
     lobby_id: str,
-    player_id: str = Depends(get_current_player)
+    user = Depends(get_current_user)
 ) -> dict:
     """Get lobby state. Auto-adds player if joining."""
     if lobby_id not in lobbies:
         raise HTTPException(status_code=404, detail="Lobby not found")
-    
+
     lobby = lobbies[lobby_id]
+    player_id = user.uuid
     
     if player_id not in lobby["players"]:
         lobby["players"][player_id] = {
@@ -85,13 +86,14 @@ def get_lobby(
 def set_lobby_player_ready(
     lobby_id: str,
     ready: bool,
-    player_id: str = Depends(get_current_player)
+    user = Depends(get_current_user)
 ) -> dict:
     """Mark player ready in lobby."""
     if lobby_id not in lobbies:
         raise HTTPException(status_code=404, detail="Lobby not found")
     
     lobby = lobbies[lobby_id]
+    player_id = user.uuid
     if player_id not in lobby["players"]:
         raise HTTPException(status_code=404, detail="Player not in lobby")
     

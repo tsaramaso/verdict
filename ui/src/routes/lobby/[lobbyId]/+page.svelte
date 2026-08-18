@@ -271,7 +271,7 @@
 	<div class="lobby-container">
 		<div class="lobby-header">
 			<h1>Game Lobby</h1>
-			<p class="game-id">Game ID: {data.gameId.slice(0, 8)}...</p>
+			<p class="game-id">Lobby ID: {data.lobbyId}</p>
 		</div>
 
 		{#if errorMessage}
