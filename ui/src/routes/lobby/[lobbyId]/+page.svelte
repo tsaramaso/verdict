@@ -64,38 +64,12 @@
 			return;
 		}
 
-		const wsUrl = `ws://localhost:8000/ws/lobbies/${data.lobbyId}?token=${encodeURIComponent(token)}`;
+		// Lobbies don't use WebSocket - they're ephemeral in-memory
+		// Real-time updates will be added in Phase 2
+		console.log('Lobby: WebSocket disabled - lobbies are ephemeral');
+		return;
 
-		ws = new WebSocket(wsUrl);
-
-		ws.onopen = () => {
-			console.log('WebSocket connected');
-			setInterval(() => {
-				if (ws && ws.readyState === WebSocket.OPEN) {
-					ws.send(JSON.stringify({ type: 'ping' }));
-				}
-			}, 30000);
-		};
-
-		ws.onmessage = (event) => {
-			try {
-				const message = JSON.parse(event.data);
-				handleWebSocketMessage(message);
-			} catch (err) {
-				console.error('Failed to parse WebSocket message:', err);
-			}
-		};
-
-		ws.onerror = (error) => {
-			console.error('WebSocket error:', error);
-			errorMessage = 'Connection error. Retrying...';
-			setTimeout(() => connectWebSocket(), 3000);
-		};
-
-		ws.onclose = () => {
-			console.log('WebSocket disconnected');
-			setTimeout(() => connectWebSocket(), 3000);
-		};
+		// WebSocket disabled for ephemeral lobbies
 	}
 
 	function handleWebSocketMessage(message: any) {
@@ -200,14 +174,6 @@
 			}
 
 			isReady = !isReady;
-
-			if (ws && ws.readyState === WebSocket.OPEN) {
-				ws.send(
-					JSON.stringify({
-						type: isReady ? 'ready' : 'not_ready'
-					})
-				);
-			}
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to update status';
 		} finally {
@@ -258,12 +224,6 @@
 
 	onMount(() => {
 		connectWebSocket();
-
-		return () => {
-			if (ws) {
-				ws.close();
-			}
-		};
 	});
 </script>
 
