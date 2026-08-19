@@ -1,41 +1,35 @@
 <!-- src/lib/components/YourCardsZone.svelte -->
 <script lang="ts">
-  import CardContainer from './CardContainer.svelte';
-  import { gameState } from '$lib/stores/gameState';
+	import CardContainer from './CardContainer.svelte';
+	import { gameState } from '$lib/stores/gameState';
 
-  interface Props {
-    onCardClick?: (slotIndex: number) => void;
-  }
+	interface Props {
+		onCardClick?: (slotIndex: number) => void;
+	}
 
-  let { onCardClick }: Props = $props();
+	let { onCardClick }: Props = $props();
 
-  const yourCards = $derived($gameState.self.hand);
+	const yourCards = $derived($gameState.self.hand);
 </script>
 
 <div class="your-cards-zone">
-  <CardContainer 
-    cards={yourCards}
-    isYourCards={true}
-    {onCardClick}
-    showKnowledge={true}
-  />
+	<CardContainer cards={yourCards} isYourCards={true} {onCardClick} showKnowledge={true} />
 </div>
 
 <style>
-  .your-cards-zone {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(0.25rem, 0.8vw, 0.5rem);
-    align-items: center;
-    padding: 0;
-    background: transparent;
-    border-radius: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    margin-top: 5%;
-    margin-right: 10%
-
-  }
+	.your-cards-zone {
+		display: flex;
+		flex-direction: column;
+		gap: clamp(0.25rem, 0.8vw, 0.5rem);
+		align-items: center;
+		padding: 0;
+		background: transparent;
+		border-radius: 0;
+		border: none;
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		margin-top: 5%;
+		margin-right: 10%;
+	}
 </style>

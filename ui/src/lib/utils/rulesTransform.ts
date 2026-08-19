@@ -3,7 +3,7 @@ import type { Rules } from '$lib/stores/gameState';
 
 /**
  * Transform rules from API format to UI format
- * 
+ *
  * Backend sends:
  * {
  *   red_king_value: number,
@@ -21,7 +21,7 @@ import type { Rules } from '$lib/stores/gameState';
  *   game_over_score: number,
  *   face_rank_values: { "ACE": 1, "TWO": 2, ... }  // String keys, string names
  * }
- * 
+ *
  * Frontend expects:
  * {
  *   ... same fields ...

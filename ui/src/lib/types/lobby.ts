@@ -4,23 +4,23 @@
  */
 
 export interface PlayerInfo {
-  player_id: string;
-  player_name: string;
-  ready: boolean;
-  connected: boolean;
+	player_id: string;
+	player_name: string;
+	ready: boolean;
+	connected: boolean;
 }
 
 export interface LobbyState {
-  lobby_id: string;
-  host_player_id: string;
-  players: PlayerInfo[];
+	lobby_id: string;
+	host_player_id: string;
+	players: PlayerInfo[];
 }
 
 export interface PlayerReadyRequest {
-  ready: boolean;
+	ready: boolean;
 }
 
 export interface PlayerReadyResponse {
-  player_id: string;
-  ready: boolean;
+	player_id: string;
+	ready: boolean;
 }

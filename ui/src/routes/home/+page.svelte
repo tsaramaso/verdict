@@ -40,9 +40,7 @@
 		<section class="section">
 			<h2>Start Playing</h2>
 			<form method="POST" action="?/createLobby" class="create-lobby-form">
-				<button type="submit" class="btn btn-primary btn-lg">
-					Create New Lobby
-				</button>
+				<button type="submit" class="btn btn-primary btn-lg"> Create New Lobby </button>
 			</form>
 			<p class="section-hint">Create a lobby and invite your friends to play</p>
 		</section>
@@ -59,11 +57,7 @@
 					disabled={isJoining}
 					required
 				/>
-				<button
-					type="submit"
-					class="btn btn-secondary"
-					disabled={isJoining}
-				>
+				<button type="submit" class="btn btn-secondary" disabled={isJoining}>
 					{#if isJoining}
 						Joining...
 					{:else}
@@ -85,12 +79,14 @@
 								<div class="lobby-host">{lobby.host}</div>
 							</div>
 							<div class="lobby-info">
-								<span class="player-count">👥 {lobby.player_count} player{lobby.player_count !== 1 ? 's' : ''}</span>
+								<span class="player-count"
+									>👥 {lobby.player_count} player{lobby.player_count !== 1 ? 's' : ''}</span
+								>
 								<span class="created-time">{new Date(lobby.created_at).toLocaleTimeString()}</span>
 							</div>
 							<button
 								class="btn btn-secondary btn-sm"
-								onclick={() => window.location.href = `/lobby/${lobby.lobby_id}`}
+								onclick={() => (window.location.href = `/lobby/${lobby.lobby_id}`)}
 							>
 								Join Lobby
 							</button>

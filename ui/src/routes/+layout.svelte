@@ -19,7 +19,6 @@
 				break;
 			}
 		}
-		
 	});
 </script>
 

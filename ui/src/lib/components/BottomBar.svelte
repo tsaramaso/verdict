@@ -51,44 +51,22 @@
 </script>
 
 <div class="bottom-bar">
-	<button 
-		class="btn btn--primary" 
-		onclick={onTestifyFirst}
-		disabled={!canTestifyFirstEnabled}
-	> 
-		TESTIMONY 
+	<button class="btn btn--primary" onclick={onTestifyFirst} disabled={!canTestifyFirstEnabled}>
+		TESTIMONY
 	</button>
 
-	<button 
-		class="btn btn--primary" 
-		onclick={onChallenge}
-		disabled={!canChallengeEnabled}
-	> 
-		CHALLENGE 
+	<button class="btn btn--primary" onclick={onChallenge} disabled={!canChallengeEnabled}>
+		CHALLENGE
 	</button>
 
-	<button 
-		class="btn btn--primary" 
-		onclick={onPlea}
-		disabled={!canPleaEnabled}
-	> 
-		TAKE PLEA 
+	<button class="btn btn--primary" onclick={onPlea} disabled={!canPleaEnabled}> TAKE PLEA </button>
+
+	<button class="btn btn--secondary" onclick={onPleaDecline} disabled={!canPleaEnabled}>
+		DECLINE
 	</button>
 
-	<button 
-		class="btn btn--secondary" 
-		onclick={onPleaDecline}
-		disabled={!canPleaEnabled}
-	> 
-		DECLINE 
-	</button>
-
-	<button 
-		class="btn btn--secondary" 
-		onclick={onSkip}
-		disabled={!canSkipEnabled}
-	> 
-		SKIP / PASS 
+	<button class="btn btn--secondary" onclick={onSkip} disabled={!canSkipEnabled}>
+		SKIP / PASS
 	</button>
 </div>
 

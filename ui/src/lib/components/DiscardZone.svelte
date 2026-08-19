@@ -20,7 +20,9 @@
 	onclick={onClick}
 	onmouseenter={() => (isHovered = true)}
 	onmouseleave={() => (isHovered = false)}
-	title={$gameState.discard_pile.visible_cards.length > 0 ? `${$gameState.discard_pile.visible_cards[0].rank}${getSuitSymbol($gameState.discard_pile.visible_cards[0].suit)}` : 'Empty discard pile'}
+	title={$gameState.discard_pile.visible_cards.length > 0
+		? `${$gameState.discard_pile.visible_cards[0].rank}${getSuitSymbol($gameState.discard_pile.visible_cards[0].suit)}`
+		: 'Empty discard pile'}
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
 		{@const topCard = $gameState.discard_pile.visible_cards[0]}
@@ -40,14 +42,13 @@
 		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
-		background-image: 
-			repeating-linear-gradient(
-				45deg,
-				transparent,
-				transparent 10px,
-				rgba(255, 255, 255, 0.03) 10px,
-				rgba(255, 255, 255, 0.03) 20px
-			);
+		background-image: repeating-linear-gradient(
+			45deg,
+			transparent,
+			transparent 10px,
+			rgba(255, 255, 255, 0.03) 10px,
+			rgba(255, 255, 255, 0.03) 20px
+		);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);
 		display: flex;

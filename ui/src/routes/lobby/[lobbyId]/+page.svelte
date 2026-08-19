@@ -35,14 +35,13 @@
 
 	// Current player ID (decode from auth token)
 	let currentPlayerId: string | null = null;
-	
+
 	// Derived state
-	let connectedPlayers = $derived(lobbyState.players.filter(p => p.connected).length);
-	let readyPlayers = $derived(lobbyState.players.filter(p => p.ready && p.connected).length);
+	let connectedPlayers = $derived(lobbyState.players.filter((p) => p.connected).length);
+	let readyPlayers = $derived(lobbyState.players.filter((p) => p.ready && p.connected).length);
 	let isHost = $derived(lobbyState.host_player_id === currentPlayerId);
 	let allReady = $derived(
-		lobbyState.players.length > 0 &&
-		lobbyState.players.every(p => p.connected && p.ready)
+		lobbyState.players.length > 0 && lobbyState.players.every((p) => p.connected && p.ready)
 	);
 
 	// WebSocket client
@@ -71,7 +70,7 @@
 
 	function handleWebSocketMessage(message: WebSocketMessage) {
 		if (message.type === 'player_connected') {
-			const existing = lobbyState.players.find(p => p.player_id === message.player_id);
+			const existing = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (existing) {
 				existing.connected = true;
 			} else {
@@ -83,12 +82,12 @@
 				});
 			}
 		} else if (message.type === 'player_ready') {
-			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (player) {
 				player.ready = message.ready;
 			}
 		} else if (message.type === 'player_disconnected') {
-			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (player) {
 				player.connected = false;
 			}
@@ -279,7 +278,11 @@
 
 		<div class="button-group">
 			{#if isHost}
-				<button class="btn btn-primary btn-lg" disabled={!allReady || isLoading} onclick={() => startGame()}>
+				<button
+					class="btn btn-primary btn-lg"
+					disabled={!allReady || isLoading}
+					onclick={() => startGame()}
+				>
 					{#if isLoading}
 						Starting...
 					{:else}
@@ -302,7 +305,11 @@
 					{/if}
 				</button>
 			{/if}
-			<button class="btn btn-secondary" disabled={isLoading} onclick={() => window.location.href = '/home'}>
+			<button
+				class="btn btn-secondary"
+				disabled={isLoading}
+				onclick={() => (window.location.href = '/home')}
+			>
 				Return Home
 			</button>
 		</div>
@@ -548,8 +555,13 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	.button-group {

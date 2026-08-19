@@ -7,7 +7,7 @@ import { getHardcodedBaseRules } from '$lib/utils/baseRules';
 // PHASE TYPE - Global solution for phase typing
 // ============================================
 
-export type GamePhase = typeof GAME_PHASES[keyof typeof GAME_PHASES];
+export type GamePhase = (typeof GAME_PHASES)[keyof typeof GAME_PHASES];
 
 // ============================================
 // TYPE DEFINITIONS

@@ -32,14 +32,13 @@
 		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
 		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
-		background-image: 
-			repeating-linear-gradient(
-				45deg,
-				transparent,
-				transparent 10px,
-				rgba(12, 196, 233, 0.05) 10px,
-				rgba(255, 255, 255, 0.05) 20px
-			);
+		background-image: repeating-linear-gradient(
+			45deg,
+			transparent,
+			transparent 10px,
+			rgba(12, 196, 233, 0.05) 10px,
+			rgba(255, 255, 255, 0.05) 20px
+		);
 		border: 2px solid rgba(255, 255, 255, 0.1);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-md);

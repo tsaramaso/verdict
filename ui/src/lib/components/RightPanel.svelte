@@ -2,7 +2,7 @@
 <script lang="ts">
 	import Timer from './Timer.svelte';
 	import { PHASE_LABELS, UI, GAME_PHASES } from '$lib/config';
- 
+
 	interface GameState {
 		phase: string;
 		round_number: number;
@@ -18,17 +18,16 @@
 			score: number;
 		}>;
 	}
- 
+
 	interface Props {
 		gameState: GameState;
 		onTimeOut?: () => void;
 	}
- 
+
 	let { gameState, onTimeOut }: Props = $props();
- 
+
 	const phaseLabel = $derived(PHASE_LABELS[gameState.phase] || 'Unknown');
 	const isAutoAdvance = $derived(UI.autoAdvancePhases.includes(gameState.phase));
-
 
 	function getPhaseDescription(phase: string, currentPlayer: string, myPlayerId: string): string {
 		const isMyTurn = currentPlayer === myPlayerId;
