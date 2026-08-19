@@ -18,7 +18,6 @@ Auth shape:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status, Path
@@ -102,13 +101,13 @@ def create_game(
     # Populate player names from found_users and track who's host
     for user in found_users:
         state.players[user.uuid].player_name = user.name or user.uuid
-    
+
     # Set host (first player in the list, typically the creator)
     state.host_player_id = user.uuid
-    
+
     # Start in WAITING_FOR_PLAYERS phase (lobby) instead of immediately starting
     state.phase = Phase.TURN_START  # Will be kept until /start endpoint is called
-    
+
     game_row = Game(
         id=game_id,
         status=GameStatus.WAITING_FOR_PLAYERS,  # Use lobby status

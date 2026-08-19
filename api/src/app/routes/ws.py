@@ -9,7 +9,7 @@ Connection flow:
   4. Server sends initial game state
   5. Server waits for keep-alive pings, broadcasts updates from HTTP endpoints
   6. On disconnect: cleanup
-""" 
+"""
 
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, WebSocketException
@@ -84,7 +84,9 @@ async def lobby_websocket_endpoint(
         # STEP 1: AUTHENTICATE
         logger.debug("ws_lobby_connection_attempt", lobby_id=lobby_id)
         player_id = await verify_ws_token(token)
-        logger.info("ws_lobby_authenticated", lobby_id=lobby_id, player_id=str(player_id)[:8])
+        logger.info(
+            "ws_lobby_authenticated", lobby_id=lobby_id, player_id=str(player_id)[:8]
+        )
 
         # STEP 2: ACCEPT CONNECTION
         await websocket.accept()
@@ -124,7 +126,11 @@ async def lobby_websocket_endpoint(
             ],
         }
         await websocket.send_json(initial_state)
-        logger.info("ws_lobby_initial_state_sent", lobby_id=lobby_id, player_id=str(player_id)[:8])
+        logger.info(
+            "ws_lobby_initial_state_sent",
+            lobby_id=lobby_id,
+            player_id=str(player_id)[:8],
+        )
 
         # STEP 6: BROADCAST PLAYER JOINED TO OTHERS
         await manager.broadcast(
@@ -132,7 +138,9 @@ async def lobby_websocket_endpoint(
             {
                 "type": "player_connected",
                 "player_id": player_id,
-                "player_name": lobby["players"].get(player_id, {}).get("name", player_id),
+                "player_name": lobby["players"]
+                .get(player_id, {})
+                .get("name", player_id),
             },
         )
 

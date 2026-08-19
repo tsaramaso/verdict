@@ -81,7 +81,9 @@ class ActionResult(BaseModel):
 
 class GameCreateRequest(BaseModel):
     player_ids: list[str]
-    rules_config: dict | None = None  # Optional rules override, None defaults to BASE_RULES
+    rules_config: dict | None = (
+        None  # Optional rules override, None defaults to BASE_RULES
+    )
 
 
 class GameCreateResult(ActionResult):
@@ -150,4 +152,5 @@ class GameListOut(BaseModel):
 
 class PlayerReadyRequest(BaseModel):
     """Mark player as ready or not ready in lobby phase."""
+
     ready: bool
