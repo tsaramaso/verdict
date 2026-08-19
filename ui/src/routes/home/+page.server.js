@@ -20,6 +20,8 @@ export async function load({ cookies }) {
 		});
 
 		if (!userResponse.ok) {
+			// Token is invalid, clear it and redirect to login
+			cookies.delete('auth_token', { path: '/' });
 			throw redirect(303, '/login');
 		}
 
@@ -87,7 +89,7 @@ export const actions = {
 		}
 
 		try {
-			const response = await fetch(`${API_URL}/lobbies/${lobbyId}`, {
+			const response = await fetch(`${API_URL}/lobby/${lobbyId}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}

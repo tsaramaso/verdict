@@ -4,12 +4,12 @@ Lobbies are ephemeral (in-memory), players join by short ID.
 Game creation handled by /games/create endpoint.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 import string
 import random
 from datetime import datetime, timezone
 
-from src.app.auth import get_current_player, get_current_user
+from src.app.auth import get_current_user
 
 router = APIRouter(prefix="/lobbies", tags=["lobbies"])
 
@@ -62,10 +62,9 @@ def get_lobby(
     """Get lobby state. Auto-adds player if joining."""
     if lobby_id not in lobbies:
         raise HTTPException(status_code=404, detail="Lobby not found")
-
+    
     lobby = lobbies[lobby_id]
     player_id = user.uuid
-    
     if player_id not in lobby["players"]:
         lobby["players"][player_id] = {
             "id": player_id,
@@ -85,7 +84,7 @@ def get_lobby(
 @router.post("/{lobby_id}/player/ready")
 def set_lobby_player_ready(
     lobby_id: str,
-    ready: bool,
+    body: dict = Body(...),
     user = Depends(get_current_user)
 ) -> dict:
     """Mark player ready in lobby."""
@@ -97,6 +96,7 @@ def set_lobby_player_ready(
     if player_id not in lobby["players"]:
         raise HTTPException(status_code=404, detail="Player not in lobby")
     
+    ready = body.get("ready", False)
     lobby["players"][player_id]["ready"] = ready
     
     return {"player_id": player_id, "ready": ready}

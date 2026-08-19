@@ -10,35 +10,8 @@
 
 	let { data } = $props<Props>();
 
-	let joinLobbyId = $state('');
 	let isJoining = $state(false);
 	let errorMessage = $state('');
-
-	async function handleJoinLobby() {
-		if (!joinLobbyId.trim()) {
-			errorMessage = 'Enter a lobby ID';
-			return;
-		}
-
-		isJoining = true;
-		const formData = new FormData();
-		formData.append('lobby_id', joinLobbyId);
-
-		try {
-			const response = await fetch('?/joinLobby', {
-				method: 'POST',
-				body: formData
-			});
-
-			if (!response.ok) {
-				errorMessage = 'Failed to join lobby';
-			}
-		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Connection error';
-		} finally {
-			isJoining = false;
-		}
-	}
 </script>
 
 <div class="home-wrapper">
@@ -77,19 +50,19 @@
 		<!-- Join Lobby Section -->
 		<section class="section">
 			<h2>Join Lobby</h2>
-			<div class="join-lobby-form">
+			<form method="POST" action="?/joinLobby" class="join-lobby-form">
 				<input
 					type="text"
+					name="lobby_id"
 					placeholder="Enter lobby ID (e.g., ABC123)"
-					bind:value={joinLobbyId}
 					class="lobby-input"
 					disabled={isJoining}
+					required
 				/>
 				<button
-					type="button"
+					type="submit"
 					class="btn btn-secondary"
-					disabled={isJoining || !joinLobbyId.trim()}
-					onclick={handleJoinLobby}
+					disabled={isJoining}
 				>
 					{#if isJoining}
 						Joining...
@@ -97,7 +70,7 @@
 						Join
 					{/if}
 				</button>
-			</div>
+			</form>
 		</section>
 
 		<!-- Active Lobbies Section -->
@@ -117,10 +90,7 @@
 							</div>
 							<button
 								class="btn btn-secondary btn-sm"
-								onclick={() => {
-									joinLobbyId = lobby.lobby_id;
-									handleJoinLobby();
-								}}
+								onclick={() => window.location.href = `/lobby/${lobby.lobby_id}`}
 							>
 								Join Lobby
 							</button>

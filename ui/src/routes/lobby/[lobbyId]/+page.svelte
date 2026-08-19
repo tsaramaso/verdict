@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { LobbyState, PlayerInfo } from '$lib/types/lobby';
+	import { WebSocketClient, type WebSocketMessage } from '$lib/utils/websocket';
 
 	interface Props {
 		data: {
@@ -16,19 +17,17 @@
 	let { data } = $props();
 
 	// Reactive state
-	let lobbyState = $state({
+	let lobbyState = $state<LobbyState>({
 		lobby_id: data.lobbyId,
 		host_player_id: data.lobbyData.host_player_id,
-		players: Object.values(data.lobbyData.players || {}).map((p: any) => ({
-			player_id: p.id || '',
+		players: Object.entries(data.lobbyData.players || {}).map(([id, p]: [string, any]) => ({
+			player_id: id,
 			player_name: p.name,
 			ready: p.ready || false,
 			connected: true
-		})),
-		player_count: data.lobbyData.player_count || 0
+		}))
 	});
 
-	let allPlayers = $state<(PlayerInfo & { uuid: string; joined: boolean })[]>([]);
 	let isReady = $state(false);
 	let isLoading = $state(false);
 	let errorMessage = $state('');
@@ -43,8 +42,8 @@
 		lobbyState.players.every(p => p.connected && p.ready)
 	);
 
-	// Non-reactive references
-	let ws: WebSocket | null = null;
+	// WebSocket client
+	let wsClient: WebSocketClient | null = null;
 	const API_URL = 'http://localhost:8000';
 
 	function getToken(): string | null {
@@ -57,6 +56,39 @@
 		return null;
 	}
 
+	function handleWebSocketMessage(message: WebSocketMessage) {
+		if (message.type === 'player_connected') {
+			const existing = lobbyState.players.find(p => p.player_id === message.player_id);
+			if (existing) {
+				existing.connected = true;
+			} else {
+				lobbyState.players.push({
+					player_id: message.player_id,
+					player_name: message.player_name,
+					ready: false,
+					connected: true
+				});
+			}
+		} else if (message.type === 'player_ready') {
+			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			if (player) {
+				player.ready = true;
+			}
+		} else if (message.type === 'player_not_ready') {
+			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			if (player) {
+				player.ready = false;
+			}
+		} else if (message.type === 'player_disconnected') {
+			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			if (player) {
+				player.connected = false;
+			}
+		} else if (message.type === 'game_started') {
+			successMessage = 'Game starting!';
+		}
+	}
+
 	function connectWebSocket() {
 		const token = getToken();
 		if (!token) {
@@ -64,91 +96,22 @@
 			return;
 		}
 
-		// Lobbies don't use WebSocket - they're ephemeral in-memory
-		// Real-time updates will be added in Phase 2
-		console.log('Lobby: WebSocket disabled - lobbies are ephemeral');
-		return;
+		const wsUrl = `ws://localhost:8000/ws/lobbies/${data.lobbyId}`;
 
-		// WebSocket disabled for ephemeral lobbies
-	}
+		wsClient = new WebSocketClient({
+			url: wsUrl,
+			token,
+			onMessage: handleWebSocketMessage,
+			onError: (err) => {
+				errorMessage = err;
+			},
+			onClose: () => {
+				console.log('WebSocket closed');
+			},
+			reconnectDelay: 5000
+		});
 
-	function handleWebSocketMessage(message: any) {
-		if (message.type === 'player_connected') {
-			const player = allPlayers.find(p => p.player_id === message.player_id);
-			if (player) {
-				player.connected = true;
-				player.joined = true;
-			}
-		} else if (message.type === 'player_ready') {
-			const player = allPlayers.find(p => p.player_id === message.player_id);
-			if (player) {
-				player.ready = true;
-			}
-		} else if (message.type === 'player_not_ready') {
-			const player = allPlayers.find(p => p.player_id === message.player_id);
-			if (player) {
-				player.ready = false;
-			}
-		} else if (message.type === 'player_disconnected') {
-			const player = allPlayers.find(p => p.player_id === message.player_id);
-			if (player) {
-				player.connected = false;
-			}
-		} else if (message.game_id) {
-			updateLobbyFromGameState(message);
-		} else if (message.type === 'game_started') {
-			successMessage = 'Game starting!';
-		}
-	}
-
-	function updateLobbyFromGameState(gameState: any) {
-		if (gameState.game_id) {
-			lobbyState.game_id = gameState.game_id;
-		}
-
-		if (gameState.phase) {
-			lobbyState.phase = gameState.phase;
-		}
-
-		// Initialize allPlayers from game creation (all invited players)
-		if (gameState.player_order) {
-			allPlayers = gameState.player_order.map((playerId: string) => {
-				const existing = allPlayers.find(p => p.player_id === playerId);
-				return {
-					player_id: playerId,
-					uuid: playerId,
-					player_name: gameState.players?.[playerId]?.player_name || playerId,
-					ready: gameState.players?.[playerId]?.ready || false,
-					connected: gameState.players?.[playerId]?.connected || false,
-					joined: !!gameState.players?.[playerId]
-				};
-			});
-		}
-
-		// Update lobbyState with currently connected players
-		if (gameState.opponents) {
-			lobbyState.players = gameState.opponents.map((opp: any) => ({
-				player_id: opp.player_id,
-				player_name: opp.player_name,
-				ready: false,
-				connected: true
-			}));
-		}
-
-		if (gameState.self) {
-			if (!lobbyState.players.some(p => p.player_id === gameState.self.player_id)) {
-				lobbyState.players.unshift({
-					player_id: gameState.self.player_id,
-					player_name: gameState.self.player_name,
-					ready: false,
-					connected: true
-				});
-			}
-		}
-
-		if (gameState.host_player_id) {
-			lobbyState.host_player_id = gameState.host_player_id;
-		}
+		wsClient.connect();
 	}
 
 	async function toggleReady() {
@@ -257,22 +220,20 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each allPlayers as player (player.uuid)}
-						<tr class="player-row" class:not-joined={!player.joined} class:joined={player.joined} class:ready={player.ready && player.joined}>
+					{#each lobbyState.players as player (player.player_id)}
+						<tr class="player-row" class:ready={player.ready && player.connected}>
 							<td class="player-name-cell">
 								{player.player_name}
-								{#if player.player_id === data.playerId}
+								{#if player.player_id === data.data?.playerId}
 									<span class="badge badge-info">You</span>
 								{/if}
 								{#if player.player_id === lobbyState.host_player_id}
 									<span class="badge badge-warning">Host</span>
 								{/if}
 							</td>
-							<td class="uuid-cell">{player.uuid.slice(0, 8)}...</td>
+							<td class="uuid-cell">{player.player_id.slice(0, 8)}...</td>
 							<td class="status-cell">
-								{#if !player.joined}
-									<span class="status-label pending">Not joined</span>
-								{:else if !player.connected}
+								{#if !player.connected}
 									<span class="status-label disconnected">Disconnected</span>
 								{:else if player.ready}
 									<span class="status-label ready">✓ Ready</span>
@@ -281,9 +242,9 @@
 								{/if}
 							</td>
 							<td class="ready-indicator">
-								{#if player.ready && player.joined}
+								{#if player.ready && player.connected}
 									<div class="ready-badge">✓</div>
-								{:else if player.joined}
+								{:else if player.connected}
 									<div class="not-ready-badge">−</div>
 								{/if}
 							</td>
