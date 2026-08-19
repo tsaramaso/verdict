@@ -33,10 +33,13 @@
 	let errorMessage = $state('');
 	let successMessage = $state('');
 
+	// Current player ID (decode from auth token)
+	let currentPlayerId: string | null = null;
+	
 	// Derived state
 	let connectedPlayers = $derived(lobbyState.players.filter(p => p.connected).length);
 	let readyPlayers = $derived(lobbyState.players.filter(p => p.ready && p.connected).length);
-	let isHost = $derived(lobbyState.host_player_id === data.data?.playerId);
+	let isHost = $derived(lobbyState.host_player_id === currentPlayerId);
 	let allReady = $derived(
 		lobbyState.players.length > 0 &&
 		lobbyState.players.every(p => p.connected && p.ready)
@@ -51,7 +54,17 @@
 		const cookies = cookieString.split(';');
 		for (const cookie of cookies) {
 			const [name, value] = cookie.trim().split('=');
-			if (name === 'auth_token') return decodeURIComponent(value);
+			if (name === 'auth_token') {
+				const token = decodeURIComponent(value);
+				// Decode JWT payload to extract player ID
+				try {
+					const payload = JSON.parse(atob(token.split('.')[1]));
+					currentPlayerId = payload.uuid;
+				} catch (e) {
+					console.error('Failed to decode token:', e);
+				}
+				return token;
+			}
 		}
 		return null;
 	}
@@ -174,9 +187,10 @@
 				throw new Error(error.detail || 'Failed to start game');
 			}
 
+			const gameData = await response.json();
 			successMessage = 'Game started! Redirecting...';
 			setTimeout(() => {
-				window.location.href = `/game/${response.game_id}/play`;
+				window.location.href = `/game/${gameData.game_id}/play`;
 			}, 500);
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to start game';
@@ -186,6 +200,8 @@
 	}
 
 	onMount(() => {
+		// Extract current player ID from token
+		getToken();
 		connectWebSocket();
 	});
 </script>
@@ -224,7 +240,7 @@
 						<tr class="player-row" class:ready={player.ready && player.connected}>
 							<td class="player-name-cell">
 								{player.player_name}
-								{#if player.player_id === data.data?.playerId}
+								{#if player.player_id === currentPlayerId}
 									<span class="badge badge-info">You</span>
 								{/if}
 								{#if player.player_id === lobbyState.host_player_id}
