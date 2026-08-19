@@ -9,7 +9,7 @@ Connection flow:
   4. Server sends initial game state
   5. Server waits for keep-alive pings, broadcasts updates from HTTP endpoints
   6. On disconnect: cleanup
-"""
+""" 
 
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, WebSocketException
@@ -55,6 +55,138 @@ async def verify_ws_token(token: str) -> str:
         raise WebSocketException(
             code=1011, reason=f"Token verification error: {str(e)}"
         )
+
+
+@router.websocket("/lobbies/{lobby_id}")
+async def lobby_websocket_endpoint(
+    websocket: WebSocket, lobby_id: str, token: str = Query(...)
+):
+    """
+    WebSocket endpoint for real-time lobby updates.
+
+    Broadcasts:
+      - player_connected: new player joined
+      - player_ready: player marked ready
+      - player_disconnected: player left
+      - game_started: game creation confirmed
+
+    Query params:
+        token: JWT authentication token (required)
+
+    Path params:
+        lobby_id: The lobby to connect to
+    """
+    from src.app.routes.lobbies import lobbies  # Import lobbies dict
+
+    player_id = None
+
+    try:
+        # STEP 1: AUTHENTICATE
+        logger.debug("ws_lobby_connection_attempt", lobby_id=lobby_id)
+        player_id = await verify_ws_token(token)
+        logger.info("ws_lobby_authenticated", lobby_id=lobby_id, player_id=str(player_id)[:8])
+
+        # STEP 2: ACCEPT CONNECTION
+        await websocket.accept()
+        logger.debug(
+            "ws_lobby_connection_accepted",
+            lobby_id=lobby_id,
+            player_id=str(player_id)[:8],
+        )
+
+        # STEP 3: VALIDATE LOBBY EXISTS
+        if lobby_id not in lobbies:
+            await websocket.close(code=1008, reason="Lobby not found")
+            return
+
+        # STEP 4: REGISTER WITH MANAGER (reuse ConnectionManager with lobby_id)
+        await manager.connect(lobby_id, player_id, websocket)
+        logger.debug(
+            "ws_lobby_registered_manager",
+            lobby_id=lobby_id,
+            player_id=str(player_id)[:8],
+        )
+
+        # STEP 5: SEND INITIAL LOBBY STATE
+        lobby = lobbies[lobby_id]
+        initial_state = {
+            "type": "lobby_state",
+            "lobby_id": lobby_id,
+            "host_player_id": lobby["host_player_id"],
+            "players": [
+                {
+                    "player_id": pid,
+                    "player_name": p["name"],
+                    "ready": p["ready"],
+                    "connected": p["connected"],
+                }
+                for pid, p in lobby["players"].items()
+            ],
+        }
+        await websocket.send_json(initial_state)
+        logger.info("ws_lobby_initial_state_sent", lobby_id=lobby_id, player_id=str(player_id)[:8])
+
+        # STEP 6: BROADCAST PLAYER JOINED TO OTHERS
+        await manager.broadcast(
+            lobby_id,
+            {
+                "type": "player_connected",
+                "player_id": player_id,
+                "player_name": lobby["players"].get(player_id, {}).get("name", player_id),
+            },
+        )
+
+        # STEP 7: LISTEN FOR MESSAGES (ping/pong)
+        while True:
+            try:
+                data = await websocket.receive_text()
+                msg = json.loads(data)
+                msg_type = msg.get("type")
+
+                if msg_type == "ping":
+                    await websocket.send_json({"type": "pong"})
+                    logger.debug("ws_lobby_pong_sent", player_id=str(player_id)[:8])
+                else:
+                    logger.warning(
+                        "ws_lobby_unknown_message_type",
+                        msg_type=msg_type,
+                        player_id=str(player_id)[:8],
+                    )
+
+            except json.JSONDecodeError:
+                logger.warning("ws_lobby_invalid_json", player_id=str(player_id)[:8])
+                await websocket.send_json({"type": "error", "message": "Invalid JSON"})
+
+    except WebSocketException as e:
+        logger.warning("ws_lobby_exception", lobby_id=lobby_id, reason=str(e.reason))
+        await websocket.close(code=e.code, reason=e.reason)
+
+    except WebSocketDisconnect:
+        if player_id:
+            await manager.disconnect(lobby_id, player_id)
+            logger.info(
+                "ws_lobby_disconnected",
+                lobby_id=lobby_id,
+                player_id=str(player_id)[:8],
+            )
+            await manager.broadcast(
+                lobby_id, {"type": "player_disconnected", "player_id": player_id}
+            )
+
+    except Exception as e:
+        logger.error(
+            "ws_lobby_unexpected_error",
+            lobby_id=lobby_id,
+            player_id=str(player_id)[:8] if player_id else "unknown",
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        if player_id:
+            await manager.disconnect(lobby_id, player_id)
+        try:
+            await websocket.close(code=1011, reason="Internal server error")
+        except Exception:
+            pass
 
 
 @router.websocket("/games/{game_id}")
