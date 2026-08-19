@@ -11,12 +11,11 @@ from datetime import datetime, timezone
 from sqlmodel import Session
 
 from src.app.auth import get_current_user
+from src.app.routes.games import create_game
 from src.app.websocket import manager
 from src.app.schemas import GameCreateRequest
 from src.db.session import get_session
 import httpx
-from src.app.routes.games import create_game
-
 
 router = APIRouter(prefix="/lobbies", tags=["lobbies"])
 
@@ -89,12 +88,12 @@ def get_lobby(
 
 
 @router.post("/{lobby_id}/player/ready")
-def set_lobby_player_ready(
+async def set_lobby_player_ready(
     lobby_id: str,
     body: dict = Body(...),
     user = Depends(get_current_user)
 ) -> dict:
-    """Mark player ready in lobby."""
+    """Mark player ready in lobby. Broadcasts update to all connected WS clients."""
     if lobby_id not in lobbies:
         raise HTTPException(status_code=404, detail="Lobby not found")
     
@@ -104,7 +103,19 @@ def set_lobby_player_ready(
         raise HTTPException(status_code=404, detail="Player not in lobby")
     
     ready = body.get("ready", False)
+    
+    # Update internal state
     lobby["players"][player_id]["ready"] = ready
+    
+    # Broadcast to all WS clients in this lobby
+    await manager.broadcast(
+        lobby_id,
+        {
+            "type": "player_ready",
+            "player_id": player_id,
+            "ready": ready
+        }
+    )
     
     return {"player_id": player_id, "ready": ready}
 
@@ -155,7 +166,8 @@ async def start_lobby_game(
             detail="At least 2 players required to start game"
         )
     
-    # CREATE: Game via internal call (avoid HTTP round-trip)    
+    # CREATE: Game via internal call (avoid HTTP round-trip)
+    
     game_request = GameCreateRequest(player_ids=player_ids)
     try:
         # get_current_user already authenticated; reuse

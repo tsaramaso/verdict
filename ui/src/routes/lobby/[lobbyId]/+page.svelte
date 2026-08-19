@@ -85,12 +85,7 @@
 		} else if (message.type === 'player_ready') {
 			const player = lobbyState.players.find(p => p.player_id === message.player_id);
 			if (player) {
-				player.ready = true;
-			}
-		} else if (message.type === 'player_not_ready') {
-			const player = lobbyState.players.find(p => p.player_id === message.player_id);
-			if (player) {
-				player.ready = false;
+				player.ready = message.ready;
 			}
 		} else if (message.type === 'player_disconnected') {
 			const player = lobbyState.players.find(p => p.player_id === message.player_id);
