@@ -8,8 +8,15 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 import string
 import random
 from datetime import datetime, timezone
+from sqlmodel import Session
 
 from src.app.auth import get_current_user
+from src.app.websocket import manager
+from src.app.schemas import GameCreateRequest
+from src.db.session import get_session
+import httpx
+from src.app.routes.games import create_game
+
 
 router = APIRouter(prefix="/lobbies", tags=["lobbies"])
 
@@ -100,6 +107,87 @@ def set_lobby_player_ready(
     lobby["players"][player_id]["ready"] = ready
     
     return {"player_id": player_id, "ready": ready}
+
+
+@router.post("/{lobby_id}/start")
+async def start_lobby_game(
+    lobby_id: str,
+    user = Depends(get_current_user),
+    session: Session = Depends(get_session)
+) -> dict:
+    """
+    Host-only: Start the game from the lobby.
+    
+    Validates:
+    - Lobby exists
+    - User is host
+    - All players are ready
+    
+    Creates game via /games endpoint, broadcasts to all lobby WS clients.
+    """
+    if lobby_id not in lobbies:
+        raise HTTPException(status_code=404, detail="Lobby not found")
+    
+    lobby = lobbies[lobby_id]
+    player_id = user.uuid
+    
+    # VALIDATE: Host only
+    if lobby["host_player_id"] != player_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the host can start the game"
+        )
+    
+    # VALIDATE: All players ready
+    for pid, player in lobby["players"].items():
+        if not player["ready"]:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Player {player['name']} is not ready"
+            )
+    
+    # EXTRACT: Player IDs (ordered by join, or arbitrary)
+    player_ids = list(lobby["players"].keys())
+    
+    if len(player_ids) < 2:
+        raise HTTPException(
+            status_code=409,
+            detail="At least 2 players required to start game"
+        )
+    
+    # CREATE: Game via internal call (avoid HTTP round-trip)    
+    game_request = GameCreateRequest(player_ids=player_ids)
+    try:
+        # get_current_user already authenticated; reuse
+        game_result = create_game(
+            request=game_request,
+            user=user,
+            session=session,
+            registry=__import__('src.app.game_registry', fromlist=['get_registry']).get_registry()
+        )
+        game_id = game_result.game_id
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create game: {str(e)}"
+        )
+    
+    # BROADCAST: game_started to all lobby WS clients
+    await manager.broadcast(
+        lobby_id,
+        {
+            "type": "game_started",
+            "game_id": game_id
+        }
+    )
+    
+    # CLEANUP: Delete lobby from memory
+    del lobbies[lobby_id]
+    
+    return {
+        "game_id": game_id,
+        "player_count": len(player_ids)
+    }
 
 
 @router.get("")
