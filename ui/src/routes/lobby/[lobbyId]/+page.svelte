@@ -317,10 +317,9 @@
 </div>
 
 <style>
-
- .badge-warning{
-	color: grey;
- }
+	.badge-warning {
+		color: grey;
+	}
 	.lobby-wrapper {
 		min-height: 100vh;
 		background-color: var(--color-bg);
