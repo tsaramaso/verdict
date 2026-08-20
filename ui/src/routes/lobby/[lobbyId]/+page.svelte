@@ -33,33 +33,23 @@
 	let errorMessage = $state('');
 	let successMessage = $state('');
 
-	// Current player ID (decode from auth token)
-	let currentPlayerId: string | null = null;
-	
+	// Current player ID (decode from auth token) — tracked state
+	let currentPlayerId = $state<string | null>(null);
+
 	// Derived state
-	let connectedPlayers = $derived(lobbyState.players.filter(p => p.connected).length);
-	let readyPlayers = $derived(lobbyState.players.filter(p => p.ready && p.connected).length);
+	let connectedPlayers = $derived(lobbyState.players.filter((p) => p.connected).length);
+	let readyPlayers = $derived(lobbyState.players.filter((p) => p.ready && p.connected).length);
 	let isHost = $state(false);
-	
-	$effect(() => {
-		// Update isHost whenever currentPlayerId or hostId changes
-		isHost = currentPlayerId !== null && currentPlayerId === lobbyState.host_player_id;
-	});
-	let allReady = $derived(
-		lobbyState.players.length > 0 &&
-		lobbyState.players.every(p => p.connected && p.ready)
-	);
-	let canStart = $derived(
-		isHost && 
-		allReady && 
-		connectedPlayers >= 2 && 
-		connectedPlayers <= 5
-	);
 
 	$effect(() => {
 		// Update isHost whenever currentPlayerId or hostId changes
-		isHost = currentPlayerId !== null && currentPlayerId === lobbyState.host_player_id;
+		const newIsHost = currentPlayerId !== null && currentPlayerId === lobbyState.host_player_id;
+		isHost = newIsHost;
 	});
+	let allReady = $derived(
+		lobbyState.players.length > 0 && lobbyState.players.every((p) => p.connected && p.ready)
+	);
+	let canStart = $derived(isHost && allReady && connectedPlayers >= 2 && connectedPlayers <= 5);
 
 	// WebSocket client
 	let wsClient: WebSocketClient | null = null;
@@ -92,7 +82,7 @@
 		}
 
 		if (message.type === 'player_connected') {
-			const existing = lobbyState.players.find(p => p.player_id === message.player_id);
+			const existing = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (existing) {
 				existing.connected = true;
 			} else {
@@ -104,12 +94,12 @@
 				});
 			}
 		} else if (message.type === 'player_ready') {
-			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (player) {
 				player.ready = message.ready;
 			}
 		} else if (message.type === 'player_disconnected') {
-			const player = lobbyState.players.find(p => p.player_id === message.player_id);
+			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
 			if (player) {
 				player.connected = false;
 			}
@@ -322,36 +312,41 @@
 		{/if}
 
 		<div class="button-group">
-			{#if isHost}
-				<button 
-					class="btn btn-primary btn-lg" 
-					class:disabled={!canStart}
-					class:loading={isLoading}
-					onclick={() => startGame()}
-				>
-					{#if isLoading}
-						Starting...
-					{:else}
-						Start Game
-					{/if}
-				</button>
-			{:else}
-				<button
-					class="btn btn-primary btn-lg"
-					class:active={isReady}
-					class:loading={isLoading}
-					onclick={() => toggleReady()}
-				>
-					{#if isLoading}
-						Updating...
-					{:else if isReady}
-						✓ Ready
-					{:else}
-						Mark Ready
-					{/if}
-				</button>
-			{/if}
-			<button class="btn btn-secondary" disabled={isLoading} onclick={() => window.location.href = '/home'}>
+			<!-- Start Game Button (Host only) -->
+			<button
+				class="btn btn-primary btn-lg"
+				disabled={!isHost || !canStart || isLoading}
+				onclick={() => startGame()}
+			>
+				{#if isLoading}
+					Starting...
+				{:else}
+					Start Game
+				{/if}
+			</button>
+
+			<!-- Mark Ready Button (Non-host only) -->
+			<button
+				class="btn btn-primary btn-lg"
+				class:active={isReady}
+				disabled={isLoading}
+				onclick={() => toggleReady()}
+			>
+				{#if isLoading}
+					Updating...
+				{:else if isReady}
+					✓ Ready
+				{:else}
+					Mark Ready
+				{/if}
+			</button>
+
+			<!-- Return Home Button -->
+			<button
+				class="btn btn-secondary"
+				disabled={isLoading}
+				onclick={() => (window.location.href = '/home')}
+			>
 				Return Home
 			</button>
 		</div>
@@ -359,8 +354,12 @@
 </div>
 
 <style>
+.badge-info{
+	color: grey;
+
+}
 	.badge-warning {
-		color: grey;
+		color: gainsboro;
 	}
 	.lobby-wrapper {
 		min-height: 100vh;
@@ -600,8 +599,13 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	.button-group {
@@ -624,16 +628,6 @@
 	.btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.btn.disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		pointer-events: none;
-	}
-
-	.btn.loading {
-		pointer-events: none;
 	}
 
 	.btn-primary {
