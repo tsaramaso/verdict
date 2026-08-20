@@ -64,7 +64,7 @@ def get_lobby(lobby_id: str, user=Depends(get_current_user)) -> dict:
     if player_id not in lobby["players"]:
         lobby["players"][player_id] = {
             "id": player_id,
-            "name": player_id,
+            "name": user.name or player_id,
             "ready": False,
             "connected": True,
         }

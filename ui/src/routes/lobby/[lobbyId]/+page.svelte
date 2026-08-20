@@ -238,7 +238,7 @@
 									<span class="badge badge-info">You</span>
 								{/if}
 								{#if player.player_id === lobbyState.host_player_id}
-									<span class="badge badge-warning">Host</span>
+									<span class="badge badge-warning">(Host)</span>
 								{/if}
 							</td>
 							<td class="uuid-cell">{player.player_id.slice(0, 8)}...</td>
@@ -317,6 +317,10 @@
 </div>
 
 <style>
+
+ .badge-warning{
+	color: grey;
+ }
 	.lobby-wrapper {
 		min-height: 100vh;
 		background-color: var(--color-bg);
