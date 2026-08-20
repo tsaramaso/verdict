@@ -105,6 +105,10 @@
 			}
 		} else if (message.type === 'game_started') {
 			successMessage = 'Game starting!';
+			// Redirect to game play page
+			setTimeout(() => {
+				window.location.href = `/game/${message.game_id}/play`;
+			}, 500);
 		}
 	}
 
@@ -354,10 +358,9 @@
 </div>
 
 <style>
-.badge-info{
-	color: grey;
-
-}
+	.badge-info {
+		color: grey;
+	}
 	.badge-warning {
 		color: gainsboro;
 	}
