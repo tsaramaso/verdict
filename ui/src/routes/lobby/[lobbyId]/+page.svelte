@@ -35,15 +35,31 @@
 
 	// Current player ID (decode from auth token)
 	let currentPlayerId: string | null = null;
-
+	
 	// Derived state
-	let connectedPlayers = $derived(lobbyState.players.filter((p) => p.connected).length);
-	let readyPlayers = $derived(lobbyState.players.filter((p) => p.ready && p.connected).length);
-	let isHost = $derived(lobbyState.host_player_id === currentPlayerId);
+	let connectedPlayers = $derived(lobbyState.players.filter(p => p.connected).length);
+	let readyPlayers = $derived(lobbyState.players.filter(p => p.ready && p.connected).length);
+	let isHost = $state(false);
+	
+	$effect(() => {
+		// Update isHost whenever currentPlayerId or hostId changes
+		isHost = currentPlayerId !== null && currentPlayerId === lobbyState.host_player_id;
+	});
 	let allReady = $derived(
-		lobbyState.players.length > 0 && lobbyState.players.every((p) => p.connected && p.ready)
+		lobbyState.players.length > 0 &&
+		lobbyState.players.every(p => p.connected && p.ready)
 	);
-	let canStart = $derived(isHost && allReady && connectedPlayers >= 2 && connectedPlayers <= 5);
+	let canStart = $derived(
+		isHost && 
+		allReady && 
+		connectedPlayers >= 2 && 
+		connectedPlayers <= 5
+	);
+
+	$effect(() => {
+		// Update isHost whenever currentPlayerId or hostId changes
+		isHost = currentPlayerId !== null && currentPlayerId === lobbyState.host_player_id;
+	});
 
 	// WebSocket client
 	let wsClient: WebSocketClient | null = null;
@@ -70,8 +86,13 @@
 	}
 
 	function handleWebSocketMessage(message: WebSocketMessage) {
+		// Silently ignore pong messages (keep-alive)
+		if (message.type === 'pong') {
+			return;
+		}
+
 		if (message.type === 'player_connected') {
-			const existing = lobbyState.players.find((p) => p.player_id === message.player_id);
+			const existing = lobbyState.players.find(p => p.player_id === message.player_id);
 			if (existing) {
 				existing.connected = true;
 			} else {
@@ -83,12 +104,12 @@
 				});
 			}
 		} else if (message.type === 'player_ready') {
-			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
+			const player = lobbyState.players.find(p => p.player_id === message.player_id);
 			if (player) {
 				player.ready = message.ready;
 			}
 		} else if (message.type === 'player_disconnected') {
-			const player = lobbyState.players.find((p) => p.player_id === message.player_id);
+			const player = lobbyState.players.find(p => p.player_id === message.player_id);
 			if (player) {
 				player.connected = false;
 			}
@@ -153,6 +174,7 @@
 	}
 
 	async function startGame() {
+		// Check all conditions before allowing
 		if (!isHost) {
 			errorMessage = 'Only the host can start the game';
 			return;
@@ -173,6 +195,7 @@
 			return;
 		}
 
+		// All checks pass, proceed with starting game
 		isLoading = true;
 		errorMessage = '';
 
@@ -199,7 +222,6 @@
 			}, 500);
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to start game';
-		} finally {
 			isLoading = false;
 		}
 	}
@@ -301,9 +323,10 @@
 
 		<div class="button-group">
 			{#if isHost}
-				<button
-					class="btn btn-primary btn-lg"
-					disabled={!canStart || isLoading}
+				<button 
+					class="btn btn-primary btn-lg" 
+					class:disabled={!canStart}
+					class:loading={isLoading}
 					onclick={() => startGame()}
 				>
 					{#if isLoading}
@@ -316,7 +339,7 @@
 				<button
 					class="btn btn-primary btn-lg"
 					class:active={isReady}
-					disabled={isLoading}
+					class:loading={isLoading}
 					onclick={() => toggleReady()}
 				>
 					{#if isLoading}
@@ -328,11 +351,7 @@
 					{/if}
 				</button>
 			{/if}
-			<button
-				class="btn btn-secondary"
-				disabled={isLoading}
-				onclick={() => (window.location.href = '/home')}
-			>
+			<button class="btn btn-secondary" disabled={isLoading} onclick={() => window.location.href = '/home'}>
 				Return Home
 			</button>
 		</div>
@@ -581,13 +600,8 @@
 	}
 
 	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
-		}
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
 	}
 
 	.button-group {
@@ -610,6 +624,16 @@
 	.btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.btn.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+
+	.btn.loading {
+		pointer-events: none;
 	}
 
 	.btn-primary {
