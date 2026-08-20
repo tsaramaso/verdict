@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import { onMount } from 'svelte';
+	import { WebSocketClient } from '$lib/utils/websocket';
 
 	interface Props {
 		data: {
@@ -12,6 +13,76 @@
 
 	let isJoining = $state(false);
 	let errorMessage = $state('');
+	let lobbies = $state(data.lobbies || []);
+	let wsClient: WebSocketClient | null = null;
+	const API_URL = 'http://localhost:8000';
+
+	function getToken(): string | null {
+		const cookieString = document.cookie;
+		const cookies = cookieString.split(';');
+		for (const cookie of cookies) {
+			const [name, value] = cookie.trim().split('=');
+			if (name === 'auth_token') return decodeURIComponent(value);
+		}
+		return null;
+	}
+
+	function handleWebSocketMessage(message: any) {
+		if (message.type === 'initial_lobbies') {
+			lobbies = message.lobbies || [];
+		} else if (message.type === 'lobby_created') {
+			// Check if lobby already exists (shouldn't happen but be safe)
+			const exists = lobbies.some((l) => l.lobby_id === message.lobby_id);
+			if (!exists) {
+				lobbies = [
+					...lobbies,
+					{
+						lobby_id: message.lobby_id,
+						host: message.host,
+						player_count: message.player_count,
+						created_at: message.created_at
+					}
+				];
+			}
+		} else if (message.type === 'lobby_deleted') {
+			lobbies = lobbies.filter((l) => l.lobby_id !== message.lobby_id);
+		}
+	}
+
+	function connectWebSocket() {
+		const token = getToken();
+		if (!token) {
+			errorMessage = 'Authentication token not found';
+			return;
+		}
+
+		const wsUrl = `ws://localhost:8000/ws/lobbies`;
+
+		wsClient = new WebSocketClient({
+			url: wsUrl,
+			token,
+			onMessage: handleWebSocketMessage,
+			onError: (err) => {
+				console.error('WebSocket error:', err);
+			},
+			onClose: () => {
+				console.log('WebSocket closed');
+			},
+			reconnectDelay: 5000
+		});
+
+		wsClient.connect();
+	}
+
+	onMount(() => {
+		connectWebSocket();
+
+		return () => {
+			if (wsClient) {
+				wsClient.close();
+			}
+		};
+	});
 </script>
 
 <div class="home-wrapper">
@@ -68,11 +139,11 @@
 		</section>
 
 		<!-- Active Lobbies Section -->
-		{#if data.lobbies && data.lobbies.length > 0}
+		{#if lobbies && lobbies.length > 0}
 			<section class="section">
 				<h2>Active Lobbies</h2>
 				<div class="lobbies-list">
-					{#each data.lobbies as lobby}
+					{#each lobbies as lobby}
 						<div class="lobby-card">
 							<div class="lobby-header-row">
 								<div class="lobby-id-badge">{lobby.lobby_id}</div>

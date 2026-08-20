@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 from sqlmodel import Session
 
 from src.app.auth import get_current_user
-from src.app.routes.games import create_game
 from src.app.websocket import manager
 from src.app.schemas import GameCreateRequest
 from src.db.session import get_session
@@ -28,14 +27,16 @@ def generate_short_id(length: int = 6) -> str:
 
 
 @router.post("/create")
-def create_lobby(user=Depends(get_current_user)) -> dict:
-    """Create ephemeral lobby. Returns short ID."""
+async def create_lobby(user=Depends(get_current_user)) -> dict:
+    """Create ephemeral lobby. Returns short ID. 
+    Broadcasts to global lobbies channel."""
     player_id = user.uuid
     short_id = generate_short_id()
 
     while short_id in lobbies:
         short_id = generate_short_id()
 
+    created_at = datetime.now(timezone.utc)
     lobbies[short_id] = {
         "host_player_id": player_id,
         "host_name": user.name or player_id,
@@ -47,8 +48,20 @@ def create_lobby(user=Depends(get_current_user)) -> dict:
                 "connected": True,
             }
         },
-        "created_at": datetime.now(timezone.utc),
+        "created_at": created_at,
     }
+
+    # Broadcast new lobby to all connected clients in global lobbies channel
+    await manager.broadcast(
+        "lobbies",  # Global channel (no specific lobby_id)
+        {
+            "type": "lobby_created",
+            "lobby_id": short_id,
+            "host": user.name or player_id,
+            "player_count": 1,
+            "created_at": created_at.isoformat(),
+        },
+    )
 
     return {"lobby_id": short_id, "host_player_id": player_id}
 
@@ -145,6 +158,7 @@ async def start_lobby_game(
         )
 
     # CREATE: Game via internal call (avoid HTTP round-trip)
+    from src.app.routes.games import create_game
 
     game_request = GameCreateRequest(player_ids=player_ids)
     try:
@@ -161,8 +175,11 @@ async def start_lobby_game(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create game: {str(e)}")
 
-    # BROADCAST: game_started to all lobby WS clients
+    # BROADCAST: game_started to all lobby-specific WS clients
     await manager.broadcast(lobby_id, {"type": "game_started", "game_id": game_id})
+
+    # BROADCAST: lobby_deleted to global lobbies channel
+    await manager.broadcast("lobbies", {"type": "lobby_deleted", "lobby_id": lobby_id})
 
     # CLEANUP: Delete lobby from memory
     del lobbies[lobby_id]
