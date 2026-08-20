@@ -43,6 +43,7 @@
 	let allReady = $derived(
 		lobbyState.players.length > 0 && lobbyState.players.every((p) => p.connected && p.ready)
 	);
+	let canStart = $derived(isHost && allReady && connectedPlayers >= 2 && connectedPlayers <= 5);
 
 	// WebSocket client
 	let wsClient: WebSocketClient | null = null;
@@ -157,6 +158,16 @@
 			return;
 		}
 
+		if (connectedPlayers < 2) {
+			errorMessage = 'At least 2 players required to start';
+			return;
+		}
+
+		if (connectedPlayers > 5) {
+			errorMessage = 'Maximum 5 players allowed';
+			return;
+		}
+
 		if (!allReady) {
 			errorMessage = 'Not all players are ready';
 			return;
@@ -238,7 +249,7 @@
 									<span class="badge badge-info">You</span>
 								{/if}
 								{#if player.player_id === lobbyState.host_player_id}
-									<span class="badge badge-warning">(Host)</span>
+									<span class="badge badge-warning">Host</span>
 								{/if}
 							</td>
 							<td class="uuid-cell">{player.player_id.slice(0, 8)}...</td>
@@ -276,11 +287,23 @@
 			</p>
 		</div>
 
+		{#if isHost && !canStart}
+			<div class="status-info">
+				{#if connectedPlayers < 2}
+					<p class="info-text">Waiting for at least 2 players to join</p>
+				{:else if connectedPlayers > 5}
+					<p class="info-text">Too many players (max 5)</p>
+				{:else if !allReady}
+					<p class="info-text">Waiting for all players to be ready</p>
+				{/if}
+			</div>
+		{/if}
+
 		<div class="button-group">
 			{#if isHost}
 				<button
 					class="btn btn-primary btn-lg"
-					disabled={!allReady || isLoading}
+					disabled={!canStart || isLoading}
 					onclick={() => startGame()}
 				>
 					{#if isLoading}
@@ -617,6 +640,21 @@
 		padding: var(--spacing-md) var(--spacing-xl);
 		font-size: var(--font-size-lg);
 		min-width: 150px;
+	}
+
+	.status-info {
+		margin: var(--spacing-md) 0;
+		padding: var(--spacing-md);
+		background-color: var(--color-warning-light);
+		border-left: 3px solid var(--color-warning);
+		border-radius: var(--border-radius-sm);
+	}
+
+	.info-text {
+		margin: 0;
+		color: var(--color-warning);
+		font-size: var(--font-size-sm);
+		font-weight: 500;
 	}
 
 	@media (max-width: 640px) {
