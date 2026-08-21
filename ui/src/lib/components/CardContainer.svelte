@@ -76,8 +76,8 @@
 		}, {})}
 		<CardSlot
 			{card}
-			{slotIndex: slotIdx}
-			{isYourCard: isYourCards}
+			slotIndex={slotIdx}
+			isYourCard={isYourCards}
 			isClickable={isClickableInPhase(slotIdx)}
 			isHighlighted={isSlotHighlighted(slotIdx)}
 			opponentKnows={opponentKnowsRecord}
