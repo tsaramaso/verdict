@@ -1,0 +1,346 @@
+/**
+ * src/lib/styles/card.css
+ * Unified styling for card components
+ * 
+ * Shared across:
+ * - DeckZone (face-down cards)
+ * - DiscardZone (face-up top card)
+ * - PeekArea (face-up drawn card, active player only)
+ * - CardSlot (your cards, opponent cards)
+ * 
+ * Maintains visual consistency regardless of card state or context.
+ */
+
+/* ============================================
+   CARD DIMENSIONS & BASE
+   ============================================ */
+
+:root {
+  --card-aspect-ratio: 2.5 / 3.5;
+  --card-border-radius: var(--radius-md, 8px);
+  --card-border: 1px solid var(--color-border, #dddddd);
+  --card-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --card-box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  /* Face-down (Deck) */
+  --card-back-bg-start: #2a2a3e;
+  --card-back-bg-end: #1a1a2e;
+  --card-back-border: 1px solid var(--color-border, #dddddd);
+
+  /* Face-up (Discard, Peek, Slots) */
+  --card-face-bg-start: #ffffff;
+  --card-face-bg-end: #f3f4f6;
+  --card-face-border: 1px solid var(--color-border, #dddddd);
+
+  /* Suit colors */
+  --suit-red: #dc2626;
+  --suit-black: #1f2937;
+}
+
+/* ============================================
+   FACE-DOWN CARD (.card-back)
+   Used by: DeckZone
+   ============================================ */
+
+.card-back {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  background: linear-gradient(135deg, var(--card-back-bg-start), var(--card-back-bg-end));
+  border: var(--card-back-border);
+  border-radius: var(--card-border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: var(--card-box-shadow);
+}
+
+/* Card back pattern overlay */
+.card-back__pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: calc(var(--card-border-radius) - 2px);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(12, 196, 233, 0.05) 10px,
+    rgba(255, 255, 255, 0.05) 20px
+  );
+  pointer-events: none;
+}
+
+/* Hover effect for clickable deck */
+.card-back.card-back--clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-back.card-back--clickable:hover {
+  border-color: var(--color-primary, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   FACE-UP CARD (.card-face)
+   Used by: DiscardZone top card, PeekArea, CardSlot when known
+   ============================================ */
+
+.card-face {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  background: linear-gradient(135deg, var(--card-face-bg-start), var(--card-face-bg-end));
+  border: var(--card-face-border);
+  border-radius: var(--card-border-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-box-shadow);
+  color: var(--suit-color, var(--suit-red));
+}
+
+/* Rank display (center, large) */
+.card-face__rank {
+  font-size: clamp(24px, 6vw, 48px);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1;
+  color: inherit;
+}
+
+/* Suit symbol (below rank) */
+.card-face__suit {
+  font-size: clamp(20px, 5vw, 36px);
+  margin-top: 4px;
+  color: inherit;
+}
+
+/* Hover effect for clickable face-up */
+.card-face.card-face--clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-face.card-face--clickable:hover {
+  border-color: var(--color-primary, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Highlight state (e.g., matching rank in quick-discard) */
+.card-face.card-face--highlighted,
+.card-back.card-back--highlighted {
+  background: linear-gradient(135deg, #ffeb3b, #ffc107) !important;
+  border-color: #ff9800 !important;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.3);
+}
+
+/* Disabled state (non-matching rank, unknown card) */
+.card-face.card-face--disabled,
+.card-back.card-back--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   CARD SLOT WRAPPER (for Your Cards, Opponent Cards)
+   Contains: face-up/face-down + rank badge + opponent-knows icon
+   ============================================ */
+
+.card-slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--card-border-radius);
+}
+
+.card-slot.card-slot--clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-slot.card-slot--clickable:hover {
+  transform: translateY(-4px);
+}
+
+.card-slot.card-slot--hovered {
+  box-shadow: var(--card-box-shadow-hover);
+}
+
+/* ============================================
+   RANK BADGE (overlays on known cards)
+   Shows rank + suit abbreviation (e.g., "K♠")
+   ============================================ */
+
+.rank-badge {
+  position: absolute;
+  top: clamp(4px, 5%, 8px);
+  right: clamp(4px, 5%, 8px);
+  background: var(--suit-color, var(--suit-red));
+  color: white;
+  padding: clamp(2px, 2%, 4px) clamp(4px, 4%, 6px);
+  border-radius: clamp(2px, 3%, 4px);
+  font-size: clamp(0.75rem, 10vw, 1rem);
+  font-weight: var(--font-weight-bold, 700);
+  font-family: monospace;
+  pointer-events: none;
+  z-index: 10;
+  min-width: max-content;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   OPPONENT-KNOWS ICON (unified 👁️)
+   Shows when opponent can infer knowledge of this card
+   ============================================ */
+
+.opponent-knows-icon {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+  z-index: 10;
+  cursor: help;
+}
+
+/* ============================================
+   HOVER TOOLTIP (who knows this card)
+   ============================================ */
+
+.hover-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border, #dddddd);
+  border-radius: var(--card-border-radius);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.hover-tooltip__title {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-text-light, #666666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.hover-tooltip__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hover-tooltip__item {
+  font-size: 0.875rem;
+  color: var(--color-text, #333333);
+  font-family: monospace;
+}
+
+/* ============================================
+   DECK PILE STACK (multiple cards, stacked)
+   Used by: DeckZone to show count
+   ============================================ */
+
+.card-stack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stacked appearance (offset layers) */
+.card-stack__layer {
+  position: absolute;
+  width: 100%;
+  aspect-ratio: var(--card-aspect-ratio);
+  background: linear-gradient(135deg, var(--card-back-bg-start), var(--card-back-bg-end));
+  border: var(--card-back-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-box-shadow);
+}
+
+.card-stack__layer:nth-child(1) {
+  transform: translateX(2px) translateY(2px);
+  z-index: 1;
+}
+
+.card-stack__layer:nth-child(2) {
+  transform: translateX(4px) translateY(4px);
+  z-index: 2;
+}
+
+.card-stack__layer:nth-child(3) {
+  transform: translateX(6px) translateY(6px);
+  z-index: 3;
+}
+
+/* ============================================
+   CARD COUNT BADGE (on Deck/Discard piles)
+   ============================================ */
+
+.card-count {
+  position: absolute;
+  bottom: -12px;
+  right: 0;
+  background: var(--color-primary, #007bff);
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-bold, 700);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Disable all pointer events */
+.card--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Transition for animations */
+.card--animating {
+  transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* RED FLAG 🚩: CSS Variables Dependency
+ * This stylesheet assumes the following CSS variables are defined in :root or parent:
+ * - --color-primary (used in hover states, count badge)
+ * - --color-border (card borders)
+ * - --color-text (text colors)
+ * - --color-bg-card (tooltip background)
+ * - --radius-md (border radius)
+ * - --font-weight-bold (font weight)
+ * 
+ * If not defined, fallback values in this file will be used.
+ * Check main theme/layout.css or global styles to ensure consistency.
+ */
