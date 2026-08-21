@@ -1,7 +1,7 @@
 /**
  * src/lib/actions/gameActions.ts
  * Centralized game action handlers + timeout fallbacks
- * 
+ *
  * All API calls go through here. Single source of truth for game logic.
  * Each handler accepts gameId, payload, and optional callbacks.
  * Fallback functions handle timeout auto-actions per phase.
@@ -13,7 +13,9 @@ import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
 // DRAW PHASE HANDLERS
 // ============================================
 
-export async function drawFromDeck(gameId: string): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
+export async function drawFromDeck(
+	gameId: string
+): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
 	try {
 		const response = await fetch(getFullUrl(API_ENDPOINTS.draw(gameId)), {
 			method: 'POST',
@@ -33,7 +35,9 @@ export async function drawFromDeck(gameId: string): Promise<{ drawn_card?: { ran
 	}
 }
 
-export async function drawFromDiscard(gameId: string): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
+export async function drawFromDiscard(
+	gameId: string
+): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
 	try {
 		const response = await fetch(getFullUrl(API_ENDPOINTS.draw(gameId)), {
 			method: 'POST',
@@ -57,7 +61,10 @@ export async function drawFromDiscard(gameId: string): Promise<{ drawn_card?: { 
 // ACTION PHASE HANDLERS
 // ============================================
 
-export async function discardImmediate(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {
+export async function discardImmediate(
+	gameId: string,
+	source: 'deck' | 'discard'
+): Promise<boolean> {
 	try {
 		const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
 			method: 'POST',
@@ -77,7 +84,11 @@ export async function discardImmediate(gameId: string, source: 'deck' | 'discard
 	}
 }
 
-export async function swapCard(gameId: string, slotIndex: number, source: 'deck' | 'discard'): Promise<boolean> {
+export async function swapCard(
+	gameId: string,
+	slotIndex: number,
+	source: 'deck' | 'discard'
+): Promise<boolean> {
 	try {
 		const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
 			method: 'POST',
@@ -169,7 +180,11 @@ export async function declinePower(gameId: string): Promise<boolean> {
 	}
 }
 
-export async function decreeSwap(gameId: string, swap: boolean, ownSlotIndex?: number): Promise<boolean> {
+export async function decreeSwap(
+	gameId: string,
+	swap: boolean,
+	ownSlotIndex?: number
+): Promise<boolean> {
 	try {
 		const response = await fetch(getFullUrl(API_ENDPOINTS.power.decreeSwap(gameId)), {
 			method: 'POST',
@@ -319,7 +334,7 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 // ============================================
 
 export async function timeoutDrawing(gameId: string): Promise<boolean> {
-	return await drawFromDiscard(gameId).then(result => !!result);
+	return await drawFromDiscard(gameId).then((result) => !!result);
 }
 
 export async function timeoutAction(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {

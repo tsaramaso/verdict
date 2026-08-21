@@ -11,8 +11,12 @@
 	// Sort players by score (lowest wins)
 	const finalRankings = $derived.by(() => {
 		const allPlayers = [
-			{ id: $gameState.self.player_id, name: $gameState.self.player_name, score: $gameState.self.score },
-			...$gameState.opponents.map(o => ({ id: o.player_id, name: o.player_name, score: o.score }))
+			{
+				id: $gameState.self.player_id,
+				name: $gameState.self.player_name,
+				score: $gameState.self.score
+			},
+			...$gameState.opponents.map((o) => ({ id: o.player_id, name: o.player_name, score: o.score }))
 		];
 
 		return allPlayers.sort((a, b) => a.score - b.score);

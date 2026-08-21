@@ -39,12 +39,12 @@
 
 	function hasOpponentKnowledge(): boolean {
 		if (!opponentKnows) return false;
-		return Object.values(opponentKnows).some(v => v === true);
+		return Object.values(opponentKnows).some((v) => v === true);
 	}
 
 	function getOpponentNames(): string[] {
 		if (!opponentKnows) return [];
-		return Object.keys(opponentKnows).filter(id => opponentKnows![id]);
+		return Object.keys(opponentKnows).filter((id) => opponentKnows![id]);
 	}
 
 	const opponentsWhoKnow = $derived(getOpponentNames());
@@ -83,9 +83,7 @@
 	{/if}
 
 	{#if hasOpponentKnowledge()}
-		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>
-			👁️
-		</div>
+		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>👁️</div>
 	{/if}
 
 	{#if isHovered && isYourCard && opponentsWhoKnow.length > 0}

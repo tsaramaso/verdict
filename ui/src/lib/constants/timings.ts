@@ -1,13 +1,13 @@
 /**
  * src/lib/constants/timings.ts
  * Game phase timings reference
- * 
+ *
  * All values in milliseconds (ms).
- * 
+ *
  * TUNING GUIDE:
  * Run actual games, watch how fast/slow phases feel, update values below.
  * Changes take effect on next game (hot reload enabled).
- * 
+ *
  * Format: PHASE_NAME: milliseconds
  */
 
@@ -16,11 +16,11 @@ import { TIMERS } from '../config';
 
 /**
  * PHASE TIMINGS (milliseconds)
- * 
+ *
  * These are per-phase duration defaults.
  * When phase starts, a timer with this duration is shown to players.
  * On timeout, fallback action fires automatically.
- * 
+ *
  * Adjust based on:
  * - Are players rushed? Increase timer
  * - Do phases feel slow/boring? Decrease timer
@@ -34,7 +34,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Auto-advance, no player input needed
 	 * Display: Cosmetic flip animation on 2 slots per player
 	 * Timeout behavior: Auto-advances (no fallback action)
-	 * 
+	 *
 	 * Tuning: Adjust if animation feels too slow/fast
 	 */
 	TURN_START: TIMERS.TURN_START,
@@ -44,7 +44,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Active player chooses to draw from Deck or Discard
 	 * Display: Deck + Discard highlighted
 	 * Timeout behavior: Auto-draw from Discard
-	 * 
+	 *
 	 * Tuning: 30s allows player to think. Reduce if games stall.
 	 */
 	DRAWING: TIMERS.DRAWING,
@@ -53,10 +53,10 @@ export const PHASE_TIMINGS = {
 	 * AWAITING_ACTION (30s)
 	 * Phase: Active player decides what to do with drawn card
 	 * Actions: Discard Immediate, Swap into slot, Pass Back
-	 * Timeout behavior: 
+	 * Timeout behavior:
 	 *   - If drawn from Deck: Auto-discard immediate
 	 *   - If drawn from Discard: Auto-pass back
-	 * 
+	 *
 	 * Tuning: 30s for deciding + potentially reading power card
 	 */
 	AWAITING_ACTION: TIMERS.AWAITING_ACTION,
@@ -66,7 +66,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Player chooses to invoke or skip spell power (7-Q)
 	 * Display: Power card name + effect, relevant zones highlighted
 	 * Timeout behavior: Auto-skip (decline spell)
-	 * 
+	 *
 	 * Tuning: 15s shorter than ACTION because choice is simpler
 	 * (either invoke on target or skip, no strategy needed)
 	 */
@@ -77,7 +77,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: ALL players can simultaneously quick-discard matching-rank cards
 	 * Display: Discard rank highlighted, matching slots in your hand glowing
 	 * Timeout behavior: Auto-pass (skip quick-discard, hand unchanged)
-	 * 
+	 *
 	 * Tuning: 10s simultaneous window. Can be shorter if quick-discard is rare.
 	 * Watch: Do quick-discards happen fast? If yes, 10s is fine.
 	 * If players don't realize they can quick-discard, increase timer.
@@ -89,7 +89,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: ALL players can claim Testimony (call "eligible")
 	 * Display: "Give Testimony" button enabled for all
 	 * Timeout behavior: Auto-pass (didn't give testimony)
-	 * 
+	 *
 	 * Tuning: 10s for simultaneous first-window calls.
 	 * Usually quick decision (am I <= 7?), so 10s is reasonable.
 	 */
@@ -100,7 +100,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Non-first-callers can join with Cross-Testimony
 	 * Display: "Give Cross-Testimony" button (only if didn't testify first)
 	 * Timeout behavior: Auto-pass (didn't give cross-testimony)
-	 * 
+	 *
 	 * Tuning: 10s for simultaneous cross-window calls.
 	 * Same as CALL_WINDOW, should be quick.
 	 */
@@ -111,7 +111,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Testimony-givers decide to Challenge
 	 * Display: "Challenge" button (only if gave testimony)
 	 * Timeout behavior: Auto-pass (didn't challenge)
-	 * 
+	 *
 	 * Tuning: 10s for challenge decision.
 	 * Usually one person challenges (or nobody does), quick decision.
 	 */
@@ -122,7 +122,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Eligible bystanders decide to take Plea or true sum
 	 * Display: "Take Plea (+25)" or "Decline (true sum)" buttons
 	 * Timeout behavior: Auto-decline (take true sum, Renaissance-eligible)
-	 * 
+	 *
 	 * Tuning: 10s for plea decision. This is informed (Perjury + Duel resolved),
 	 * so should be quick. If players are hesitating, they might need more info.
 	 */
@@ -133,7 +133,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Display round verdict (scores, perjury, duel results, plea outcomes)
 	 * Display: Modal overlay with summary
 	 * Timeout behavior: Auto-advance to next round or game over
-	 * 
+	 *
 	 * Tuning: 10s to read verdicts. Players can click to advance immediately.
 	 * If players are always waiting full 10s, increase. If they skip early, decrease.
 	 */
@@ -144,7 +144,7 @@ export const PHASE_TIMINGS = {
 	 * Phase: Display final standings + 1st/2nd/3rd ranking
 	 * Display: Modal overlay with final scores
 	 * Timeout behavior: Auto-dismiss to home menu (or allow manual return)
-	 * 
+	 *
 	 * Tuning: 10s to admire winner. Can be longer for celebration.
 	 */
 	GAME_OVER: TIMERS.GAME_OVER
@@ -152,7 +152,7 @@ export const PHASE_TIMINGS = {
 
 /**
  * TIMER COLOR THRESHOLDS (milliseconds)
- * 
+ *
  * Timer component uses these to change color as countdown approaches 0:
  * - Green: Normal
  * - Yellow: Below TIMER_WARNING_THRESHOLD
@@ -217,22 +217,22 @@ export const ANIMATION_TIMINGS = {
 
 /**
  * RED FLAG 🚩: Timer Unit Inconsistency
- * 
+ *
  * Current state:
  * - TIMERS object: milliseconds (1000ms = 1s)
  * - TIMER_THRESHOLDS: milliseconds
  * - ANIMATION_TIMINGS: milliseconds
- * 
+ *
  * Make sure Timer.svelte component receives milliseconds and converts to seconds for display.
  * Example: 30000ms should display as "0:30" (30 seconds)
- * 
+ *
  * If Timer component expects seconds, convert before passing:
  *   duration_seconds = PHASE_TIMINGS.DRAWING / 1000
  */
 
 /**
  * RED FLAG 🚩: Timeout Fallback Actions
- * 
+ *
  * Confirm these are implemented in GamePage/API handlers:
  * - DRAWING timeout → auto-draw from discard
  * - ACTION timeout → auto-discard-immediate (if from deck) or auto-pass-back (if from discard)

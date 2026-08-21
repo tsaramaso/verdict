@@ -13,12 +13,12 @@
 </script>
 
 <div class="your-cards-zone">
-	<CardContainer 
-		cards={yourCards} 
-		isYourCards={true} 
+	<CardContainer
+		cards={yourCards}
+		isYourCards={true}
 		{onCardClick}
 		{onQuickDiscard}
-		showKnowledge={true} 
+		showKnowledge={true}
 	/>
 </div>
 

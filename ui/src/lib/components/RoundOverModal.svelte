@@ -51,7 +51,7 @@
 						<div class="summary-list">
 							{#each $gameState.trial.perjury_removed as playerId}
 								<div class="summary-item">
-									{$gameState.opponents.find(o => o.player_id === playerId)?.player_name}
+									{$gameState.opponents.find((o) => o.player_id === playerId)?.player_name}
 								</div>
 							{/each}
 						</div>
@@ -64,7 +64,7 @@
 						<div class="summary-list">
 							{#each $gameState.trial.duel_winners as playerId}
 								<div class="summary-item winner">
-									{$gameState.opponents.find(o => o.player_id === playerId)?.player_name} (Winner)
+									{$gameState.opponents.find((o) => o.player_id === playerId)?.player_name} (Winner)
 								</div>
 							{/each}
 						</div>
@@ -77,7 +77,7 @@
 						<div class="summary-list">
 							{#each $gameState.trial.plea_taken as playerId}
 								<div class="summary-item">
-									{$gameState.opponents.find(o => o.player_id === playerId)?.player_name}
+									{$gameState.opponents.find((o) => o.player_id === playerId)?.player_name}
 								</div>
 							{/each}
 						</div>

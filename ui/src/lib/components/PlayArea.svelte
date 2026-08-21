@@ -17,11 +17,11 @@
 		onPleaDecline?: () => void;
 	}
 
-	let { 
-		drawnCard, 
+	let {
+		drawnCard,
 		drawnCardSource,
-		onDeckClick, 
-		onDiscardClick, 
+		onDeckClick,
+		onDiscardClick,
 		onAction,
 		onQuickDiscard,
 		onTestifyFirst,
@@ -38,20 +38,11 @@
 	</div>
 
 	<div class="central-section">
-		<CentralArea 
-			{drawnCard}
-			{drawnCardSource}
-			{onDeckClick} 
-			{onDiscardClick}
-			{onAction}
-		/>
+		<CentralArea {drawnCard} {drawnCardSource} {onDeckClick} {onDiscardClick} {onAction} />
 	</div>
 
 	<div class="your-zones-row">
-		<YourZonesRow 
-			onCardClick={(idx) => onAction?.('swap', idx)}
-			{onQuickDiscard}
-		/>
+		<YourZonesRow onCardClick={(idx) => onAction?.('swap', idx)} {onQuickDiscard} />
 	</div>
 </div>
 

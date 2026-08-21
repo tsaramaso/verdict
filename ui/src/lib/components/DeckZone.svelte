@@ -12,8 +12,8 @@
 	const cardCount = $derived(52 - deckCount);
 </script>
 
-<div 
-	class="deck-zone" 
+<div
+	class="deck-zone"
 	class:clickable={isClickable}
 	onclick={isClickable ? onClick : null}
 	role={isClickable ? 'button' : 'region'}
