@@ -86,7 +86,7 @@ async def global_lobbies_websocket_endpoint(
             "ws_global_lobbies_connection_accepted", player_id=str(player_id)[:8]
         )
 
-        # STEP 3: REGISTER WITH MANAGER 
+        # STEP 3: REGISTER WITH MANAGER
         # (use fixed "lobbies" as room_id for global channel)
         await manager.connect("lobbies", player_id, websocket)
         logger.debug(

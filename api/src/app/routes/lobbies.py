@@ -28,7 +28,7 @@ def generate_short_id(length: int = 6) -> str:
 
 @router.post("/create")
 async def create_lobby(user=Depends(get_current_user)) -> dict:
-    """Create ephemeral lobby. Returns short ID. 
+    """Create ephemeral lobby. Returns short ID.
     Broadcasts to global lobbies channel."""
     player_id = user.uuid
     short_id = generate_short_id()
