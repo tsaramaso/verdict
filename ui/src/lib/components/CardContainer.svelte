@@ -25,12 +25,12 @@
 
 	function isSlotHighlighted(slotIdx: number): boolean {
 		if (!isQuickDiscardPhase || !isYourCards) return false;
-		
+
 		const card = cards[slotIdx];
 		if (!card || !card.known) return false;
-		
+
 		if (!discardTopCard) return false;
-		
+
 		// Highlight if card rank matches discard top card rank
 		return card.rank === discardTopCard.rank;
 	}
@@ -49,17 +49,17 @@
 
 	function isClickableInPhase(slotIdx: number): boolean {
 		if (!isYourCards) return false;
-		
+
 		if (isQuickDiscardPhase) {
 			// Quick discard: only matching-rank cards clickable
 			return isSlotHighlighted(slotIdx);
 		}
-		
+
 		// Action phase: all cards clickable
 		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
 			return true;
 		}
-		
+
 		return false;
 	}
 </script>
