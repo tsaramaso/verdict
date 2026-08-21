@@ -1,4 +1,3 @@
-<!-- src/lib/components/YourZonesRow.svelte -->
 <script lang="ts">
 	import { calculateKnownSum, getPointsToRenaissance } from '$lib/config';
 	import { gameState } from '$lib/stores/gameState';
@@ -6,9 +5,28 @@
 
 	interface Props {
 		onCardClick?: (slotIndex: number) => void;
+		onQuickDiscard?: (slotIndex: number) => void;
 	}
 
-	let { onCardClick }: Props = $props();
+	let { onCardClick, onQuickDiscard }: Props = $props();
+
+	const knownSum = $derived(
+		calculateKnownSum(
+			$gameState.self.hand,
+			$gameState.rules.black_king_value,
+			$gameState.rules.red_king_value,
+			$gameState.rules.rank_values
+		)
+	);
+
+	const nextRenaissance = $derived(
+		getPointsToRenaissance(
+			$gameState.self.score,
+			Object.keys($gameState.rules.renaissance_thresholds).map(Number)
+		)
+	);
+
+	const knownSumColor = $derived(knownSum <= 7 ? '#4caf50' : '#f44336');
 </script>
 
 <div class="your-zones-row">
@@ -17,24 +35,16 @@
 			<div class="player-name">{$gameState.self.player_name}<br /> (You)</div>
 			<div class="player-meta">
 				<span class="score">Score:<br />{$gameState.self.score}</span>
-				<span class="score"
-					>Known Sum:<br />{calculateKnownSum(
-						$gameState.self.hand,
-						$gameState.rules.black_king_value,
-						$gameState.rules.red_king_value,
-						$gameState.rules.rank_values
-					)}</span
-				>
-				<span class="score"
-					>Next Renaissance:<br />{getPointsToRenaissance(
-						$gameState.self.score,
-						Object.keys($gameState.rules.renaissance_thresholds).map(Number)
-					)}</span
-				>
+				<span class="score" style="color: {knownSumColor}">
+					Known Sum:<br />{knownSum}
+				</span>
+				<span class="score">
+					Next Renaissance:<br />{nextRenaissance}
+				</span>
 			</div>
 		</div>
 		<div class="your-zone">
-			<YourCardsZone {onCardClick} />
+			<YourCardsZone {onCardClick} {onQuickDiscard} />
 		</div>
 	</div>
 </div>
@@ -57,7 +67,6 @@
 		align-items: center;
 		height: 100%;
 		min-height: 0;
-		/* Single zone with fixed aspect ratio */
 		max-width: 100%;
 		overflow: hidden;
 		border-radius: 5%;
@@ -70,12 +79,8 @@
 		justify-content: center;
 		min-height: 0;
 		min-width: 0;
-		/* Fixed width derived from height via aspect-ratio */
-		/* Height 100% comes from parent */
-		/* Width is calculated as: 100% height × (2.5/3.5) aspect */
 		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
-		/* Zone is fixed size - doesn't shrink/grow individually */
 		flex: 0 0 auto;
 	}
 

@@ -49,7 +49,7 @@
 
 	<div class="your-zones-row">
 		<YourZonesRow 
-			{onAction}
+			onCardClick={(idx) => onAction?.('swap', idx)}
 			{onQuickDiscard}
 		/>
 	</div>
