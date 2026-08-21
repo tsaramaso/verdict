@@ -1,4 +1,3 @@
-<!-- src/lib/components/DiscardZone.svelte -->
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
 	import { getSuitSymbol } from '$lib/config';
@@ -15,7 +14,9 @@
 </script>
 
 <button
-	class={`discard-zone ${isClickable ? 'discard-zone--clickable' : ''} ${isHovered ? 'discard-zone--hovered' : ''}`}
+	class="discard-zone"
+	class:clickable={isClickable}
+	class:hovered={isHovered}
 	disabled={!isClickable}
 	onclick={onClick}
 	onmouseenter={() => (isHovered = true)}
@@ -26,37 +27,29 @@
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
 		{@const topCard = $gameState.discard_pile.visible_cards[0]}
-		<div class="card-display" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
-			<div class="card-rank">{topCard.rank}</div>
-			<div class="card-suit">{getSuitSymbol(topCard.suit)}</div>
+		<div 
+			class="card-face"
+			style="--suit-color: {SUIT_COLORS[topCard.suit]}"
+		>
+			<div class="card-face__rank">{topCard.rank[0]}</div>
+			<div class="card-face__suit">{getSuitSymbol(topCard.suit)}</div>
 		</div>
 	{:else}
-		<div class="empty-label">No card</div>
+		<div class="empty-label">-</div>
 	{/if}
-	<div class="discard-count">{$gameState.discard_pile.count}</div>
+	<div class="card-count">{$gameState.discard_pile.count}</div>
 </button>
 
 <style>
+	@import '$lib/styles/card.css';
+
 	.discard-zone {
 		position: relative;
-		height: 100%;
-		aspect-ratio: 2.5 / 3.5;
-		background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
-		background-image: repeating-linear-gradient(
-			45deg,
-			transparent,
-			transparent 10px,
-			rgba(255, 255, 255, 0.03) 10px,
-			rgba(255, 255, 255, 0.03) 20px
-		);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-md);
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		padding: 0;
+		background: transparent;
+		border: none;
 		cursor: default;
 		transition: all 0.2s ease;
-		border: 2px solid transparent;
 	}
 
 	.discard-zone:disabled {
@@ -64,60 +57,30 @@
 		opacity: 0.6;
 	}
 
-	.discard-zone:not(:disabled) {
+	.discard-zone.clickable {
 		cursor: pointer;
 	}
 
-	.discard-zone--clickable:hover {
-		border-color: var(--color-primary);
-		box-shadow:
-			0 0 0 2px rgba(0, 123, 255, 0.2),
-			var(--shadow-md);
+	.discard-zone.clickable:hover {
+		transform: translateY(-4px);
 	}
 
-	.discard-zone--hovered {
-		transform: scale(1.05);
+	.discard-zone.clickable:focus-visible {
+		outline: 2px solid var(--color-primary, #007bff);
+		outline-offset: 4px;
 	}
 
-	.card-display {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		color: var(--suit-color);
-		width: 85%;
-		height: 85%;
-		background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
-		border-radius: clamp(2px, 3%, 4px);
-	}
-
-	.card-rank {
-		font-size: clamp(0.875rem, 2.5vw, 1.5rem);
-		font-weight: var(--font-weight-bold);
-		line-height: 1;
-	}
-
-	.card-suit {
-		font-size: clamp(0.75rem, 2vw, 1.25rem);
-		margin-top: clamp(2px, 1.5%, 6px);
+	.discard-zone.hovered .card-face {
+		box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 	}
 
 	.empty-label {
-		font-size: clamp(0.75rem, 1.5vw, 1rem);
-		color: #8892b0;
-		font-weight: var(--font-weight-bold);
-	}
-
-	.discard-count {
-		position: absolute;
-		bottom: clamp(2px, 3%, 8px);
-		right: clamp(2px, 3%, 8px);
-		background: rgba(0, 0, 0, 0.3);
-		color: white;
-		padding: clamp(1px, 1.5%, 4px) clamp(2px, 2%, 6px);
-		border-radius: clamp(2px, 3%, 4px);
-		font-size: clamp(0.65rem, 1.5vw, 0.875rem);
-		font-weight: var(--font-weight-bold);
-		font-family: monospace;
+		font-size: 32px;
+		color: var(--color-text-light, #999);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
 	}
 </style>

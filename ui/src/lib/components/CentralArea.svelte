@@ -1,17 +1,25 @@
-<!-- src/lib/components/CentralArea.svelte -->
 <script lang="ts">
 	import DeckZone from './DeckZone.svelte';
 	import DiscardZone from './DiscardZone.svelte';
+	import PeekArea from './PeekArea.svelte';
 	import { gameState, isActivePlayer } from '$lib/stores/gameState';
 	import { GAME_PHASES } from '$lib/config';
-	import CardSlot from './CardSlot.svelte';
 
 	interface Props {
+		drawnCard?: { rank: string; suit: string } | null;
+		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
 		onDiscardClick?: () => void;
+		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
-	let { onDeckClick, onDiscardClick }: Props = $props();
+	let { 
+		drawnCard, 
+		drawnCardSource,
+		onDeckClick, 
+		onDiscardClick,
+		onAction
+	}: Props = $props();
 
 	const isDeckClickable = $derived($isActivePlayer && $gameState.phase === GAME_PHASES.DRAWING);
 
@@ -19,12 +27,28 @@
 		$isActivePlayer &&
 			($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION)
 	);
+
+	const isPeekAreaVisible = $derived(
+		$gameState.phase === GAME_PHASES.AWAITING_ACTION && !!drawnCard
+	);
+
+	function handleDiscardImmediateClick() {
+		if (!isDiscardClickable) return;
+		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
+			onAction?.('discard_immediate');
+		}
+	}
 </script>
 
 <div class="central-area">
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
-		<DiscardZone isClickable={isDiscardClickable} onClick={onDiscardClick} />
+		<PeekArea 
+			card={drawnCard}
+			isVisible={isPeekAreaVisible}
+			isActivePlayer={$isActivePlayer}
+		/>
+		<DiscardZone isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION} onClick={handleDiscardImmediateClick} />
 	</div>
 </div>
 
@@ -48,14 +72,11 @@
 		align-items: center;
 		height: 100%;
 		min-height: 0;
-		/* Two cards side-by-side, each with aspect-ratio 2.5/3.5 */
-		/* Width: (height × 2.5/3.5) × 2 + gap */
 		max-width: 100%;
 		overflow: hidden;
 	}
 
 	.central-cards-container > :global(*) {
-		/* Each card fills zone height, width from aspect-ratio */
 		height: 100%;
 		aspect-ratio: 2.5 / 3.5;
 		flex: 0 0 auto;

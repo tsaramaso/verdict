@@ -1,16 +1,35 @@
-<!-- src/lib/components/PlayArea.svelte -->
 <script lang="ts">
 	import OpponentZonesRow from './OpponentZonesRow.svelte';
 	import CentralArea from './CentralArea.svelte';
 	import YourZonesRow from './YourZonesRow.svelte';
 
 	interface Props {
+		drawnCard?: { rank: string; suit: string } | null;
+		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
 		onDiscardClick?: () => void;
-		onCardClick?: (slotIndex: number) => void;
+		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
+		onQuickDiscard?: (slotIndex: number) => void;
+		onTestifyFirst?: () => void;
+		onTestifyCross?: () => void;
+		onChallenge?: () => void;
+		onPlea?: () => void;
+		onPleaDecline?: () => void;
 	}
 
-	let { onDeckClick, onDiscardClick, onCardClick }: Props = $props();
+	let { 
+		drawnCard, 
+		drawnCardSource,
+		onDeckClick, 
+		onDiscardClick, 
+		onAction,
+		onQuickDiscard,
+		onTestifyFirst,
+		onTestifyCross,
+		onChallenge,
+		onPlea,
+		onPleaDecline
+	}: Props = $props();
 </script>
 
 <div class="play-area">
@@ -19,11 +38,20 @@
 	</div>
 
 	<div class="central-section">
-		<CentralArea {onDeckClick} {onDiscardClick} />
+		<CentralArea 
+			{drawnCard}
+			{drawnCardSource}
+			{onDeckClick} 
+			{onDiscardClick}
+			{onAction}
+		/>
 	</div>
 
 	<div class="your-zones-row">
-		<YourZonesRow {onCardClick} />
+		<YourZonesRow 
+			{onAction}
+			{onQuickDiscard}
+		/>
 	</div>
 </div>
 
@@ -64,7 +92,6 @@
 		background: var(--color-bg-card);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		padding: clamp(0.5rem, 1vw, 1rem);
 		overflow: hidden;
 	}
 
