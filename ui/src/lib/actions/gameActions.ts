@@ -1,9 +1,10 @@
 /**
  * src/lib/actions/gameActions.ts
- * Centralized game action handlers
+ * Centralized game action handlers + timeout fallbacks
  * 
  * All API calls go through here. Single source of truth for game logic.
  * Each handler accepts gameId, payload, and optional callbacks.
+ * Fallback functions handle timeout auto-actions per phase.
  */
 
 import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
@@ -311,4 +312,44 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 		console.error('[declinePlea] Error:', error);
 		return false;
 	}
+}
+
+// ============================================
+// TIMEOUT FALLBACK HANDLERS
+// ============================================
+
+export async function timeoutDrawing(gameId: string): Promise<boolean> {
+	return await drawFromDiscard(gameId).then(result => !!result);
+}
+
+export async function timeoutAction(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {
+	if (source === 'deck') {
+		return await discardImmediate(gameId, source);
+	} else {
+		return await passBack(gameId);
+	}
+}
+
+export async function timeoutSpell(gameId: string): Promise<boolean> {
+	return await declinePower(gameId);
+}
+
+export async function timeoutQuickDiscard(gameId: string): Promise<boolean> {
+	// No action needed, game continues
+	return true;
+}
+
+export async function timeoutTestifyWindow(gameId: string): Promise<boolean> {
+	// No action needed, player passes automatically
+	return true;
+}
+
+export async function timeoutDuelWindow(gameId: string): Promise<boolean> {
+	// No action needed, player didn't challenge
+	return true;
+}
+
+export async function timeoutPleaWindow(gameId: string): Promise<boolean> {
+	// No action needed, player declines plea (takes true sum)
+	return true;
 }
