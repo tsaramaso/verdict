@@ -9,6 +9,8 @@
 	import { transformRules } from '$lib/utils/rulesTransform';
 	import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
 	import { GAME_PHASES } from '$lib/config';
+	import RoundOverModal from './RoundOverModal.svelte';
+	import GameOverModal from './GameOverModal.svelte';
 
 	interface Props {
 		playerId: string;
@@ -313,6 +315,21 @@
 			onInvoke={handlePowerInvoke}
 			onDecline={handlePowerDecline}
 			onDecreeSwap={handlePowerDecreeSwap}
+		/>
+	{/if}
+
+	{#if $gameState.phase === GAME_PHASES.ROUND_OVER}
+		<RoundOverModal 
+			onAdvance={() => {
+				// Auto-advance triggered, game continues naturally via WebSocket
+			}}
+		/>
+	{/if}
+
+	{#if $gameState.phase === GAME_PHASES.GAME_OVER}
+		<GameOverModal 
+			onReturnLobby={() => window.location.href = '/'}
+			onPlayAgain={() => window.location.href = '/lobbies'}
 		/>
 	{/if}
 </div>
