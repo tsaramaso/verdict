@@ -5,12 +5,11 @@
 	import BottomBar from './BottomBar.svelte';
 	import PlayArea from './PlayArea.svelte';
 	import SpellInvocationModal from './SpellInvocationModal.svelte';
-	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
-	import { transformRules } from '$lib/utils/rulesTransform';
-	import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
-	import { GAME_PHASES } from '$lib/config';
 	import RoundOverModal from './RoundOverModal.svelte';
 	import GameOverModal from './GameOverModal.svelte';
+	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
+	import { GAME_PHASES } from '$lib/config';
+	import * as gameActions from '$lib/actions/gameActions';
 
 	interface Props {
 		playerId: string;
@@ -79,7 +78,8 @@
 				opponents: transformedOpponents,
 				my_opponent_knowledge: message.my_opponent_knowledge,
 				trial: message.trial,
-				discard_pile: transformedDiscard
+				discard_pile: transformedDiscard,
+				rules: message.rules
 			});
 		}
 	}
@@ -90,69 +90,31 @@
 		return token;
 	}
 
-	async function handleDeckClick() {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.draw(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ source: 'deck' })
-			});
-
-			if (!response.ok) {
-				console.error('Draw from deck failed:', response.status);
-				return;
-			}
-
-			const data = await response.json();
-			if (data.drawn_card) {
-				drawnCard = data.drawn_card;
-				drawnCardSource = 'deck';
-			}
-		} catch (error) {
-			console.error('Deck draw error:', error);
+	async function handleDrawDeck() {
+		const result = await gameActions.drawFromDeck(gameId);
+		if (result?.drawn_card) {
+			drawnCard = result.drawn_card;
+			drawnCardSource = 'deck';
 		}
 	}
 
-	async function handleDiscardClick() {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.draw(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ source: 'discard' })
-			});
-
-			if (!response.ok) {
-				console.error('Draw from discard failed:', response.status);
-				return;
-			}
-
-			const data = await response.json();
-			if (data.drawn_card) {
-				drawnCard = data.drawn_card;
-				drawnCardSource = 'discard';
-			}
-		} catch (error) {
-			console.error('Discard draw error:', error);
+	async function handleDrawDiscard() {
+		const result = await gameActions.drawFromDiscard(gameId);
+		if (result?.drawn_card) {
+			drawnCard = result.drawn_card;
+			drawnCardSource = 'discard';
 		}
 	}
 
 	async function handleAction(choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					choice,
-					slot_index: slotIndex,
-					source: drawnCardSource
-				})
-			});
-
-			if (!response.ok) console.error('Action failed:', response.status);
-			clearDrawnCard();
-		} catch (error) {
-			console.error('Action error:', error);
+		if (choice === 'discard_immediate') {
+			await gameActions.discardImmediate(gameId, drawnCardSource || 'deck');
+		} else if (choice === 'swap' && slotIndex !== undefined) {
+			await gameActions.swapCard(gameId, slotIndex, drawnCardSource || 'deck');
+		} else if (choice === 'pass_back') {
+			await gameActions.passBack(gameId);
 		}
+		clearDrawnCard();
 	}
 
 	async function handlePowerInvoke(
@@ -160,122 +122,42 @@
 		targetOwner?: string,
 		targetIndex?: number
 	) {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.power.invoke(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					own_slot_index: ownSlotIndex,
-					target_owner: targetOwner,
-					target_index: targetIndex
-				})
-			});
-
-			if (!response.ok) console.error('Power invoke failed:', response.status);
-			clearDrawnCard();
-		} catch (error) {
-			console.error('Power invoke error:', error);
-		}
+		await gameActions.invokePower(gameId, ownSlotIndex, targetOwner, targetIndex);
+		clearDrawnCard();
 	}
 
 	async function handlePowerDecline() {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.power.decline(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-
-			if (!response.ok) console.error('Power decline failed:', response.status);
-			clearDrawnCard();
-		} catch (error) {
-			console.error('Power decline error:', error);
-		}
+		await gameActions.declinePower(gameId);
+		clearDrawnCard();
 	}
 
 	async function handlePowerDecreeSwap(swap: boolean, ownSlotIndex?: number) {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.power.decreeSwap(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ swap, own_slot_index: ownSlotIndex })
-			});
-
-			if (!response.ok) console.error('Decree swap failed:', response.status);
-			if (swap) clearDrawnCard();
-		} catch (error) {
-			console.error('Decree swap error:', error);
-		}
+		await gameActions.decreeSwap(gameId, swap, ownSlotIndex);
+		if (swap) clearDrawnCard();
 	}
 
 	async function handleQuickDiscard(slotIndex: number) {
-		try {
-			const response = await fetch(getFullUrl(API_ENDPOINTS.quickDiscard(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ slot_index: slotIndex })
-			});
-
-			if (!response.ok) console.error('Quick discard failed:', response.status);
-		} catch (error) {
-			console.error('Quick discard error:', error);
-		}
+		await gameActions.quickDiscard(gameId, slotIndex);
 	}
 
 	async function handleTestifyFirst() {
-		try {
-			await fetch(getFullUrl(API_ENDPOINTS.trial.testifyFirst(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-		} catch (error) {
-			console.error('Testify first error:', error);
-		}
+		await gameActions.testifyFirst(gameId);
 	}
 
 	async function handleTestifyCross() {
-		try {
-			await fetch(getFullUrl(API_ENDPOINTS.trial.testifyCross(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-		} catch (error) {
-			console.error('Testify cross error:', error);
-		}
+		await gameActions.testifyCross(gameId);
 	}
 
 	async function handleChallenge() {
-		try {
-			await fetch(getFullUrl(API_ENDPOINTS.trial.challenge(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-		} catch (error) {
-			console.error('Challenge error:', error);
-		}
+		await gameActions.challenge(gameId);
 	}
 
 	async function handlePlea() {
-		try {
-			await fetch(getFullUrl(API_ENDPOINTS.trial.plea(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ plea: true })
-			});
-		} catch (error) {
-			console.error('Plea error:', error);
-		}
+		await gameActions.takePlea(gameId);
 	}
 
 	async function handlePleaDecline() {
-		try {
-			await fetch(getFullUrl(API_ENDPOINTS.trial.plea(gameId)), {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ plea: false })
-			});
-		} catch (error) {
-			console.error('Plea decline error:', error);
-		}
+		await gameActions.declinePlea(gameId);
 	}
 
 	function clearDrawnCard() {
@@ -288,30 +170,24 @@
 	<PlayArea
 		{drawnCard}
 		{drawnCardSource}
-		{onDeckClick: handleDeckClick}
-		{onDiscardClick: handleDiscardClick}
-		{onAction: handleAction}
-		{onQuickDiscard: handleQuickDiscard}
-		{onTestifyFirst: handleTestifyFirst}
-		{onTestifyCross: handleTestifyCross}
-		{onChallenge: handleChallenge}
-		{onPlea: handlePlea}
-		{onPleaDecline: handlePleaDecline}
+		onDeckClick={handleDrawDeck}
+		onDiscardClick={handleDrawDiscard}
+		onAction={handleAction}
+		onQuickDiscard={handleQuickDiscard}
+		onTestifyFirst={handleTestifyFirst}
+		onTestifyCross={handleTestifyCross}
+		onChallenge={handleChallenge}
+		onPlea={handlePlea}
+		onPleaDecline={handlePleaDecline}
 	/>
 
-	<RightPanel
-		{onTestifyFirst: handleTestifyFirst}
-		{onTestifyCross: handleTestifyCross}
-		{onChallenge: handleChallenge}
-		{onPlea: handlePlea}
-		{onPleaDecline: handlePleaDecline}
-	/>
+	<RightPanel gameState={$gameState} />
 
 	<BottomBar />
 
 	{#if $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION && drawnCard}
 		<SpellInvocationModal
-			card={drawnCard}
+			{drawnCard}
 			onInvoke={handlePowerInvoke}
 			onDecline={handlePowerDecline}
 			onDecreeSwap={handlePowerDecreeSwap}
@@ -321,15 +197,15 @@
 	{#if $gameState.phase === GAME_PHASES.ROUND_OVER}
 		<RoundOverModal 
 			onAdvance={() => {
-				// Auto-advance triggered, game continues naturally via WebSocket
+				// Auto-advance triggered, game continues via WebSocket
 			}}
 		/>
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.GAME_OVER}
 		<GameOverModal 
-			onReturnLobby={() => window.location.href = '/'}
-			onPlayAgain={() => window.location.href = '/lobbies'}
+			onReturnLobby={() => (window.location.href = '/')}
+			onPlayAgain={() => (window.location.href = '/lobbies')}
 		/>
 	{/if}
 </div>
