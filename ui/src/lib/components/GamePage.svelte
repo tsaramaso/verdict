@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { gameState, setCurrentPlayerId } from '$lib/stores/gameState';
+	import { gameState, setCurrentPlayerId, type Rules } from '$lib/stores/gameState';
 	import RightPanel from './RightPanel.svelte';
 	import BottomBar from './BottomBar.svelte';
 	import PlayArea from './PlayArea.svelte';
@@ -8,6 +8,7 @@
 	import RoundOverModal from './RoundOverModal.svelte';
 	import GameOverModal from './GameOverModal.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
+	import { fetchBaseRules, getHardcodedBaseRules } from '$lib/utils/baseRules';
 	import { GAME_PHASES } from '$lib/config';
 	import * as gameActions from '$lib/actions/gameActions';
 
@@ -21,9 +22,11 @@
 	let drawnCard: { rank: string; suit: string } | null = $state(null);
 	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
+	let baseRules: Rules | null = null;
 
-	onMount(() => {
+	onMount(async () => {
 		setCurrentPlayerId(playerId);
+		baseRules = await fetchBaseRules(); // Fetch once on init
 		initWebSocket();
 	});
 
@@ -44,9 +47,11 @@
 	}
 
 	function handleWebSocketMessage(data: string) {
+		console.log('[GamePage] WS message received:', data.substring(0, 200) + '...');
 		const message = JSON.parse(data);
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
+			console.log('[GamePage] Game state update, phase:', message.game.phase);
 			const transformedSelf = {
 				...message.self,
 				hand: transformCardList(message.self.hand)
@@ -71,7 +76,7 @@
 
 			gameState.set({
 				game_id: message.game.game_id,
-				phase: message.game.phase,
+				phase: message.game.phase.toUpperCase(),
 				current_player: message.game.current_player,
 				round_number: message.game.round_number,
 				self: transformedSelf,
@@ -79,7 +84,7 @@
 				my_opponent_knowledge: message.my_opponent_knowledge,
 				trial: message.trial,
 				discard_pile: transformedDiscard,
-				rules: message.rules
+				rules: message.rules || baseRules || getHardcodedBaseRules(),
 			});
 		}
 	}
@@ -91,25 +96,32 @@
 	}
 
 	async function handleDrawDeck() {
+		console.log('[GamePage] Deck clicked, gameId:', gameId);
 		const result = await gameActions.drawFromDeck(gameId);
+		console.log('[GamePage] Deck draw result:', result);
 		if (result?.drawn_card) {
+			console.log('[GamePage] Card drawn:', result.drawn_card);
 			drawnCard = result.drawn_card;
 			drawnCardSource = 'deck';
+		} else {
+			console.error('[GamePage] No card drawn from deck');
 		}
 	}
 
 	async function handleDrawDiscard() {
+		console.log('[GamePage] Discard clicked, gameId:', gameId);
 		const result = await gameActions.drawFromDiscard(gameId);
+		console.log('[GamePage] Discard draw result:', result);
 		if (result?.drawn_card) {
+			console.log('[GamePage] Card drawn:', result.drawn_card);
 			drawnCard = result.drawn_card;
 			drawnCardSource = 'discard';
+		} else {
+			console.error('[GamePage] No card drawn from discard');
 		}
 	}
 
-	async function handleAction(
-		choice: 'discard_immediate' | 'swap' | 'pass_back',
-		slotIndex?: number
-	) {
+	async function handleAction(choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) {
 		if (choice === 'discard_immediate') {
 			await gameActions.discardImmediate(gameId, drawnCardSource || 'deck');
 		} else if (choice === 'swap' && slotIndex !== undefined) {
@@ -229,7 +241,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.ROUND_OVER}
-		<RoundOverModal
+		<RoundOverModal 
 			onAdvance={() => {
 				// Auto-advance triggered, game continues via WebSocket
 			}}
@@ -237,7 +249,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.GAME_OVER}
-		<GameOverModal
+		<GameOverModal 
 			onReturnLobby={() => (window.location.href = '/')}
 			onPlayAgain={() => (window.location.href = '/lobbies')}
 		/>

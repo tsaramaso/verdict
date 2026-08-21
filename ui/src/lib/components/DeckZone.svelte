@@ -10,12 +10,22 @@
 
 	const deckCount = $derived($gameState.discard_pile?.count ?? 0);
 	const cardCount = $derived(52 - deckCount);
+
+	function handleClick() {
+		console.log('[DeckZone] Clicked, isClickable:', isClickable);
+		if (isClickable && onClick) {
+			console.log('[DeckZone] Calling onClick handler');
+			onClick();
+		} else {
+			console.warn('[DeckZone] Click ignored - not clickable or no handler');
+		}
+	}
 </script>
 
-<div
-	class="deck-zone"
+<div 
+	class="deck-zone" 
 	class:clickable={isClickable}
-	onclick={isClickable ? onClick : null}
+	onclick={handleClick}
 	role={isClickable ? 'button' : 'region'}
 	tabindex={isClickable ? 0 : -1}
 	aria-label="Draw from deck"
