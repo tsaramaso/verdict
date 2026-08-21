@@ -164,6 +164,37 @@
 		drawnCard = null;
 		drawnCardSource = null;
 	}
+
+	// ============================================
+	// TIMEOUT FALLBACK HANDLERS
+	// ============================================
+
+	async function handleTimeoutDrawing() {
+		await gameActions.timeoutDrawing(gameId);
+	}
+
+	async function handleTimeoutAction() {
+		await gameActions.timeoutAction(gameId, drawnCardSource || 'deck');
+		clearDrawnCard();
+	}
+
+	async function handleTimeoutSpell() {
+		await gameActions.timeoutSpell(gameId);
+		clearDrawnCard();
+	}
+
+	function getTimeoutHandler() {
+		switch ($gameState.phase) {
+			case GAME_PHASES.DRAWING:
+				return handleTimeoutDrawing;
+			case GAME_PHASES.AWAITING_ACTION:
+				return handleTimeoutAction;
+			case GAME_PHASES.AWAITING_SPELL_INVOCATION:
+				return handleTimeoutSpell;
+			default:
+				return undefined;
+		}
+	}
 </script>
 
 <div class="game-page">
@@ -181,7 +212,7 @@
 		onPleaDecline={handlePleaDecline}
 	/>
 
-	<RightPanel gameState={$gameState} />
+	<RightPanel gameState={$gameState} onTimeOut={getTimeoutHandler()} />
 
 	<BottomBar />
 
