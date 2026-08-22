@@ -30,7 +30,9 @@
 			remainingSeconds -= 1;
 
 			if (remainingSeconds <= 0) {
-				clearInterval(timerInterval);
+				if (timerInterval) {
+					clearInterval(timerInterval);
+				}
 				timerInterval = null;
 				if (onTimeOut) {
 					onTimeOut();

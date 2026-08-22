@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { CardRank, CardSuit } from '$lib/constants/cards';
-	import { SUIT_LABELS, SUIT_COLORS } from '$lib/constants/cards';
+	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS } from '$lib/constants/cards';
 
 	interface Props {
 		card: { rank: CardRank; suit: CardSuit } | null;
@@ -22,7 +22,7 @@
 <div class="peek-area" class:visible={isVisible && isActivePlayer}>
 	{#if isVisible && isActivePlayer && card}
 		<div class="peek-card card-face" style="color: {getSuitColor(card.suit)}">
-			<div class="card-face__rank">{card.rank[0]}</div>
+			<div class="card-face__rank">{RANK_LABELS[card.rank]}</div>
 			<div class="card-face__suit">{getSuitSymbol(card.suit)}</div>
 		</div>
 		<div class="peek-label">Drawn Card</div>

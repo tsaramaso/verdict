@@ -13,17 +13,17 @@
 	let { gameState, onTimeOut }: Props = $props();
 
 	const phaseLabel = $derived(PHASE_LABELS[gameState.phase] || 'Unknown');
-	const isAutoAdvance = $derived(UI.autoAdvancePhases.includes(gameState.phase));
 
 	const currentPlayerName = $derived.by(() => {
 		if (gameState.current_player === gameState.self.player_id) {
+			console.log('[RightPanel] Current player is self:', gameState.self.player_name);
 			return gameState.self.player_name;
 		}
-		return (
-			gameState.opponents.find((o) => o.player_id === gameState.current_player)?.player_name ||
-			'Unknown'
-		);
+		const opponentName = gameState.opponents.find(o => o.player_id === gameState.current_player)?.player_name || 'Unknown';
+		console.log('[RightPanel] Current player is opponent:', opponentName);
+		return opponentName;
 	});
+
 </script>
 
 <div class="right-panel">
@@ -45,7 +45,7 @@
 	</div>
 
 	<div class="timer-section">
-		<Timer phase={gameState.phase as GamePhase} {onTimeOut} />
+		<Timer phase={gameState.phase as GamePhase} onTimeOut={onTimeOut} />
 	</div>
 
 	<div class="leaderboard-section">

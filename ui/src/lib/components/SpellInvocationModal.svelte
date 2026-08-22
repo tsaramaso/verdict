@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
-	import { SUIT_LABELS, SUIT_COLORS, CardRank } from '$lib/constants/cards';
+	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS, type CardRank, type CardSuit } from '$lib/constants/cards';
 	import { getPowerName } from '$lib/config';
 
 	interface Props {
@@ -28,11 +28,11 @@
 	}
 
 	function getSuitSymbol(suit: string): string {
-		return SUIT_LABELS[suit as keyof typeof SUIT_LABELS];
+		return SUIT_LABELS[suit as unknown as CardSuit];
 	}
 
 	function getSuitColor(suit: string): string {
-		return SUIT_COLORS[suit as keyof typeof SUIT_COLORS];
+		return SUIT_COLORS[suit as unknown as CardSuit];
 	}
 
 	function handleYourSlotClick(slotIndex: number) {
@@ -147,8 +147,7 @@
 							{#each [0, 1, 2, 3] as idx}
 								<button
 									class="slot-btn"
-									class:selected={selectedTargetId === opponent.player_id &&
-										selectedTargetSlot === idx}
+									class:selected={selectedTargetId === opponent.player_id && selectedTargetSlot === idx}
 									onclick={() => handleOpponentSlotClick(opponent.player_id, idx)}
 								>
 									Slot {idx + 1}
@@ -175,9 +174,13 @@
 
 		<div class="spell-buttons">
 			{#if powerType === 'decree' && decreeStage === 'swap'}
-				<button class="btn btn-secondary" onclick={handleDecreeSwapDecline}> Decline Swap </button>
+				<button class="btn btn-secondary" onclick={handleDecreeSwapDecline}>
+					Decline Swap
+				</button>
 			{:else}
-				<button class="btn btn-secondary" onclick={onDecline}> Skip Spell </button>
+				<button class="btn btn-secondary" onclick={onDecline}>
+					Skip Spell
+				</button>
 			{/if}
 		</div>
 	</div>
