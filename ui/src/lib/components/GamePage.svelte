@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { gameState, setCurrentPlayerId } from '$lib/stores/gameState';
+	import { gameState, setCurrentPlayerId, isActivePlayer } from '$lib/stores/gameState';
 	import RightPanel from './RightPanel.svelte';
 	import BottomBar from './BottomBar.svelte';
 	import PlayArea from './PlayArea.svelte';
@@ -88,9 +88,14 @@
 			});
 
 			if (phaseUppercase === GAME_PHASES.TURN_START) {
-				setTimeout(async () => {
-					await gameActions.advancePhase(gameId);
-				}, 3000);
+				// Only active player should advance phase after animation delay
+				const isActive = $isActivePlayer;
+				if (isActive) {
+					setTimeout(async () => {
+						console.log('[GamePage] Active player advancing phase');
+						await gameActions.advancePhase(gameId);
+					}, 3000);
+				}
 			}
 		}
 	}
@@ -127,10 +132,7 @@
 		}
 	}
 
-	async function handleAction(
-		choice: 'discard_immediate' | 'swap' | 'pass_back',
-		slotIndex?: number
-	) {
+	async function handleAction(choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) {
 		if (choice === 'discard_immediate') {
 			await gameActions.discardImmediate(gameId, drawnCardSource || 'deck');
 		} else if (choice === 'swap' && slotIndex !== undefined) {
@@ -250,7 +252,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.ROUND_OVER}
-		<RoundOverModal
+		<RoundOverModal 
 			onAdvance={() => {
 				// Auto-advance triggered, game continues via WebSocket
 			}}
@@ -258,7 +260,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.GAME_OVER}
-		<GameOverModal
+		<GameOverModal 
 			onReturnLobby={() => (window.location.href = '/')}
 			onPlayAgain={() => (window.location.href = '/lobbies')}
 		/>
