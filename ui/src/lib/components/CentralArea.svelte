@@ -73,17 +73,19 @@
 
 	.central-cards-container {
 		display: flex;
-		gap: clamp(0.25rem, 0.75vw, 0.75rem);
+		gap: clamp(0.5rem, 1.5vw, 1.5rem);
 		justify-content: center;
 		align-items: center;
 		height: 100%;
+		width: 100%;
 		min-height: 0;
-		max-width: 100%;
-		overflow: hidden;
+		min-width: 0;
+		padding: clamp(1rem, 2vh, 2rem) 0;
 	}
 
 	.central-cards-container > :global(*) {
 		height: 100%;
+		max-height: clamp(150px, 60vh, 400px);
 		aspect-ratio: 2.5 / 3.5;
 		flex: 0 0 auto;
 	}
