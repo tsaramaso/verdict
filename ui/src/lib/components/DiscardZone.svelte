@@ -16,6 +16,7 @@
 <button
 	class="discard-zone"
 	class:clickable={isClickable}
+	class:clickable-glow={isClickable}
 	class:hovered={isHovered}
 	disabled={!isClickable}
 	onclick={onClick}
@@ -27,7 +28,10 @@
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
 		{@const topCard = $gameState.discard_pile.visible_cards[0]}
-		<div class="card-face" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
+		<div 
+			class="card-face"
+			style="--suit-color: {SUIT_COLORS[topCard.suit]}"
+		>
 			<div class="card-face__rank">{topCard.rank[0]}</div>
 			<div class="card-face__suit">{getSuitSymbol(topCard.suit)}</div>
 		</div>
@@ -39,6 +43,7 @@
 
 <style>
 	@import '$lib/styles/card.css';
+	@import '$lib/styles/clickable.css';
 
 	.discard-zone {
 		position: relative;

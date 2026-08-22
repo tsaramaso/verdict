@@ -1,0 +1,23 @@
+/* src/lib/styles/clickable.css */
+/* Global styles for interactive/clickable elements */
+
+@keyframes clickable-glow {
+	0% {
+		box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+	}
+	50% {
+		box-shadow: 0 0 16px rgba(0, 123, 255, 0.6);
+	}
+	100% {
+		box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+	}
+}
+
+.clickable-glow {
+	animation: clickable-glow 1.5s ease-in-out infinite;
+	cursor: pointer;
+}
+
+.clickable-glow:hover {
+	animation-duration: 1s;
+}

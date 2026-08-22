@@ -25,6 +25,7 @@
 <div 
 	class="deck-zone" 
 	class:clickable={isClickable}
+	class:clickable-glow={isClickable}
 	onclick={handleClick}
 	role={isClickable ? 'button' : 'region'}
 	tabindex={isClickable ? 0 : -1}
@@ -40,6 +41,7 @@
 
 <style>
 	@import '$lib/styles/card.css';
+	@import '$lib/styles/clickable.css';
 
 	.deck-zone {
 		position: relative;
