@@ -327,8 +327,32 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 }
 
 // ============================================
-// TIMEOUT FALLBACK HANDLERS
+// PHASE ADVANCEMENT (for TURN_START → DRAWING)
 // ============================================
+
+export async function advancePhase(gameId: string): Promise<boolean> {
+	try {
+		const url = getFullUrl(API_ENDPOINTS.draw(gameId)).replace('/draw', '/advance-phase');
+		console.log('[gameActions] advancePhase: POST to', url);
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' }
+		});
+
+		console.log('[gameActions] advancePhase: Response status', response.status);
+		if (!response.ok) {
+			const error = await response.text();
+			console.error('[gameActions] advancePhase failed:', response.status, error);
+			return false;
+		}
+
+		console.log('[gameActions] advancePhase: Success');
+		return true;
+	} catch (error) {
+		console.error('[gameActions] advancePhase exception:', error);
+		return false;
+	}
+}
 
 export async function timeoutDrawing(gameId: string): Promise<boolean> {
 	return await drawFromDiscard(gameId).then(result => !!result);

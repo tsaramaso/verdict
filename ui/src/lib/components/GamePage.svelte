@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { gameState, setCurrentPlayerId, type Rules } from '$lib/stores/gameState';
+	import { gameState, setCurrentPlayerId } from '$lib/stores/gameState';
 	import RightPanel from './RightPanel.svelte';
 	import BottomBar from './BottomBar.svelte';
 	import PlayArea from './PlayArea.svelte';
@@ -8,9 +8,9 @@
 	import RoundOverModal from './RoundOverModal.svelte';
 	import GameOverModal from './GameOverModal.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
-	import { fetchBaseRules, getHardcodedBaseRules } from '$lib/utils/baseRules';
 	import { GAME_PHASES } from '$lib/config';
 	import * as gameActions from '$lib/actions/gameActions';
+	import { getHardcodedBaseRules } from '$lib/utils/baseRules';
 
 	interface Props {
 		playerId: string;
@@ -22,11 +22,9 @@
 	let drawnCard: { rank: string; suit: string } | null = $state(null);
 	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
-	let baseRules: Rules | null = null;
 
-	onMount(async () => {
+	onMount(() => {
 		setCurrentPlayerId(playerId);
-		baseRules = await fetchBaseRules(); // Fetch once on init
 		initWebSocket();
 	});
 
@@ -74,9 +72,11 @@
 				}))
 			};
 
+			const phaseUppercase = message.game.phase.toUpperCase();
+
 			gameState.set({
 				game_id: message.game.game_id,
-				phase: message.game.phase.toUpperCase(),
+				phase: phaseUppercase,
 				current_player: message.game.current_player,
 				round_number: message.game.round_number,
 				self: transformedSelf,
@@ -84,8 +84,14 @@
 				my_opponent_knowledge: message.my_opponent_knowledge,
 				trial: message.trial,
 				discard_pile: transformedDiscard,
-				rules: message.rules || baseRules || getHardcodedBaseRules(),
+				rules: message.rules || getHardcodedBaseRules()
 			});
+
+			if (phaseUppercase === GAME_PHASES.TURN_START) {
+				setTimeout(async () => {
+					await gameActions.advancePhase(gameId);
+				}, 3000);
+			}
 		}
 	}
 
@@ -244,7 +250,7 @@
 		<RoundOverModal 
 			onAdvance={() => {
 				// Auto-advance triggered, game continues via WebSocket
-			}}
+			}}	
 		/>
 	{/if}
 
