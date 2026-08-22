@@ -39,12 +39,12 @@
 
 	function hasOpponentKnowledge(): boolean {
 		if (!opponentKnows) return false;
-		return Object.values(opponentKnows).some((v) => v === true);
+		return Object.values(opponentKnows).some(v => v === true);
 	}
 
 	function getOpponentNames(): string[] {
 		if (!opponentKnows) return [];
-		return Object.keys(opponentKnows).filter((id) => opponentKnows![id]);
+		return Object.keys(opponentKnows).filter(id => opponentKnows![id]);
 	}
 
 	const opponentsWhoKnow = $derived(getOpponentNames());
@@ -56,7 +56,7 @@
 	class:highlighted={isHighlighted}
 	class:hovered={isHovered}
 	role={isClickable ? 'button' : 'region'}
-	tabindex={isClickable ? 0 : -1}
+	{...(isClickable ? { tabindex: 0 } : {})}
 	onclick={onClick}
 	onkeydown={(e) => {
 		if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
@@ -76,12 +76,14 @@
 
 	{#if card?.known && showRankBadge && card.rank && card.suit}
 		<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
-			{card.rank[0]}{SUIT_LABELS[card.suit]}
+			{RANK_LABELS[card.rank]}{SUIT_LABELS[card.suit]}
 		</div>
 	{/if}
 
 	{#if hasOpponentKnowledge()}
-		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>👁️</div>
+		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>
+			👁️
+		</div>
 	{/if}
 
 	{#if isHovered && isYourCard && opponentsWhoKnow.length > 0}

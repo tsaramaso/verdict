@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { gameState, setCurrentPlayerId, isActivePlayer } from '$lib/stores/gameState';
+	import { gameState, setCurrentPlayerId, isActivePlayer, type Rules } from '$lib/stores/gameState';
 	import RightPanel from './RightPanel.svelte';
 	import BottomBar from './BottomBar.svelte';
 	import PlayArea from './PlayArea.svelte';
@@ -9,6 +9,7 @@
 	import GameOverModal from './GameOverModal.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
 	import { GAME_PHASES } from '$lib/config';
+	import type { CardRank, CardSuit } from '$lib/constants/cards';
 	import * as gameActions from '$lib/actions/gameActions';
 	import { getHardcodedBaseRules } from '$lib/utils/baseRules';
 
@@ -19,9 +20,10 @@
 
 	let { playerId, gameId }: Props = $props();
 
-	let drawnCard: { rank: string; suit: string } | null = $state(null);
+	let drawnCard: { rank: CardRank; suit: CardSuit } | null = $state(null);
 	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
+	let baseRules: Rules | null = null;
 
 	onMount(() => {
 		setCurrentPlayerId(playerId);
@@ -112,7 +114,10 @@
 		console.log('[GamePage] Deck draw result:', result);
 		if (result?.drawn_card) {
 			console.log('[GamePage] Card drawn:', result.drawn_card);
-			drawnCard = result.drawn_card;
+			drawnCard = {
+				rank: transformRank(result.drawn_card.rank),
+				suit: transformSuit(result.drawn_card.suit)
+			};
 			drawnCardSource = 'deck';
 		} else {
 			console.error('[GamePage] No card drawn from deck');
@@ -125,7 +130,10 @@
 		console.log('[GamePage] Discard draw result:', result);
 		if (result?.drawn_card) {
 			console.log('[GamePage] Card drawn:', result.drawn_card);
-			drawnCard = result.drawn_card;
+			drawnCard = {
+				rank: transformRank(result.drawn_card.rank),
+				suit: transformSuit(result.drawn_card.suit)
+			};
 			drawnCardSource = 'discard';
 		} else {
 			console.error('[GamePage] No card drawn from discard');
@@ -277,4 +285,4 @@
 		height: 100vh;
 		background: var(--color-bg, #f5f5f5);
 	}
-</style>
+	</style>

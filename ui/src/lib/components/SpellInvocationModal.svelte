@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
-	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS, type CardRank, type CardSuit } from '$lib/constants/cards';
+	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS, CardRank, type CardSuit } from '$lib/constants/cards';
 	import { getPowerName } from '$lib/config';
 
 	interface Props {
-		drawnCard: { rank: string; suit: string } | null;
+		drawnCard: { rank: CardRank; suit: CardSuit } | null;
 		onInvoke?: (slotIndex?: number, targetId?: string, targetIndex?: number) => void;
 		onDecline?: () => void;
 		onDecreeSwap?: (swap: boolean, ownSlot?: number) => void;
@@ -14,25 +14,25 @@
 
 	let selectedOwnSlot: number | null = $state(null);
 	let selectedTargetSlot: number | null = $state(null);
-	let selectedTargetId: string | null = $state(null);
+	let selectedTargetId: string | undefined = $state(undefined);
 	let decreeStage: 'peek' | 'swap' = $state('peek');
 
 	function getPowerType(): string {
 		if (!drawnCard) return '';
 		const rank = drawnCard.rank;
-		if (rank === '7' || rank === '8') return 'glance';
-		if (rank === '9' || rank === '10') return 'spy';
-		if (rank === 'J') return 'smuggle';
-		if (rank === 'Q') return 'decree';
+		if (rank === CardRank.SEVEN || rank === CardRank.EIGHT) return 'glance';
+		if (rank === CardRank.NINE || rank === CardRank.TEN) return 'spy';
+		if (rank === CardRank.JACK) return 'smuggle';
+		if (rank === CardRank.QUEEN) return 'decree';
 		return '';
 	}
 
-	function getSuitSymbol(suit: string): string {
-		return SUIT_LABELS[suit as unknown as CardSuit];
+	function getSuitSymbol(suit: CardSuit): string {
+		return SUIT_LABELS[suit];
 	}
 
-	function getSuitColor(suit: string): string {
-		return SUIT_COLORS[suit as unknown as CardSuit];
+	function getSuitColor(suit: CardSuit): string {
+		return SUIT_COLORS[suit];
 	}
 
 	function handleYourSlotClick(slotIndex: number) {
@@ -80,22 +80,24 @@
 	function resetSelection() {
 		selectedOwnSlot = null;
 		selectedTargetSlot = null;
-		selectedTargetId = null;
+		selectedTargetId = undefined;
 		decreeStage = 'peek';
 	}
 
 	const powerType = $derived(getPowerType());
-	const powerName = $derived(drawnCard ? getPowerName(drawnCard.rank as CardRank) : '');
+	const powerName = $derived(drawnCard ? getPowerName(drawnCard.rank) : '');
 </script>
 
 <div class="spell-modal-overlay">
 	<div class="spell-modal">
 		<div class="spell-header">
 			<div class="spell-title">{powerName}</div>
-			<div class="spell-card" style="color: {getSuitColor(drawnCard?.suit || '')}">
-				<div class="spell-rank">{drawnCard?.rank[0]}</div>
-				<div class="spell-suit">{getSuitSymbol(drawnCard?.suit || '')}</div>
+		{#if drawnCard}
+			<div class="spell-card" style="color: {getSuitColor(drawnCard.suit)}">
+				<div class="spell-rank">{RANK_LABELS[drawnCard.rank]}</div>
+				<div class="spell-suit">{getSuitSymbol(drawnCard.suit)}</div>
 			</div>
+		{/if}
 		</div>
 
 		<div class="spell-instructions">

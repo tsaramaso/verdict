@@ -1,72 +1,110 @@
 <script lang="ts">
+	import OpponentZonesRow from './OpponentZonesRow.svelte';
+	import CentralArea from './CentralArea.svelte';
+	import YourZonesRow from './YourZonesRow.svelte';
+
 	import type { CardRank, CardSuit } from '$lib/constants/cards';
-	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS } from '$lib/constants/cards';
 
 	interface Props {
-		card: { rank: CardRank; suit: CardSuit } | null;
-		isVisible: boolean;
-		isActivePlayer: boolean;
+		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
+		onDeckClick?: () => void;
+		onDiscardClick?: () => void;
+		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
+		onQuickDiscard?: (slotIndex: number) => void;
+		onTestifyFirst?: () => void;
+		onTestifyCross?: () => void;
+		onChallenge?: () => void;
+		onPlea?: () => void;
+		onPleaDecline?: () => void;
 	}
 
-	let { card, isVisible, isActivePlayer }: Props = $props();
-
-	function getSuitColor(suit: CardSuit): string {
-		return SUIT_COLORS[suit];
-	}
-
-	function getSuitSymbol(suit: CardSuit): string {
-		return SUIT_LABELS[suit];
-	}
+	let { 
+		drawnCard, 
+		onDeckClick, 
+		onDiscardClick, 
+		onAction,
+		onQuickDiscard,
+		onTestifyFirst,
+		onTestifyCross,
+		onChallenge,
+		onPlea,
+		onPleaDecline
+	}: Props = $props();
 </script>
 
-<div class="peek-area" class:visible={isVisible && isActivePlayer}>
-	{#if isVisible && isActivePlayer && card}
-		<div class="peek-card card-face" style="color: {getSuitColor(card.suit)}">
-			<div class="card-face__rank">{RANK_LABELS[card.rank]}</div>
-			<div class="card-face__suit">{getSuitSymbol(card.suit)}</div>
-		</div>
-		<div class="peek-label">Drawn Card</div>
-	{:else}
-		<div class="peek-empty">-</div>
-	{/if}
+<div class="play-area">
+	<div class="opponent-zones-row">
+		<OpponentZonesRow />
+	</div>
+
+	<div class="central-section">
+		<CentralArea 
+			{drawnCard}
+			{onDeckClick} 
+			{onDiscardClick}
+			{onAction}
+		/>
+	</div>
+
+	<div class="your-zones-row">
+		<YourZonesRow 
+			onCardClick={(idx) => onAction?.('swap', idx)}
+			{onQuickDiscard}
+		/>
+	</div>
 </div>
 
 <style>
-	.peek-area {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 8px;
-		padding: 16px;
-		min-width: 150px;
-		opacity: 0.3;
-		transition: opacity 0.3s ease;
+	.play-area {
+		grid-column: 1;
+		grid-row: 1;
+		display: grid;
+		grid-template-rows: 1fr 0.5fr 1fr;
+		gap: clamp(0.25rem, 0.75vw, 0.75rem);
+		padding: clamp(0.25rem, 0.75vw, 0.75rem);
+		overflow: hidden;
+		min-height: 0;
+		min-width: 0;
 	}
 
-	.peek-area.visible {
-		opacity: 1;
-	}
-
-	.peek-card {
-		width: 120px;
-		height: 168px;
-	}
-
-	.peek-empty {
-		width: 120px;
-		height: 168px;
+	.opponent-zones-row {
+		grid-row: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 32px;
-		color: var(--color-text-light, #999);
+		min-height: 0;
+		min-width: 0;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: clamp(0.5rem, 1vw, 1rem);
+		overflow: hidden;
 	}
 
-	.peek-label {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--color-text, #333);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
+	.central-section {
+		grid-row: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		min-width: 0;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.your-zones-row {
+		grid-row: 3;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		min-width: 0;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: clamp(0.5rem, 1vw, 1rem);
+		overflow: hidden;
 	}
 </style>

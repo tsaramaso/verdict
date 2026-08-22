@@ -4,43 +4,32 @@
 	import PeekArea from './PeekArea.svelte';
 	import { gameState, isActivePlayer } from '$lib/stores/gameState';
 	import { GAME_PHASES } from '$lib/config';
+	import type { CardRank, CardSuit } from '$lib/constants/cards';
 
 	interface Props {
-		drawnCard?: { rank: string; suit: string } | null;
-		drawnCardSource?: 'deck' | 'discard' | null;
+		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
 		onDeckClick?: () => void;
-		onDiscardClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
-	let { drawnCard, drawnCardSource, onDeckClick, onDiscardClick, onAction }: Props = $props();
+	let { 
+		drawnCard, 
+		onDeckClick, 
+		onAction
+	}: Props = $props();
 
 	const isDeckClickable = $derived.by(() => {
-		const clickable = $isActivePlayer && $gameState.phase === GAME_PHASES.DRAWING;
-		console.log(
-			'[CentralArea] isDeckClickable:',
-			clickable,
-			'isActive:',
-			$isActivePlayer,
-			'phase:',
-			$gameState.phase
-		);
+		const isActive = $isActivePlayer;
+		const isDrawingPhase = $gameState.phase === GAME_PHASES.DRAWING;
+		const clickable = isActive && isDrawingPhase;
+		console.log('[CentralArea] isDeckClickable:', clickable, '| isActive:', isActive, '| phase:', $gameState.phase, '| DRAWING:', GAME_PHASES.DRAWING);
 		return clickable;
 	});
 
 	const isDiscardClickable = $derived.by(() => {
-		const clickable =
-			$isActivePlayer &&
-			($gameState.phase === GAME_PHASES.DRAWING ||
-				$gameState.phase === GAME_PHASES.AWAITING_ACTION);
-		console.log(
-			'[CentralArea] isDiscardClickable:',
-			clickable,
-			'isActive:',
-			$isActivePlayer,
-			'phase:',
-			$gameState.phase
-		);
+		const clickable = $isActivePlayer &&
+			($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION);
+		console.log('[CentralArea] isDiscardClickable:', clickable, 'isActive:', $isActivePlayer, 'phase:', $gameState.phase);
 		return clickable;
 	});
 
@@ -59,11 +48,12 @@
 <div class="central-area">
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
-		<PeekArea card={drawnCard} isVisible={isPeekAreaVisible} isActivePlayer={$isActivePlayer} />
-		<DiscardZone
-			isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION}
-			onClick={handleDiscardImmediateClick}
+		<PeekArea 
+			card={drawnCard}
+			isVisible={isPeekAreaVisible}
+			isActivePlayer={$isActivePlayer}
 		/>
+		<DiscardZone isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION} onClick={handleDiscardImmediateClick} />
 	</div>
 </div>
 
