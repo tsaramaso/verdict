@@ -19,16 +19,9 @@
 
 	let {
 		drawnCard,
-		drawnCardSource,
 		onDeckClick,
-		onDiscardClick,
 		onAction,
 		onQuickDiscard,
-		onTestifyFirst,
-		onTestifyCross,
-		onChallenge,
-		onPlea,
-		onPleaDecline
 	}: Props = $props();
 </script>
 
@@ -38,7 +31,7 @@
 	</div>
 
 	<div class="central-section">
-		<CentralArea {drawnCard} {drawnCardSource} {onDeckClick} {onDiscardClick} {onAction} />
+		<CentralArea {drawnCard} {onDeckClick} {onAction} />
 	</div>
 
 	<div class="your-zones-row">

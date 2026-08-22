@@ -233,7 +233,6 @@
 
 <div class="game-page">
 	<PlayArea
-		{drawnCard}
 		{drawnCardSource}
 		onDeckClick={handleDrawDeck}
 		onDiscardClick={handleDrawDiscard}

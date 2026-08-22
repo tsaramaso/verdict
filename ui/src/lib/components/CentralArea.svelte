@@ -49,7 +49,7 @@
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
 		<PeekArea 
-			card={drawnCard}
+			drawnCard={drawnCard}
 			isVisible={isPeekAreaVisible}
 			isActivePlayer={$isActivePlayer}
 		/>

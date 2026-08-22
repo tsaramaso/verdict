@@ -21,14 +21,8 @@
 	let { 
 		drawnCard, 
 		onDeckClick, 
-		onDiscardClick, 
 		onAction,
 		onQuickDiscard,
-		onTestifyFirst,
-		onTestifyCross,
-		onChallenge,
-		onPlea,
-		onPleaDecline
 	}: Props = $props();
 </script>
 
@@ -41,7 +35,6 @@
 		<CentralArea 
 			{drawnCard}
 			{onDeckClick} 
-			{onDiscardClick}
 			{onAction}
 		/>
 	</div>
