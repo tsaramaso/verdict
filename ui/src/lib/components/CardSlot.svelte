@@ -39,12 +39,12 @@
 
 	function hasOpponentKnowledge(): boolean {
 		if (!opponentKnows) return false;
-		return Object.values(opponentKnows).some((v) => v === true);
+		return Object.values(opponentKnows).some(v => v === true);
 	}
 
 	function getOpponentNames(): string[] {
 		if (!opponentKnows) return [];
-		return Object.keys(opponentKnows).filter((id) => opponentKnows![id]);
+		return Object.keys(opponentKnows).filter(id => opponentKnows![id]);
 	}
 
 	const opponentsWhoKnow = $derived(getOpponentNames());
@@ -69,11 +69,9 @@
 >
 	{#if !card || !card.known}
 		<div class="card-back"></div>
-	{:else}
-		<div class="card-face" style="--suit-color: {SUIT_COLORS[card.suit]}">
-			<div class="card-face__rank">{card.rank[0]}</div>
-			<div class="card-face__suit">{SUIT_LABELS[card.suit]}</div>
-		</div>
+	{:else if card.known}
+		<!-- Face-down but known: show badge only -->
+		<div class="card-back"></div>
 	{/if}
 
 	{#if card?.known && showRankBadge && card.rank && card.suit}
@@ -83,7 +81,9 @@
 	{/if}
 
 	{#if hasOpponentKnowledge()}
-		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>👁️</div>
+		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>
+			👁️
+		</div>
 	{/if}
 
 	{#if isHovered && isYourCard && opponentsWhoKnow.length > 0}
