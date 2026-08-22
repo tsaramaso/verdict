@@ -1,24 +1,9 @@
 <script lang="ts">
 	import Timer from './Timer.svelte';
-	import Leaderboard from './Leaderboard.svelte';
+	import LeaderboardPanel from './LeaderboardPanel.svelte';
 	import ButtonZone from './ButtonZone.svelte';
 	import { PHASE_LABELS, UI, GAME_PHASES } from '$lib/config';
-
-	interface GameState {
-		phase: string;
-		round_number: number;
-		current_player: string;
-		self: {
-			player_id: string;
-			player_name: string;
-			score: number;
-		};
-		opponents: Array<{
-			player_id: string;
-			player_name: string;
-			score: number;
-		}>;
-	}
+	import type { GameState, GamePhase } from '$lib/stores/gameState';
 
 	interface Props {
 		gameState: GameState;
@@ -37,35 +22,6 @@
 		return gameState.opponents.find(o => o.player_id === gameState.current_player)?.player_name || 'Unknown';
 	});
 
-	function getPhaseDescription(phase: string, currentPlayer: string, myPlayerId: string): string {
-		const isMyTurn = currentPlayer === myPlayerId;
-		switch (phase) {
-			case GAME_PHASES.TURN_START:
-				return 'Starting new round...';
-			case GAME_PHASES.DRAWING:
-				return isMyTurn ? 'Your turn to draw' : 'Waiting for draw...';
-			case GAME_PHASES.AWAITING_ACTION:
-				return isMyTurn ? 'Choose your action' : 'Waiting for action...';
-			case GAME_PHASES.AWAITING_SPELL_INVOCATION:
-				return isMyTurn ? 'Use power card?' : 'Waiting for power use...';
-			case GAME_PHASES.AWAITING_QUICK_DISCARD:
-				return 'Discard matching ranks...';
-			case GAME_PHASES.AWAITING_CALL_WINDOW:
-				return 'Call window open';
-			case GAME_PHASES.AWAITING_MATCH_WINDOW:
-				return 'Match window open';
-			case GAME_PHASES.AWAITING_DUEL_WINDOW:
-				return 'Duel happening...';
-			case GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW:
-				return 'Final plea window...';
-			case GAME_PHASES.ROUND_OVER:
-				return 'Round complete';
-			case GAME_PHASES.GAME_OVER:
-				return 'Game finished!';
-			default:
-				return 'Unknown phase';
-		}
-	}
 </script>
 
 <div class="right-panel">
@@ -87,11 +43,11 @@
 	</div>
 
 	<div class="timer-section">
-		<Timer phase={gameState.phase} onTimeOut={onTimeOut} />
+		<Timer phase={gameState.phase as GamePhase} onTimeOut={onTimeOut} />
 	</div>
 
 	<div class="leaderboard-section">
-		<Leaderboard {gameState} />
+		<LeaderboardPanel />
 	</div>
 
 	<div class="button-section">
