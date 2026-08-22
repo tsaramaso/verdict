@@ -1,6 +1,7 @@
-<!-- src/lib/components/RightPanel.svelte -->
 <script lang="ts">
 	import Timer from './Timer.svelte';
+	import Leaderboard from './Leaderboard.svelte';
+	import ButtonZone from './ButtonZone.svelte';
 	import { PHASE_LABELS, UI, GAME_PHASES } from '$lib/config';
 
 	interface GameState {
@@ -29,6 +30,13 @@
 	const phaseLabel = $derived(PHASE_LABELS[gameState.phase] || 'Unknown');
 	const isAutoAdvance = $derived(UI.autoAdvancePhases.includes(gameState.phase));
 
+	const currentPlayerName = $derived.by(() => {
+		if (gameState.current_player === gameState.self.player_id) {
+			return gameState.self.player_name;
+		}
+		return gameState.opponents.find(o => o.player_id === gameState.current_player)?.player_name || 'Unknown';
+	});
+
 	function getPhaseDescription(phase: string, currentPlayer: string, myPlayerId: string): string {
 		const isMyTurn = currentPlayer === myPlayerId;
 		switch (phase) {
@@ -51,232 +59,116 @@
 			case GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW:
 				return 'Final plea window...';
 			case GAME_PHASES.ROUND_OVER:
-				return 'Round ending...';
+				return 'Round complete';
 			case GAME_PHASES.GAME_OVER:
-				return 'Game over!';
+				return 'Game finished!';
 			default:
-				return '';
+				return 'Unknown phase';
 		}
 	}
-
-	function getStandings() {
-		const standings = [];
-
-		// Add self
-		standings.push({
-			player_id: gameState.self.player_id,
-			name: `${gameState.self.player_name}`,
-			score: gameState.self.score,
-			isYou: true
-		});
-
-		// Add opponents sorted by score
-		for (const opponent of gameState.opponents) {
-			standings.push({
-				player_id: opponent.player_id,
-				name: opponent.player_name,
-				score: opponent.score,
-				isYou: false
-			});
-		}
-
-		return standings.sort((a, b) => b.score - a.score);
-	}
-
-	const description = $derived(
-		getPhaseDescription(gameState.phase, gameState.current_player, gameState.self.player_id)
-	);
-
-	const standings = $derived(getStandings());
 </script>
 
-<aside class="right-panel">
-	<div class="phase-card">
-		<div class="phase-card__label">Round</div>
-		<div class="phase-card__value">{gameState.round_number}</div>
-	</div>
+<div class="right-panel">
+	<div class="info-section">
+		<div class="phase-card">
+			<div class="phase-card__label">Round</div>
+			<div class="phase-card__value">{gameState.round_number}</div>
+		</div>
 
-	<div class="phase-card">
-		<div class="phase-card__label">Phase</div>
-		<div class="phase-card__value phase-card__value--phase">{phaseLabel}</div>
-	</div>
+		<div class="phase-card">
+			<div class="phase-card__label">Phase</div>
+			<div class="phase-card__value phase-card__value--phase">{phaseLabel}</div>
+		</div>
 
-	<div class="timer-card">
-		{#if !isAutoAdvance}
-			<Timer phase={gameState.phase} {onTimeOut} />
-		{:else}
-			<div class="auto-advance-indicator">
-				<span>Auto...</span>
-			</div>
-		{/if}
-	</div>
-
-	<div class="standings-card">
-		<div class="standings-header">Score</div>
-		<div class="standings-list">
-			{#each standings as player, idx}
-				<div class={`standing-row ${player.isYou ? 'standing-row--you' : ''}`}>
-					<div class="standing-place">{idx + 1}</div>
-					<div class="standing-name">{player.name}</div>
-					<div class="standing-score">{player.score}</div>
-				</div>
-			{/each}
+		<div class="phase-card">
+			<div class="phase-card__label">Current Turn</div>
+			<div class="phase-card__value phase-card__value--player">{currentPlayerName}</div>
 		</div>
 	</div>
-</aside>
+
+	<div class="timer-section">
+		<Timer phase={gameState.phase} onTimeOut={onTimeOut} />
+	</div>
+
+	<div class="leaderboard-section">
+		<Leaderboard {gameState} />
+	</div>
+
+	<div class="button-section">
+		<ButtonZone />
+	</div>
+</div>
 
 <style>
 	.right-panel {
-		display: grid;
-		grid-template-columns: 1fr;
-		grid-template-rows: auto auto auto 1fr;
-		gap: clamp(0.5rem, 1vw, 0.75rem);
-		padding: clamp(0.5rem, 1vw, 1rem);
-		background: var(--color-bg);
-		border-left: 1px solid var(--color-border);
+		display: flex;
+		flex-direction: column;
+		gap: clamp(0.5rem, 1.5vw, 1rem);
+		padding: clamp(1rem, 2vw, 1.5rem);
+		background: var(--color-bg-card, #fafafa);
+		border-radius: var(--radius-md, 8px);
+		min-width: 200px;
+		max-width: 280px;
+		height: 100%;
+		min-height: 0;
 		overflow-y: auto;
-		flex-shrink: 0;
-		min-width: 160px;
-		max-width: 200px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.info-section {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 	}
 
 	.phase-card {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		text-align: center;
+		padding: 12px;
+		background: var(--color-bg, #f5f5f5);
+		border-radius: 4px;
+		border: 1px solid var(--color-border, #ddd);
 	}
 
 	.phase-card__label {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-light);
+		font-size: 11px;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
-		font-weight: var(--font-weight-bold);
+		color: var(--color-text-light, #666);
 	}
 
 	.phase-card__value {
-		font-size: var(--font-size-lg);
-		font-weight: var(--font-weight-bold);
-		color: var(--color-text);
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--color-text, #333);
 	}
 
 	.phase-card__value--phase {
-		color: var(--color-primary);
+		color: var(--color-primary, #007bff);
+		font-size: 15px;
 	}
 
-	.timer-card {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		min-height: 60px;
+	.phase-card__value--player {
+		color: var(--color-text, #333);
+		font-weight: 600;
 	}
 
-	.auto-advance-indicator {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		color: var(--color-text-light);
-		font-size: var(--font-size-sm);
-		font-weight: var(--font-weight-bold);
+	.timer-section {
+		padding: clamp(0.5rem, 1vw, 1rem) 0;
+		border-top: 1px solid var(--color-border, #ddd);
+		border-bottom: 1px solid var(--color-border, #ddd);
 	}
 
-	.auto-advance-indicator::after {
-		content: '';
-		display: inline-block;
-		width: 8px;
-		height: 8px;
-		background: var(--color-success);
-		border-radius: 50%;
-		animation: pulse 1.5s ease-in-out infinite;
-	}
-
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.5;
-			transform: scale(1.2);
-		}
-	}
-
-	.standings-card {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+	.leaderboard-section {
+		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
 	}
 
-	.standings-header {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-light);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		font-weight: var(--font-weight-bold);
-		padding-bottom: var(--spacing-sm);
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.standings-list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-xs);
-	}
-
-	.standing-row {
-		display: grid;
-		grid-template-columns: 20px 1fr 25px;
-		gap: var(--spacing-xs);
-		align-items: center;
-		font-size: var(--font-size-xs);
-		padding: var(--spacing-xs);
-		border-radius: var(--radius-sm);
-		background: var(--color-bg);
-		border: 1px solid var(--color-border-light);
-		transition: all 0.2s ease;
-	}
-
-	.standing-row--you {
-		background: linear-gradient(135deg, rgba(0, 123, 255, 0.08) 0%, rgba(0, 123, 255, 0.03) 100%);
-		border-color: var(--color-primary);
-		font-weight: var(--font-weight-bold);
-	}
-
-	.standing-place {
-		text-align: center;
-		color: var(--color-text-light);
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-bold);
-	}
-
-	.standing-name {
-		color: var(--color-text);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		font-size: var(--font-size-xs);
-	}
-
-	.standing-score {
-		text-align: right;
-		color: var(--color-text);
-		font-family: monospace;
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-bold);
+	.button-section {
+		padding-top: 8px;
+		border-top: 1px solid var(--color-border, #ddd);
 	}
 </style>
