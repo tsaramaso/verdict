@@ -4,13 +4,18 @@
 	import OpponentCardsZone from './OpponentCardsZone.svelte';
 
 	const numOpponents = $derived($gameState.opponents.length);
+
+	function isOpponentTurn(opponentId: string): boolean {
+		return $gameState.current_player === opponentId;
+	}
 </script>
 
 <div class="opponent-zones-row">
 	<div class="opponent-zones-container">
 		{#each Array(numOpponents) as _, idx (idx)}
 			{@const opponent = $gameState.opponents[idx]}
-			<div class="player-box">
+			{@const isCurrentTurn = isOpponentTurn(opponent.player_id)}
+			<div class="player-box" class:is-opponent-turn={isCurrentTurn}>
 				<div class="player-info-label">
 					<div class="player-name">{opponent.player_name}</div>
 					<div class="player-meta">
@@ -28,6 +33,37 @@
 </div>
 
 <style>
+	@keyframes turn-glow-opponent {
+		0%, 100% {
+			box-shadow: 0 0 12px rgba(244, 67, 54, 0.3), inset 0 0 8px rgba(244, 67, 54, 0.1);
+		}
+		50% {
+			box-shadow: 0 0 24px rgba(244, 67, 54, 0.6), inset 0 0 12px rgba(244, 67, 54, 0.2);
+		}
+	}
+
+	.opponent-zones-row {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		min-width: 0;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.opponent-zones-container {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		gap: clamp(0.75rem, 1.5vw, 1.5rem);
+		justify-content: center;
+		align-items: center;
+		padding: 0;
+		min-height: 0;
+		min-width: 0;
+	}
+
 	.player-box {
 		border-color: black;
 		display: flex;
@@ -38,14 +74,18 @@
 		min-height: 0;
 		background-color: rgba(255, 42, 0, 0.371);
 		border-radius: 5%;
-		/* Base size calculated from zone height via aspect-ratio */
-		/* Width = height × (2.5/3.5) for card aspect ratio */
-		/* Minimum width based on zone height */
 		min-width: fit-content;
-		/* If all zones overflow, scale down uniformly */
 		max-width: 100%;
 		overflow: hidden;
+		transition: box-shadow 0.3s ease;
+		border: 2px solid transparent;
 	}
+
+	.player-box.is-opponent-turn {
+		animation: turn-glow-opponent 1.5s ease-in-out infinite;
+		border-color: rgba(244, 67, 54, 0.5);
+	}
+
 	.player-info-label {
 		display: flex;
 		flex-direction: column;
@@ -77,47 +117,14 @@
 		white-space: nowrap;
 	}
 
-	.opponent-zones-row {
-		display: flex;
-		width: 100%;
-		height: 100%;
-		min-height: 0;
-		min-width: 0;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.opponent-zones-container {
-		border-color: black;
-		display: flex;
-		gap: clamp(0.5rem, 1.5vw, 1.5rem);
-		justify-content: center;
-		align-items: center;
-		height: 100%;
-		min-height: 0;
-		border-radius: 5%;
-		/* Base size calculated from zone height via aspect-ratio */
-		/* Width = height × (2.5/3.5) for card aspect ratio */
-		/* Minimum width based on zone height */
-		min-width: fit-content;
-		/* If all zones overflow, scale down uniformly */
-		max-width: 100%;
-		overflow: hidden;
-		padding: 0.5%;
-	}
-
 	.opponent-zone {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		min-height: 0;
 		min-width: 0;
-		/* Fixed width derived from height via aspect-ratio */
-		/* Height 100% comes from parent */
-		/* Width is calculated as: 100% height × (2.5/3.5) aspect */
-		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
-		/* All zones are identical size - shrink together if needed */
-		flex: 0 0 auto;
+		flex: 1 1 auto;
+		max-width: 100%;
 	}
 </style>

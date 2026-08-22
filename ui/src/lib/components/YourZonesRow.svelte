@@ -10,6 +10,8 @@
 
 	let { onCardClick, onQuickDiscard }: Props = $props();
 
+	const isYourTurn = $derived($gameState.current_player === $gameState.self.player_id);
+
 	const knownSum = $derived(
 		calculateKnownSum(
 			$gameState.self.hand,
@@ -30,7 +32,7 @@
 </script>
 
 <div class="your-zones-row">
-	<div class="your-zones-container">
+	<div class="your-zones-container" class:is-your-turn={isYourTurn}>
 		<div class="player-info-label">
 			<div class="player-name">{$gameState.self.player_name}<br /> (You)</div>
 			<div class="player-meta">
@@ -50,6 +52,15 @@
 </div>
 
 <style>
+	@keyframes turn-glow-self {
+		0%, 100% {
+			box-shadow: 0 0 12px rgba(0, 123, 255, 0.3), inset 0 0 8px rgba(0, 123, 255, 0.1);
+		}
+		50% {
+			box-shadow: 0 0 24px rgba(0, 123, 255, 0.6), inset 0 0 12px rgba(0, 123, 255, 0.2);
+		}
+	}
+
 	.your-zones-row {
 		display: flex;
 		width: 100%;
@@ -71,6 +82,13 @@
 		overflow: hidden;
 		border-radius: 5%;
 		background-color: rgba(1, 160, 252, 0.345);
+		transition: box-shadow 0.3s ease;
+		border: 2px solid transparent;
+	}
+
+	.your-zones-container.is-your-turn {
+		animation: turn-glow-self 1.5s ease-in-out infinite;
+		border-color: rgba(0, 123, 255, 0.5);
 	}
 
 	.your-zone {
