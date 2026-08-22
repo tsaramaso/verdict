@@ -53,11 +53,16 @@
 
 <style>
 	@keyframes turn-glow-self {
-		0%, 100% {
-			box-shadow: 0 0 12px rgba(0, 123, 255, 0.3), inset 0 0 8px rgba(0, 123, 255, 0.1);
+		0%,
+		100% {
+			box-shadow:
+				0 0 12px rgba(0, 123, 255, 0.3),
+				inset 0 0 8px rgba(0, 123, 255, 0.1);
 		}
 		50% {
-			box-shadow: 0 0 24px rgba(0, 123, 255, 0.6), inset 0 0 12px rgba(0, 123, 255, 0.2);
+			box-shadow:
+				0 0 24px rgba(0, 123, 255, 0.6),
+				inset 0 0 12px rgba(0, 123, 255, 0.2);
 		}
 	}
 

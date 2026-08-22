@@ -13,24 +13,34 @@
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
-	let { 
-		drawnCard, 
-		drawnCardSource,
-		onDeckClick, 
-		onDiscardClick,
-		onAction
-	}: Props = $props();
+	let { drawnCard, drawnCardSource, onDeckClick, onDiscardClick, onAction }: Props = $props();
 
 	const isDeckClickable = $derived.by(() => {
 		const clickable = $isActivePlayer && $gameState.phase === GAME_PHASES.DRAWING;
-		console.log('[CentralArea] isDeckClickable:', clickable, 'isActive:', $isActivePlayer, 'phase:', $gameState.phase);
+		console.log(
+			'[CentralArea] isDeckClickable:',
+			clickable,
+			'isActive:',
+			$isActivePlayer,
+			'phase:',
+			$gameState.phase
+		);
 		return clickable;
 	});
 
 	const isDiscardClickable = $derived.by(() => {
-		const clickable = $isActivePlayer &&
-			($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION);
-		console.log('[CentralArea] isDiscardClickable:', clickable, 'isActive:', $isActivePlayer, 'phase:', $gameState.phase);
+		const clickable =
+			$isActivePlayer &&
+			($gameState.phase === GAME_PHASES.DRAWING ||
+				$gameState.phase === GAME_PHASES.AWAITING_ACTION);
+		console.log(
+			'[CentralArea] isDiscardClickable:',
+			clickable,
+			'isActive:',
+			$isActivePlayer,
+			'phase:',
+			$gameState.phase
+		);
 		return clickable;
 	});
 
@@ -49,12 +59,11 @@
 <div class="central-area">
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
-		<PeekArea 
-			card={drawnCard}
-			isVisible={isPeekAreaVisible}
-			isActivePlayer={$isActivePlayer}
+		<PeekArea card={drawnCard} isVisible={isPeekAreaVisible} isActivePlayer={$isActivePlayer} />
+		<DiscardZone
+			isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION}
+			onClick={handleDiscardImmediateClick}
 		/>
-		<DiscardZone isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION} onClick={handleDiscardImmediateClick} />
 	</div>
 </div>
 

@@ -19,9 +19,11 @@
 		if (gameState.current_player === gameState.self.player_id) {
 			return gameState.self.player_name;
 		}
-		return gameState.opponents.find(o => o.player_id === gameState.current_player)?.player_name || 'Unknown';
+		return (
+			gameState.opponents.find((o) => o.player_id === gameState.current_player)?.player_name ||
+			'Unknown'
+		);
 	});
-
 </script>
 
 <div class="right-panel">
@@ -43,7 +45,7 @@
 	</div>
 
 	<div class="timer-section">
-		<Timer phase={gameState.phase as GamePhase} onTimeOut={onTimeOut} />
+		<Timer phase={gameState.phase as GamePhase} {onTimeOut} />
 	</div>
 
 	<div class="leaderboard-section">

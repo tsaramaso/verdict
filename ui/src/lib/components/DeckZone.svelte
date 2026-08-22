@@ -22,8 +22,8 @@
 	}
 </script>
 
-<div 
-	class="deck-zone" 
+<div
+	class="deck-zone"
 	class:clickable={isClickable}
 	class:clickable-glow={isClickable}
 	onclick={handleClick}

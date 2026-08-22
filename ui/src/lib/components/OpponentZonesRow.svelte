@@ -34,11 +34,16 @@
 
 <style>
 	@keyframes turn-glow-opponent {
-		0%, 100% {
-			box-shadow: 0 0 12px rgba(244, 67, 54, 0.3), inset 0 0 8px rgba(244, 67, 54, 0.1);
+		0%,
+		100% {
+			box-shadow:
+				0 0 12px rgba(244, 67, 54, 0.3),
+				inset 0 0 8px rgba(244, 67, 54, 0.1);
 		}
 		50% {
-			box-shadow: 0 0 24px rgba(244, 67, 54, 0.6), inset 0 0 12px rgba(244, 67, 54, 0.2);
+			box-shadow:
+				0 0 24px rgba(244, 67, 54, 0.6),
+				inset 0 0 12px rgba(244, 67, 54, 0.2);
 		}
 	}
 
