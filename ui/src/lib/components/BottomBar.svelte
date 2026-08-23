@@ -39,14 +39,14 @@
 	);
 
 	const canSkipEnabled = $derived(
-		[
+		([
 			GAME_PHASES.AWAITING_CALL_WINDOW,
 			GAME_PHASES.AWAITING_MATCH_WINDOW,
 			GAME_PHASES.AWAITING_DUEL_WINDOW,
 			GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW,
 			GAME_PHASES.AWAITING_ACTION,
 			GAME_PHASES.AWAITING_QUICK_DISCARD
-		].includes($gameState.phase)
+		] as const).includes($gameState.phase as any)
 	);
 
 	// Context-aware TESTIMONY handler
