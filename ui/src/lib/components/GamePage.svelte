@@ -276,7 +276,6 @@
 		onTestifyCross={handleTestifyCross}
 		onChallenge={handleChallenge}
 		onPlea={handlePlea}
-		onPleaDecline={handlePleaDecline}
 	/>
 
 	{#if $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION && drawnCard}

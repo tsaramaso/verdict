@@ -15,11 +15,9 @@
 		onTestifyCross?: () => void;
 		onChallenge?: () => void;
 		onPlea?: () => void;
-		onPleaDecline?: () => void;
 	}
 
-	let { onSkip, onTestifyFirst, onTestifyCross, onChallenge, onPlea, onPleaDecline }: Props =
-		$props();
+	let { onSkip, onTestifyFirst, onTestifyCross, onChallenge, onPlea }: Props = $props();
 
 	// Button enabled logic based on phase and trial state
 	const canTestifyFirstEnabled = $derived(
@@ -73,10 +71,6 @@
 	</button>
 
 	<button class="btn btn--primary" onclick={onPlea} disabled={!canPleaEnabled}> TAKE PLEA </button>
-
-	<button class="btn btn--secondary" onclick={onPleaDecline} disabled={!canPleaEnabled}>
-		DECLINE
-	</button>
 
 	<button class="btn btn--secondary" onclick={onSkip} disabled={!canSkipEnabled}>
 		SKIP / PASS
