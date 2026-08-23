@@ -2,19 +2,23 @@
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
 	import OpponentCardsZone from './OpponentCardsZone.svelte';
+	import type { OpponentInfo } from '$lib/stores/gameState';
 
-	const numOpponents = $derived($gameState.opponents.length);
-
-	function isOpponentTurn(opponentId: string): boolean {
-		return $gameState.current_player === opponentId;
+	interface Props {
+		opponents?: OpponentInfo[];
+		currentPlayer?: string;
 	}
+
+	let {
+		opponents = $gameState.opponents,
+		currentPlayer = $gameState.current_player
+	}: Props = $props();
 </script>
 
 <div class="opponent-zones-row">
 	<div class="opponent-zones-container">
-		{#each Array(numOpponents) as _, idx (idx)}
-			{@const opponent = $gameState.opponents[idx]}
-			{@const isCurrentTurn = isOpponentTurn(opponent.player_id)}
+		{#each opponents as opponent (opponent.player_id)}
+			{@const isCurrentTurn = currentPlayer === opponent.player_id}
 			<div class="player-box" class:is-opponent-turn={isCurrentTurn}>
 				<div class="player-info-label">
 					<div class="player-name">{opponent.player_name}</div>
@@ -23,9 +27,7 @@
 					</div>
 				</div>
 				<div class="opponent-zone">
-					{#if opponent}
-						<OpponentCardsZone {opponent} />
-					{/if}
+					<OpponentCardsZone {opponent} />
 				</div>
 			</div>
 		{/each}
