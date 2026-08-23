@@ -52,6 +52,13 @@
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
 			console.log('[GamePage] Game state update, phase:', message.game.phase);
+			
+			// Check for Last Turn (deck empty)
+			const deckEmpty = message.deck?.card_count === 0;
+			if (deckEmpty) {
+				console.warn('[GamePage] LAST TURN: Deck is empty');
+			}
+
 			const transformedSelf = {
 				...message.self,
 				hand: transformCardList(message.self.hand)
@@ -106,6 +113,11 @@
 		const token = localStorage.getItem('auth_token');
 		if (!token) throw new Error('No auth token found');
 		return token;
+	}
+
+	function clearDrawnCard() {
+		drawnCard = null;
+		drawnCardSource = null;
 	}
 
 	async function handleDrawDeck() {
@@ -194,50 +206,72 @@
 		await gameActions.declinePlea(gameId);
 	}
 
-	function clearDrawnCard() {
-		drawnCard = null;
-		drawnCardSource = null;
+	async function handleSkip() {
+		// Skip/Pass button handler - different logic per phase
+		if ($gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION) {
+			await gameActions.declinePower(gameId);
+			clearDrawnCard();
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_QUICK_DISCARD) {
+			// No action, player passes quick discard
+			return;
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_CALL_WINDOW) {
+			// No explicit API call, player just passes
+			return;
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_MATCH_WINDOW) {
+			// No explicit API call, player just passes
+			return;
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_DUEL_WINDOW) {
+			// No explicit API call, player just doesn't challenge
+			return;
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW) {
+			await gameActions.declinePlea(gameId);
+		}
 	}
 
 	// ============================================
-	// TIMEOUT FALLBACK HANDLERS
+	// SINGLE TIMEOUT DISPATCHER
 	// ============================================
 
-	async function handleTimeoutDrawing() {
-		await gameActions.timeoutDrawing(gameId);
-	}
+	async function handleTimeout() {
+		const phase = $gameState.phase;
+		console.log('[GamePage] Timer expired for phase:', phase);
 
-	async function handleTimeoutAction() {
-		await gameActions.timeoutAction(gameId, drawnCardSource || 'deck');
-		clearDrawnCard();
-	}
-
-	async function handleTimeoutSpell() {
-		await gameActions.timeoutSpell(gameId);
-		clearDrawnCard();
-	}
-
-	function getTimeoutHandler() {
-		switch ($gameState.phase) {
-			case GAME_PHASES.DRAWING:
-				return handleTimeoutDrawing;
-			case GAME_PHASES.AWAITING_ACTION:
-				return handleTimeoutAction;
-			case GAME_PHASES.AWAITING_SPELL_INVOCATION:
-				return handleTimeoutSpell;
-			default:
-				return undefined;
+		if (phase === GAME_PHASES.DRAWING) {
+			await gameActions.timeoutDrawing(gameId);
+		} else if (phase === GAME_PHASES.AWAITING_ACTION) {
+			await gameActions.timeoutAction(gameId, drawnCardSource || 'deck');
+			clearDrawnCard();
+		} else if (phase === GAME_PHASES.AWAITING_SPELL_INVOCATION) {
+			await gameActions.timeoutSpell(gameId);
+			clearDrawnCard();
+		} else if (phase === GAME_PHASES.AWAITING_QUICK_DISCARD) {
+			await gameActions.timeoutQuickDiscard(gameId);
+		} else if (phase === GAME_PHASES.AWAITING_CALL_WINDOW) {
+			await gameActions.timeoutTestifyWindow(gameId);
+		} else if (phase === GAME_PHASES.AWAITING_MATCH_WINDOW) {
+			await gameActions.timeoutTestifyWindow(gameId);
+		} else if (phase === GAME_PHASES.AWAITING_DUEL_WINDOW) {
+			await gameActions.timeoutDuelWindow(gameId);
+		} else if (phase === GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW) {
+			await gameActions.timeoutPleaWindow(gameId);
 		}
 	}
 </script>
 
 <div class="game-page">
 	<PlayArea
+		{drawnCard}
 		{drawnCardSource}
 		onDeckClick={handleDrawDeck}
-		onDiscardClick={handleDrawDiscard}
+		onDiscardDrawClick={handleDrawDiscard}
 		onAction={handleAction}
 		onQuickDiscard={handleQuickDiscard}
+	/>
+
+	<RightPanel gameState={$gameState} onTimeOut={handleTimeout} />
+
+	<BottomBar
+		onSkip={handleSkip}
 		onTestifyFirst={handleTestifyFirst}
 		onTestifyCross={handleTestifyCross}
 		onChallenge={handleChallenge}
@@ -245,13 +279,10 @@
 		onPleaDecline={handlePleaDecline}
 	/>
 
-	<RightPanel gameState={$gameState} onTimeOut={getTimeoutHandler()} />
-
-	<BottomBar />
-
 	{#if $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION && drawnCard}
 		<SpellInvocationModal
 			{drawnCard}
+			{drawnCardSource}
 			onInvoke={handlePowerInvoke}
 			onDecline={handlePowerDecline}
 			onDecreeSwap={handlePowerDecreeSwap}

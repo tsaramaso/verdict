@@ -8,6 +8,7 @@
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
 		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
+		onDiscardDrawClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 		onQuickDiscard?: (slotIndex: number) => void;
 	}
@@ -16,6 +17,7 @@
 		drawnCard,
 		drawnCardSource,
 		onDeckClick,
+		onDiscardDrawClick,
 		onAction,
 		onQuickDiscard
 	}: Props = $props();
@@ -27,7 +29,7 @@
 	</div>
 
 	<div class="central-section">
-		<CentralArea {drawnCard} {drawnCardSource} {onDeckClick} {onAction} />
+		<CentralArea {drawnCard} {drawnCardSource} {onDeckClick} {onDiscardDrawClick} {onAction} />
 	</div>
 
 	<div class="your-zones-row">

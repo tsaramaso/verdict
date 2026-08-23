@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
-	import { SUIT_LABELS, RANK_LABELS, SUIT_COLORS, CardRank, type CardSuit } from '$lib/constants/cards';
+	import { SUIT_COLORS, CardRank, type CardSuit } from '$lib/constants/cards';
+	import { displayRank, displaySuit } from '$lib/utils/cardTransform';
 	import { getPowerName } from '$lib/config';
 
 	interface Props {
 		drawnCard: { rank: CardRank; suit: CardSuit } | null;
+		drawnCardSource?: 'deck' | 'discard' | null;
 		onInvoke?: (slotIndex?: number, targetId?: string, targetIndex?: number) => void;
 		onDecline?: () => void;
 		onDecreeSwap?: (swap: boolean, ownSlot?: number) => void;
 	}
 
-	let { drawnCard, onInvoke, onDecline, onDecreeSwap }: Props = $props();
+	let { drawnCard, drawnCardSource, onInvoke, onDecline, onDecreeSwap }: Props = $props();
 
 	let selectedOwnSlot: number | null = $state(null);
 	let selectedTargetSlot: number | null = $state(null);
@@ -27,14 +29,6 @@
 		return '';
 	}
 
-	function getSuitSymbol(suit: CardSuit): string {
-		return SUIT_LABELS[suit];
-	}
-
-	function getSuitColor(suit: CardSuit): string {
-		return SUIT_COLORS[suit];
-	}
-
 	function handleYourSlotClick(slotIndex: number) {
 		const power = getPowerType();
 
@@ -44,7 +38,7 @@
 			if (selectedOwnSlot === null) {
 				selectedOwnSlot = slotIndex;
 			} else {
-				onInvoke?.(selectedOwnSlot, selectedTargetId, selectedTargetSlot);
+				onInvoke?.(selectedOwnSlot, selectedTargetId, selectedTargetSlot ?? undefined);
 				resetSelection();
 			}
 		} else if (power === 'decree' && decreeStage === 'swap') {
@@ -93,9 +87,14 @@
 		<div class="spell-header">
 			<div class="spell-title">{powerName}</div>
 		{#if drawnCard}
-			<div class="spell-card" style="color: {getSuitColor(drawnCard.suit)}">
-				<div class="spell-rank">{RANK_LABELS[drawnCard.rank]}</div>
-				<div class="spell-suit">{getSuitSymbol(drawnCard.suit)}</div>
+			<div class="spell-card" style="color: {SUIT_COLORS[drawnCard.suit]}">
+				<div class="spell-rank">{displayRank(drawnCard.rank)}</div>
+				<div class="spell-suit">{displaySuit(drawnCard.suit)}</div>
+			</div>
+		{/if}
+		{#if drawnCardSource}
+			<div class="source-badge">
+				{drawnCardSource === 'deck' ? 'From Deck' : 'From Discard'}
 			</div>
 		{/if}
 		</div>
@@ -255,6 +254,16 @@
 	.spell-suit {
 		font-size: 16px;
 		margin-top: 4px;
+	}
+
+	.source-badge {
+		font-size: 12px;
+		font-weight: 600;
+		background: var(--color-bg, #f5f5f5);
+		padding: 4px 8px;
+		border-radius: 4px;
+		color: var(--color-text-light, #666);
+		white-space: nowrap;
 	}
 
 	.spell-instructions {
