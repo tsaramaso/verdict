@@ -173,6 +173,7 @@ export const canPlea: Readable<boolean> = derived(gameState, ($state) => {
 	const testified = new Set([...$state.trial.first_window_callers, ...$state.trial.cross_callers]);
 	return (
 		!testified.has(currentPlayerId) &&
+		!$state.trial.perjury_removed.includes(currentPlayerId) &&
 		!$state.trial.plea_taken.includes(currentPlayerId) &&
 		!$state.trial.plea_declined.includes(currentPlayerId)
 	);

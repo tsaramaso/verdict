@@ -88,3 +88,17 @@ export function getPowerName(rank: CardRank): string | null {
 	const power = POWER_CARDS[rank];
 	return power ? power.name : null;
 }
+
+/**
+ * Get display string for rank (e.g., "A", "2", "J", "K")
+ */
+export function getRankDisplay(rank: CardRank): string {
+	return RANK_LABELS[rank];
+}
+
+/**
+ * Get display symbol for suit (e.g., "♥", "♦", "♣", "♠")
+ */
+export function getSuitDisplay(suit: CardSuit): string {
+	return SUIT_LABELS[suit];
+}

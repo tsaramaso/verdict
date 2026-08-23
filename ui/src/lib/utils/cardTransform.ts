@@ -1,4 +1,4 @@
-import { CardRank, CardSuit } from '$lib/constants/cards';
+import { CardRank, CardSuit, getRankDisplay, getSuitDisplay } from '$lib/constants/cards';
 
 /**
  * Map backend rank strings to frontend CardRank enums
@@ -74,4 +74,20 @@ export function transformCardList(
 	apiCards: Array<{ rank?: string; suit?: string; known: boolean }>
 ) {
 	return apiCards.map((card) => transformCard(card));
+}
+
+/**
+ * Display rank enum as string (e.g., CardRank.ACE → "A")
+ * Use only at render time
+ */
+export function displayRank(rank: CardRank): string {
+	return getRankDisplay(rank);
+}
+
+/**
+ * Display suit enum as symbol (e.g., CardSuit.HEART → "♥")
+ * Use only at render time
+ */
+export function displaySuit(suit: CardSuit): string {
+	return getSuitDisplay(suit);
 }
