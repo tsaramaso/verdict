@@ -48,10 +48,23 @@
 			GAME_PHASES.AWAITING_QUICK_DISCARD
 		].includes($gameState.phase)
 	);
+
+	// Context-aware TESTIMONY handler
+	function handleTestimony() {
+		if ($gameState.phase === GAME_PHASES.AWAITING_CALL_WINDOW) {
+			onTestifyFirst?.();
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_MATCH_WINDOW) {
+			onTestifyCross?.();
+		}
+	}
+
+	const testifyButtonEnabled = $derived(
+		canTestifyFirstEnabled || canTestifyCrossEnabled
+	);
 </script>
 
 <div class="bottom-bar">
-	<button class="btn btn--primary" onclick={onTestifyFirst} disabled={!canTestifyFirstEnabled}>
+	<button class="btn btn--primary" onclick={handleTestimony} disabled={!testifyButtonEnabled}>
 		TESTIMONY
 	</button>
 

@@ -1,9 +1,15 @@
 <script lang="ts">
 	import Timer from './Timer.svelte';
 	import LeaderboardPanel from './LeaderboardPanel.svelte';
-	import ButtonZone from './ButtonZone.svelte';
 	import { PHASE_LABELS, UI, GAME_PHASES } from '$lib/config';
 	import type { GameState, GamePhase } from '$lib/stores/gameState';
+
+	interface PlayerStanding {
+		player_id: string;
+		name: string;
+		score: number;
+		isYou?: boolean;
+	}
 
 	interface Props {
 		gameState: GameState;
@@ -24,7 +30,29 @@
 		return opponentName;
 	});
 
-</script>
+	const standings = $derived.by(() => {
+		const all: PlayerStanding[] = [];
+		
+		// Add self
+		all.push({
+			player_id: gameState.self.player_id,
+			name: `${gameState.self.player_name} (You)`,
+			score: gameState.self.score,
+			isYou: true
+		});
+		
+		// Add opponents
+		for (const opponent of gameState.opponents) {
+			all.push({
+				player_id: opponent.player_id,
+				name: opponent.player_name,
+				score: opponent.score,
+				isYou: false
+			});
+		}
+		
+		return all.sort((a, b) => a.score - b.score);
+	});</script>
 
 <div class="right-panel">
 	<div class="info-section">
@@ -45,15 +73,11 @@
 	</div>
 
 	<div class="timer-section">
-		<Timer phase={gameState.phase as GamePhase} onTimeOut={onTimeOut} />
+		<Timer phase={gameState.phase as GamePhase} {onTimeOut} />
 	</div>
 
 	<div class="leaderboard-section">
-		<LeaderboardPanel />
-	</div>
-
-	<div class="button-section">
-		<ButtonZone />
+		<LeaderboardPanel {standings} />
 	</div>
 </div>
 
@@ -123,10 +147,5 @@
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
-	}
-
-	.button-section {
-		padding-top: 8px;
-		border-top: 1px solid var(--color-border, #ddd);
 	}
 </style>

@@ -1,38 +1,17 @@
 <!-- src/lib/components/LeaderboardPanel.svelte -->
 <script lang="ts">
-	import { gameState } from '$lib/stores/gameState';
-
 	interface PlayerStanding {
 		player_id: string;
 		name: string;
 		score: number;
-		isYou: boolean;
+		isYou?: boolean;
 	}
 
-	function getStandings(): PlayerStanding[] {
-		const standings: PlayerStanding[] = [];
-
-		// Add self
-		standings.push({
-			player_id: $gameState.self.player_id,
-			name: `${$gameState.self.player_name} (You)`,
-			score: $gameState.self.score,
-			isYou: true
-		});
-		// Add opponents sorted by score
-		for (const opponent of $gameState.opponents) {
-			standings.push({
-				player_id: opponent.player_id,
-				name: opponent.player_name,
-				score: opponent.score,
-				isYou: false
-			});
-		}
-
-		return standings.sort((a, b) => a.score - b.score);
+	interface Props {
+		standings?: PlayerStanding[];
 	}
 
-	const standings = $derived(getStandings());
+	let { standings = [] }: Props = $props();
 </script>
 
 <div class="leaderboard-panel">
