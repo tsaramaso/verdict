@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { gameState } from '$lib/stores/gameState';
-	import { getSuitSymbol } from '$lib/config';
+	import { displayRank, displaySuit } from '$lib/utils/cardTransform';
 	import { SUIT_COLORS } from '$lib/constants/cards';
 
 	interface Props {
@@ -23,14 +23,14 @@
 	onmouseenter={() => (isHovered = true)}
 	onmouseleave={() => (isHovered = false)}
 	title={$gameState.discard_pile.visible_cards.length > 0
-		? `${$gameState.discard_pile.visible_cards[0].rank}${getSuitSymbol($gameState.discard_pile.visible_cards[0].suit)}`
+		? `${displayRank($gameState.discard_pile.visible_cards[0].rank)}${displaySuit($gameState.discard_pile.visible_cards[0].suit)}`
 		: 'Empty discard pile'}
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
 		{@const topCard = $gameState.discard_pile.visible_cards[0]}
 		<div class="card-face" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
-			<div class="card-face__rank">{topCard.rank}</div>
-			<div class="card-face__suit">{getSuitSymbol(topCard.suit)}</div>
+			<div class="card-face__rank">{displayRank(topCard.rank)}</div>
+			<div class="card-face__suit">{displaySuit(topCard.suit)}</div>
 		</div>
 	{:else}
 		<div class="empty-label">-</div>
