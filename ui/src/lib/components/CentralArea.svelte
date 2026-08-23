@@ -8,12 +8,14 @@
 
 	interface Props {
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
+		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
 	let { 
-		drawnCard, 
+		drawnCard,
+		drawnCardSource,
 		onDeckClick, 
 		onAction
 	}: Props = $props();
@@ -49,9 +51,9 @@
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
 		<PeekArea 
-			drawnCard={drawnCard}
+			{drawnCard}
+			{drawnCardSource}
 			isVisible={isPeekAreaVisible}
-			isActivePlayer={$isActivePlayer}
 		/>
 		<DiscardZone isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION} onClick={handleDiscardImmediateClick} />
 	</div>

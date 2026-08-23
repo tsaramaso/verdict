@@ -2,9 +2,10 @@
 	import OpponentZonesRow from './OpponentZonesRow.svelte';
 	import CentralArea from './CentralArea.svelte';
 	import YourZonesRow from './YourZonesRow.svelte';
+	import type { CardRank, CardSuit } from '$lib/constants/cards';
 
 	interface Props {
-		drawnCard?: { rank: string; suit: string } | null;
+		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
 		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
 		onDiscardClick?: () => void;
@@ -19,6 +20,7 @@
 
 	let {
 		drawnCard,
+		drawnCardSource,
 		onDeckClick,
 		onAction,
 		onQuickDiscard,
@@ -31,7 +33,7 @@
 	</div>
 
 	<div class="central-section">
-		<CentralArea {drawnCard} {onDeckClick} {onAction} />
+		<CentralArea {drawnCard} {drawnCardSource} {onDeckClick} {onAction} />
 	</div>
 
 	<div class="your-zones-row">
