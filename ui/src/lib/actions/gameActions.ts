@@ -155,9 +155,9 @@ export async function invokePower(
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				own_slot_index: ownSlotIndex,
-				target_owner: targetOwner,
-				target_index: targetIndex
+				own_slot: ownSlotIndex,
+				target_player_id: targetOwner,
+				target_slot: targetIndex
 			})
 		});
 
@@ -201,7 +201,7 @@ export async function decreeSwap(
 		const response = await fetch(getFullUrl(API_ENDPOINTS.power.decreeSwap(gameId)), {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ swap, own_slot_index: ownSlotIndex })
+			body: JSON.stringify({ swap, own_slot: ownSlotIndex })
 		});
 
 		if (!response.ok) {
