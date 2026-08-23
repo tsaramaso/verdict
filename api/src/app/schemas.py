@@ -97,17 +97,18 @@ class DrawRequest(BaseModel):
 class ActionRequest(BaseModel):
     choice: ActionChoice
     slot_index: int | None = None
+    source: DrawSource | None = None
 
 
 class InvokePowerRequest(BaseModel):
-    own_slot_index: int | None = None
-    target_owner: str | None = None
-    target_index: int | None = None
+    own_slot: int | None = None
+    target_player_id: str | None = None
+    target_slot: int | None = None
 
 
 class DecreeSwapRequest(BaseModel):
     swap: bool
-    own_slot_index: int | None = None
+    own_slot: int | None = None
 
 
 class QuickDiscardRequest(BaseModel):

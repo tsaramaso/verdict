@@ -20,7 +20,7 @@ Grouped by rules.md section:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from src.app.auth import get_current_player
@@ -190,9 +190,9 @@ async def invoke_power(
         engine.invoke_power,
         state,
         player_id,
-        request.own_slot_index,
-        request.target_owner,
-        request.target_index,
+        request.own_slot,
+        request.target_player_id,
+        request.target_slot,
     )
     _persist(session, events)
 
@@ -214,7 +214,7 @@ async def decree_swap(
         state,
         player_id,
         request.swap,
-        request.own_slot_index,
+        request.own_slot,
     )
     _persist(session, events)
 
@@ -397,4 +397,3 @@ async def advance_phase(
     await broadcast_game_update(state.game_id, state, events)
     
     return _result(state, events, player_id)
- 
