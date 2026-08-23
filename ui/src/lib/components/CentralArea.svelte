@@ -10,13 +10,15 @@
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
 		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
+		onDiscardDrawClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
 	let { 
 		drawnCard,
 		drawnCardSource,
-		onDeckClick, 
+		onDeckClick,
+		onDiscardDrawClick,
 		onAction
 	}: Props = $props();
 
@@ -39,9 +41,11 @@
 		$gameState.phase === GAME_PHASES.AWAITING_ACTION && !!drawnCard
 	);
 
-	function handleDiscardImmediateClick() {
+	function handleDiscardClick() {
 		if (!isDiscardClickable) return;
-		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
+		if ($gameState.phase === GAME_PHASES.DRAWING) {
+			onDiscardDrawClick?.();
+		} else if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
 			onAction?.('discard_immediate');
 		}
 	}
@@ -55,7 +59,10 @@
 			{drawnCardSource}
 			isVisible={isPeekAreaVisible}
 		/>
-		<DiscardZone isClickable={isDiscardClickable && $gameState.phase === GAME_PHASES.AWAITING_ACTION} onClick={handleDiscardImmediateClick} />
+		<DiscardZone 
+			isClickable={isDiscardClickable && ($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION)} 
+			onClick={handleDiscardClick} 
+		/>
 	</div>
 </div>
 

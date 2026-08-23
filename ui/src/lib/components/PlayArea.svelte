@@ -8,14 +8,8 @@
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
 		drawnCardSource?: 'deck' | 'discard' | null;
 		onDeckClick?: () => void;
-		onDiscardClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 		onQuickDiscard?: (slotIndex: number) => void;
-		onTestifyFirst?: () => void;
-		onTestifyCross?: () => void;
-		onChallenge?: () => void;
-		onPlea?: () => void;
-		onPleaDecline?: () => void;
 	}
 
 	let {
@@ -23,7 +17,7 @@
 		drawnCardSource,
 		onDeckClick,
 		onAction,
-		onQuickDiscard,
+		onQuickDiscard
 	}: Props = $props();
 </script>
 
