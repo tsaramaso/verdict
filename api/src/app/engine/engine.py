@@ -152,7 +152,7 @@ def _start_round(state: GameState) -> list[Event]:
     state.deck = build_deck(seed, state.rules)
     state.discard_pile = []
     state.current_turn_index = state.dealer_index
-    state.is_last_turn = False
+    state.empty_deck = False
     state.trial = TrialState()
     state.phase = Phase.TURN_START
 
@@ -225,13 +225,13 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
     if source is DrawSource.DECK and not state.deck:
         raise IllegalAction(
             "Deck is empty"
-        )  # should never happen given is_last_turn gating
+        )  # should never happen given empty_deck gating
 
     if source is DrawSource.DECK:
         card = state.deck.pop()
         if not state.deck:
             # This was the last card in the deck — rules.md §5.5.
-            state.is_last_turn = True
+            state.empty_deck = True
     else:
         card = state.discard_pile.pop()
 
@@ -730,7 +730,7 @@ def _maybe_close_match_window(state: GameState) -> list[Event]:
         state.trial.cross_callers
     )
     if total_testimony == 0:
-        if state.is_last_turn:
+        if state.empty_deck:
             return _end_round_forced_no_testimony(state)
         return _advance_to_next_player(state)
     return _resolve_perjury_check(state)

@@ -120,7 +120,16 @@ class GameState:
     discard_pile: list[Card] = field(default_factory=list)
     current_turn_index: int = 0
     phase: Phase = Phase.TURN_START
-    is_last_turn: bool = False
+    empty_deck: bool = False
+
+    @property
+    def is_last_turn(self) -> bool:
+        """Alias for empty_deck (documentation: when deck is exhausted after drawing last card)"""
+        return self.empty_deck
+
+    @is_last_turn.setter
+    def is_last_turn(self, value: bool):
+        self.empty_deck = value
     game_over: bool = False
 
     # Lobby phase tracking
