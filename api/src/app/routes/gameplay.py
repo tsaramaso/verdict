@@ -28,6 +28,8 @@ from src.app.engine import engine
 from src.app.engine.state import GameState
 from src.app.game_registry import get_locked_game_state
 from src.app.routes._shared import _call, _persist, _result
+from src.app.engine.state import Phase
+
 from src.app.schemas import (
     ActionRequest,
     ActionResult,
@@ -378,8 +380,6 @@ async def advance_phase(
     Called by UI after animation delay (3s) for all players.
     Only valid during TURN_START phase.
     """
-    from src.app.engine.state import Phase
-    from src.app.routes._shared import _result
 
     if state.phase != Phase.TURN_START:
         raise HTTPException(
