@@ -31,10 +31,22 @@
 	});
 
 	const isDiscardClickable = $derived.by(() => {
-		const clickable = $isActivePlayer &&
-			($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION);
-		console.log('[CentralArea] isDiscardClickable:', clickable, 'isActive:', $isActivePlayer, 'phase:', $gameState.phase);
-		return clickable;
+		if (!$isActivePlayer) return false;
+		
+		// DRAWING phase: can draw from discard only if it has cards (rules.md §6.1)
+		if ($gameState.phase === GAME_PHASES.DRAWING) {
+			const hasCards = $gameState.discard_pile.visible_cards.length > 0;
+			console.log('[CentralArea] isDiscardClickable (DRAWING):', hasCards, 'hasCards:', hasCards);
+			return hasCards;
+		}
+		
+		// AWAITING_ACTION phase: can discard to pile (target for discard_immediate or pass_back)
+		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
+			console.log('[CentralArea] isDiscardClickable (ACTION): true');
+			return true;
+		}
+		
+		return false;
 	});
 
 	const isPeekAreaVisible = $derived(
@@ -60,7 +72,7 @@
 			isVisible={isPeekAreaVisible}
 		/>
 		<DiscardZone 
-			isClickable={isDiscardClickable && ($gameState.phase === GAME_PHASES.DRAWING || $gameState.phase === GAME_PHASES.AWAITING_ACTION)} 
+			isClickable={isDiscardClickable}
 			onClick={handleDiscardClick} 
 		/>
 	</div>

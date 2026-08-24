@@ -226,6 +226,11 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
         raise IllegalAction(
             "Deck is empty"
         )  # should never happen given empty_deck gating
+    
+    if source is DrawSource.DISCARD and not state.discard_pile:
+        raise IllegalAction(
+            "Discard pile is empty"
+        )  # First turn of round; discard pile not yet populated (rules.md §6.1)
 
     if source is DrawSource.DECK:
         card = state.deck.pop()
