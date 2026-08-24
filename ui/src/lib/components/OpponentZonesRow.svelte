@@ -9,10 +9,8 @@
 		currentPlayer?: string;
 	}
 
-	let {
-		opponents = $gameState.opponents,
-		currentPlayer = $gameState.current_player
-	}: Props = $props();
+	let { opponents = $gameState.opponents, currentPlayer = $gameState.current_player }: Props =
+		$props();
 </script>
 
 <div class="opponent-zones-row">

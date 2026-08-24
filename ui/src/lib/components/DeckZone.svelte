@@ -22,13 +22,13 @@
 	}
 </script>
 
-<div 
-	class="deck-zone" 
+<div
+	class="deck-zone"
 	class:clickable={isClickable}
 	class:clickable-glow={isClickable}
 	onclick={handleClick}
 	role={isClickable ? 'button' : 'region'}
-	{...(isClickable ? { tabindex: 0 } : {})}
+	{...isClickable ? { tabindex: 0 } : {}}
 	aria-label="Draw from deck"
 >
 	<div class="card-stack">

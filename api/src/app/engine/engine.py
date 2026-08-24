@@ -226,7 +226,7 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
         raise IllegalAction(
             "Deck is empty"
         )  # should never happen given empty_deck gating
-    
+
     if source is DrawSource.DISCARD and not state.discard_pile:
         raise IllegalAction(
             "Discard pile is empty"
@@ -242,7 +242,7 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
         # Discard pile is face-up; all players see its value (rules.md §6.1, §9).
         for pid in state.player_order:
             card.known_by.add(pid)
-    
+
     if source is DrawSource.DECK:
         card.known_by.add(player_id)
     state.drawn_card = card

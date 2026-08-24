@@ -25,14 +25,16 @@
 			console.log('[RightPanel] Current player is self:', gameState.self.player_name);
 			return gameState.self.player_name;
 		}
-		const opponentName = gameState.opponents.find(o => o.player_id === gameState.current_player)?.player_name || 'Unknown';
+		const opponentName =
+			gameState.opponents.find((o) => o.player_id === gameState.current_player)?.player_name ||
+			'Unknown';
 		console.log('[RightPanel] Current player is opponent:', opponentName);
 		return opponentName;
 	});
 
 	const standings = $derived.by(() => {
 		const all: PlayerStanding[] = [];
-		
+
 		// Add self
 		all.push({
 			player_id: gameState.self.player_id,
@@ -40,7 +42,7 @@
 			score: gameState.self.score,
 			isYou: true
 		});
-		
+
 		// Add opponents
 		for (const opponent of gameState.opponents) {
 			all.push({
@@ -50,9 +52,10 @@
 				isYou: false
 			});
 		}
-		
+
 		return all.sort((a, b) => a.score - b.score);
-	});</script>
+	});
+</script>
 
 <div class="right-panel">
 	<div class="info-section">

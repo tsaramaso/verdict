@@ -9,25 +9,16 @@
 		isVisible?: boolean;
 	}
 
-	let {
-		drawnCard,
-		drawnCardSource,
-		isVisible = false
-	}: Props = $props();
+	let { drawnCard, drawnCardSource, isVisible = false }: Props = $props();
 
 	const sourceLabel = $derived(
-		drawnCardSource === 'deck' ? 'From Deck' :
-		drawnCardSource === 'discard' ? 'From Discard' :
-		null
+		drawnCardSource === 'deck' ? 'From Deck' : drawnCardSource === 'discard' ? 'From Discard' : null
 	);
 </script>
 
 {#if isVisible && drawnCard}
 	<div class="peek-area">
-		<div 
-			class="peek-card"
-			style="--suit-color: {SUIT_COLORS[drawnCard.suit]}"
-		>
+		<div class="peek-card" style="--suit-color: {SUIT_COLORS[drawnCard.suit]}">
 			<div class="peek-card__rank">{displayRank(drawnCard.rank)}</div>
 			<div class="peek-card__suit">{displaySuit(drawnCard.suit)}</div>
 		</div>

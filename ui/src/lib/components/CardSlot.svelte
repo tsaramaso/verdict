@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		type CardSuit,
-		type CardRank,
-		SUIT_COLORS
-	} from '$lib/constants/cards';
+	import { type CardSuit, type CardRank, SUIT_COLORS } from '$lib/constants/cards';
 	import { displayRank, displaySuit } from '$lib/utils/cardTransform';
 
 	export interface CardData {
@@ -38,12 +34,12 @@
 
 	function hasOpponentKnowledge(): boolean {
 		if (!opponentKnows) return false;
-		return Object.values(opponentKnows).some(v => v === true);
+		return Object.values(opponentKnows).some((v) => v === true);
 	}
 
 	function getOpponentNames(): string[] {
 		if (!opponentKnows) return [];
-		return Object.keys(opponentKnows).filter(id => opponentKnows![id]);
+		return Object.keys(opponentKnows).filter((id) => opponentKnows![id]);
 	}
 
 	const opponentsWhoKnow = $derived(getOpponentNames());
@@ -55,7 +51,7 @@
 	class:highlighted={isHighlighted}
 	class:hovered={isHovered}
 	role={isClickable ? 'button' : 'region'}
-	{...(isClickable ? { tabindex: 0 } : {})}
+	{...isClickable ? { tabindex: 0 } : {}}
 	onclick={onClick}
 	onkeydown={(e) => {
 		if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
@@ -80,9 +76,7 @@
 	{/if}
 
 	{#if hasOpponentKnowledge()}
-		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>
-			👁️
-		</div>
+		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>👁️</div>
 	{/if}
 
 	{#if isHovered && isYourCard && opponentsWhoKnow.length > 0}

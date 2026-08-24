@@ -86,17 +86,17 @@
 	<div class="spell-modal">
 		<div class="spell-header">
 			<div class="spell-title">{powerName}</div>
-		{#if drawnCard}
-			<div class="spell-card" style="color: {SUIT_COLORS[drawnCard.suit]}">
-				<div class="spell-rank">{displayRank(drawnCard.rank)}</div>
-				<div class="spell-suit">{displaySuit(drawnCard.suit)}</div>
-			</div>
-		{/if}
-		{#if drawnCardSource}
-			<div class="source-badge">
-				{drawnCardSource === 'deck' ? 'From Deck' : 'From Discard'}
-			</div>
-		{/if}
+			{#if drawnCard}
+				<div class="spell-card" style="color: {SUIT_COLORS[drawnCard.suit]}">
+					<div class="spell-rank">{displayRank(drawnCard.rank)}</div>
+					<div class="spell-suit">{displaySuit(drawnCard.suit)}</div>
+				</div>
+			{/if}
+			{#if drawnCardSource}
+				<div class="source-badge">
+					{drawnCardSource === 'deck' ? 'From Deck' : 'From Discard'}
+				</div>
+			{/if}
 		</div>
 
 		<div class="spell-instructions">
@@ -148,7 +148,8 @@
 							{#each [0, 1, 2, 3] as idx}
 								<button
 									class="slot-btn"
-									class:selected={selectedTargetId === opponent.player_id && selectedTargetSlot === idx}
+									class:selected={selectedTargetId === opponent.player_id &&
+										selectedTargetSlot === idx}
 									onclick={() => handleOpponentSlotClick(opponent.player_id, idx)}
 								>
 									Slot {idx + 1}
@@ -175,13 +176,9 @@
 
 		<div class="spell-buttons">
 			{#if powerType === 'decree' && decreeStage === 'swap'}
-				<button class="btn btn-secondary" onclick={handleDecreeSwapDecline}>
-					Decline Swap
-				</button>
+				<button class="btn btn-secondary" onclick={handleDecreeSwapDecline}> Decline Swap </button>
 			{:else}
-				<button class="btn btn-secondary" onclick={onDecline}>
-					Skip Spell
-				</button>
+				<button class="btn btn-secondary" onclick={onDecline}> Skip Spell </button>
 			{/if}
 		</div>
 	</div>

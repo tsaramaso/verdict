@@ -366,6 +366,7 @@ def pass_plea(
     _persist(session, events)
     return _result(state, events, player_id)
 
+
 @router.post("/{game_id}/advance-phase")
 async def advance_phase(
     player_id: str = Depends(get_current_player),
@@ -379,21 +380,22 @@ async def advance_phase(
     """
     from src.app.engine.state import Phase
     from src.app.routes._shared import _result
-    
+
     if state.phase != Phase.TURN_START:
         raise HTTPException(
             status_code=409,
-            detail=f"Cannot advance phase from {state.phase}. Only valid during TURN_START."
+            detail=f"Cannot advance phase from {state.phase}."
+            " Only valid during TURN_START.",
         )
-    
+
     # Advance phase
     state.phase = Phase.DRAWING
-    
+
     # No events needed (pure phase transition)
     events = []
     _persist(session, events)
-    
+
     # Broadcast update to all players
     await broadcast_game_update(state.game_id, state, events)
-    
+
     return _result(state, events, player_id)

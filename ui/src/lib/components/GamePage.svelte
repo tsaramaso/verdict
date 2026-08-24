@@ -52,7 +52,7 @@
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
 			console.log('[GamePage] Game state update, phase:', message.game.phase);
-			
+
 			// Check for Last Turn (deck empty)
 			const deckEmpty = message.deck?.card_count === 0;
 			if (deckEmpty) {
@@ -152,7 +152,10 @@
 		}
 	}
 
-	async function handleAction(choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) {
+	async function handleAction(
+		choice: 'discard_immediate' | 'swap' | 'pass_back',
+		slotIndex?: number
+	) {
 		if (choice === 'discard_immediate') {
 			await gameActions.discardImmediate(gameId, drawnCardSource || 'deck');
 		} else if (choice === 'swap' && slotIndex !== undefined) {
@@ -289,7 +292,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.ROUND_OVER}
-		<RoundOverModal 
+		<RoundOverModal
 			onAdvance={() => {
 				// Auto-advance triggered, game continues via WebSocket
 			}}
@@ -297,7 +300,7 @@
 	{/if}
 
 	{#if $gameState.phase === GAME_PHASES.GAME_OVER}
-		<GameOverModal 
+		<GameOverModal
 			onReturnLobby={() => (window.location.href = '/')}
 			onPlayAgain={() => (window.location.href = '/lobbies')}
 		/>
@@ -314,4 +317,4 @@
 		height: 100vh;
 		background: var(--color-bg, #f5f5f5);
 	}
-	</style>
+</style>

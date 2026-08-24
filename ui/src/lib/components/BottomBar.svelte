@@ -37,14 +37,16 @@
 	);
 
 	const canSkipEnabled = $derived(
-		([
-			GAME_PHASES.AWAITING_CALL_WINDOW,
-			GAME_PHASES.AWAITING_MATCH_WINDOW,
-			GAME_PHASES.AWAITING_DUEL_WINDOW,
-			GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW,
-			GAME_PHASES.AWAITING_ACTION,
-			GAME_PHASES.AWAITING_QUICK_DISCARD
-		] as const).includes($gameState.phase as any)
+		(
+			[
+				GAME_PHASES.AWAITING_CALL_WINDOW,
+				GAME_PHASES.AWAITING_MATCH_WINDOW,
+				GAME_PHASES.AWAITING_DUEL_WINDOW,
+				GAME_PHASES.AWAITING_FINAL_PLEA_WINDOW,
+				GAME_PHASES.AWAITING_ACTION,
+				GAME_PHASES.AWAITING_QUICK_DISCARD
+			] as const
+		).includes($gameState.phase as any)
 	);
 
 	// Context-aware TESTIMONY handler
@@ -56,9 +58,7 @@
 		}
 	}
 
-	const testifyButtonEnabled = $derived(
-		canTestifyFirstEnabled || canTestifyCrossEnabled
-	);
+	const testifyButtonEnabled = $derived(canTestifyFirstEnabled || canTestifyCrossEnabled);
 </script>
 
 <div class="bottom-bar">

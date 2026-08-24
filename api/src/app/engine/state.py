@@ -124,12 +124,14 @@ class GameState:
 
     @property
     def is_last_turn(self) -> bool:
-        """Alias for empty_deck (documentation: when deck is exhausted after drawing last card)"""
+        """Alias for empty_deck (documentation: when
+        deck is exhausted after drawing last card)"""
         return self.empty_deck
 
     @is_last_turn.setter
     def is_last_turn(self, value: bool):
         self.empty_deck = value
+
     game_over: bool = False
 
     # Lobby phase tracking

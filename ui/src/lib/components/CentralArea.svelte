@@ -14,38 +14,41 @@
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 	}
 
-	let { 
-		drawnCard,
-		drawnCardSource,
-		onDeckClick,
-		onDiscardDrawClick,
-		onAction
-	}: Props = $props();
+	let { drawnCard, drawnCardSource, onDeckClick, onDiscardDrawClick, onAction }: Props = $props();
 
 	const isDeckClickable = $derived.by(() => {
 		const isActive = $isActivePlayer;
 		const isDrawingPhase = $gameState.phase === GAME_PHASES.DRAWING;
 		const clickable = isActive && isDrawingPhase;
-		console.log('[CentralArea] isDeckClickable:', clickable, '| isActive:', isActive, '| phase:', $gameState.phase, '| DRAWING:', GAME_PHASES.DRAWING);
+		console.log(
+			'[CentralArea] isDeckClickable:',
+			clickable,
+			'| isActive:',
+			isActive,
+			'| phase:',
+			$gameState.phase,
+			'| DRAWING:',
+			GAME_PHASES.DRAWING
+		);
 		return clickable;
 	});
 
 	const isDiscardClickable = $derived.by(() => {
 		if (!$isActivePlayer) return false;
-		
+
 		// DRAWING phase: can draw from discard only if it has cards (rules.md §6.1)
 		if ($gameState.phase === GAME_PHASES.DRAWING) {
 			const hasCards = $gameState.discard_pile.visible_cards.length > 0;
 			console.log('[CentralArea] isDiscardClickable (DRAWING):', hasCards, 'hasCards:', hasCards);
 			return hasCards;
 		}
-		
+
 		// AWAITING_ACTION phase: can discard to pile (target for discard_immediate or pass_back)
 		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
 			console.log('[CentralArea] isDiscardClickable (ACTION): true');
 			return true;
 		}
-		
+
 		return false;
 	});
 
@@ -66,15 +69,8 @@
 <div class="central-area">
 	<div class="central-cards-container">
 		<DeckZone isClickable={isDeckClickable} onClick={onDeckClick} />
-		<PeekArea 
-			{drawnCard}
-			{drawnCardSource}
-			isVisible={isPeekAreaVisible}
-		/>
-		<DiscardZone 
-			isClickable={isDiscardClickable}
-			onClick={handleDiscardClick} 
-		/>
+		<PeekArea {drawnCard} {drawnCardSource} isVisible={isPeekAreaVisible} />
+		<DiscardZone isClickable={isDiscardClickable} onClick={handleDiscardClick} />
 	</div>
 </div>
 
