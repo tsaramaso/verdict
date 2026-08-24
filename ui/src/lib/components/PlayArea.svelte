@@ -61,7 +61,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		padding: clamp(0.5rem, 1vw, 1rem);
-		overflow: hidden;
+		overflow: visible;
 	}
 
 	.central-section {
@@ -88,6 +88,6 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		padding: clamp(0.5rem, 1vw, 1rem);
-		overflow: hidden;
+		overflow: visible;
 	}
 </style>

@@ -84,7 +84,7 @@
 		height: 100%;
 		min-height: 0;
 		max-width: 100%;
-		overflow: hidden;
+		overflow: visible;
 		border-radius: 5%;
 		background-color: rgba(1, 160, 252, 0.345);
 		transition: box-shadow 0.3s ease;

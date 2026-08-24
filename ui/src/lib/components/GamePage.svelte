@@ -23,7 +23,6 @@
 	let drawnCard: { rank: CardRank; suit: CardSuit } | null = $state(null);
 	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
-	let baseRules: Rules | null = null;
 
 	onMount(() => {
 		setCurrentPlayerId(playerId);

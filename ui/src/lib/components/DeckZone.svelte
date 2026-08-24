@@ -47,6 +47,10 @@
 		position: relative;
 		cursor: default;
 		transition: all 0.2s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
 	}
 
 	.deck-zone.clickable {
@@ -61,5 +65,13 @@
 		outline: 2px solid var(--color-primary, #007bff);
 		outline-offset: 4px;
 		border-radius: var(--card-border-radius);
+	}
+
+	.card-count {
+		font-weight: var(--font-weight-bold);
+		font-size: clamp(0.75rem, 1.2vw, 1rem);
+		color: var(--color-text);
+		text-align: center;
+		min-width: 2rem;
 	}
 </style>

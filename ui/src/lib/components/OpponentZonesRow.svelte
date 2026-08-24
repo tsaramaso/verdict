@@ -81,7 +81,7 @@
 		border-radius: 5%;
 		min-width: fit-content;
 		max-width: 100%;
-		overflow: hidden;
+		overflow: visible;
 		transition: box-shadow 0.3s ease;
 		border: 2px solid transparent;
 	}
@@ -128,8 +128,8 @@
 		justify-content: center;
 		min-height: 0;
 		min-width: 0;
+		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
-		flex: 1 1 auto;
-		max-width: 100%;
+		flex: 0 0 auto;
 	}
 </style>

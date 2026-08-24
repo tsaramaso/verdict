@@ -49,6 +49,10 @@
 		border: none;
 		cursor: default;
 		transition: all 0.2s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
 	}
 
 	.discard-zone:disabled {
@@ -81,5 +85,13 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
+	}
+
+	.card-count {
+		font-weight: var(--font-weight-bold);
+		font-size: clamp(0.75rem, 1.2vw, 1rem);
+		color: var(--color-text);
+		text-align: center;
+		min-width: 2rem;
 	}
 </style>
