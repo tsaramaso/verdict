@@ -1,203 +1,442 @@
-# Verdict
-### Design Reference & Rulebook — Draft v0.1
+# Verdict — Game Rules
+
+## 1. Purpose
+
+Verdict is a bluffing and deduction card game. Players build hands and make public claims about their card values. The court (other players) challenges or accepts these claims. Truth and lies are scored differently. The player with the lowest cumulative score after the game ends wins.
+
+Why lowest score? Because honest players accumulate points slowly. Liars who succeed gain points fast but risk harsh penalties.
 
 ---
 
-## 1. Glossary
+## 2. Win Condition (Game)
 
-The whole ruleset uses a consistent Renaissance-court theme. These terms are used precisely throughout this document — the exact word matters.
+**The game ends immediately when any player's score reaches 120 or higher.**
 
-| Term | Meaning |
-|---|---|
-| **Eligible** | A hand whose true value sums to ≤ 7 points. |
-| **Testimony** | Publicly claiming "I'm eligible" (the old "call Gabo"). Ends the current turn loop and opens the Trial. |
-| **Cross-Testimony** | A player joining with their own Testimony *after* the first window has closed, during the Match Window. |
-| **Challenge** | Contesting a Testimony (the old "Counter-Gabo"), escalating the situation to a Duel. |
-| **Duel** | The head-to-head comparison of true hand values among everyone still eligible-and-in-play once at least one Challenge has occurred. |
-| **Perjury** | A false Testimony given by a **first-window** caller that nobody managed to Challenge. The harshest outcome in the game. |
-| **Perjury Check** | The moment the game validates first-window callers for Perjury; happens mid-Trial. |
-| **Verdict** | The end-of-round moment when scores are finalized, Renaissances are applied, and winners are announced—the suspenseful reveal. |
-| **Plea** | Voluntarily accepting a flat, capped penalty instead of your true hand score (the old "Request Penalty" / Penalty A). |
-| **Renaissance** | The comeback mechanic: landing exactly on 50 or 100 points via a genuine addition resets your score down to 25 or 50. |
-| **Trial** | The entire round-ending decision sequence: Call Window → Match Window → Perjury Check → Duel Window → Final Plea Window → Verdict (Scoring). |
-| **Glance** | The 7/8 self-peek power. |
-| **Spy** | The 9/10 opponent-peek power. |
-| **Smuggle** | The Jack's blind, deliberate-position exchange power. |
-| **Decree** | The Queen's peek-then-optional-swap power. |
-| **Slot** | A fixed position in a player's hand layout. Knowledge in this game is tracked per-slot, not per-memory. |
+The player with the lowest final score wins. Standard competition ranking applies: tied scores share the same rank, next rank skips accordingly.
+
+Example: Final scores [85, 92, 92, 110]. Rankings: 1st place = 85, 2nd place (tie) = both at 92, 4th place = 110.
 
 ---
 
-## 2. Objective
+## 3. Win Condition (Round)
 
-The game is played over several rounds. The goal is the **lowest cumulative score**. When the game ends (see Section 10), the player with the minimum score takes 1st place; all ranks below follow standard competition ranking (ties share a rank, the next rank skips accordingly).
+Each round awards points based on outcomes. The distribution depends on whether a [Trial](#trial) occurred and how players fared.
+
+**Outcome table:**
+
+| Outcome | Score | Renaissance Eligible? |
+|---------|-------|----------------------|
+| [Perjury](#perjury) (false claim, unchallenged) | +25 AND true hand sum, stacked | No |
+| [Duel](#duel) winner (lowest eligible hand sum) | +0 | No (zero never triggers) |
+| [Duel](#duel) loser (higher eligible hand sum) | +50 | No |
+| [Plain Agreement](#plain-agreement) (2+ eligible, no challenge) | +0 | No |
+| False [Cross-Testimony](#cross-testimony) | +25 flat | No |
+| [Plea](#plea) taken | +25 flat | No |
+| True [Bystander](#bystander), no Perjury this round | true hand sum | Yes |
+| True [Bystander](#bystander), Perjury occurred this round | player choice: true sum (eligible) OR +25 (ineligible) | Depends on choice |
+| [Empty Hand](#empty-hand) (player discards last card) | +0 | N/A (everyone else scores as bystanders) |
+| Last Turn, no [Testimony](#testimony) given | everyone scores as true bystander | Yes, for all |
 
 ---
 
-## 3. Setup
+## 4. Setup
 
-- **Player count: 2–5 players per game.** These are hard caps — the engine should reject game creation outside this range.
-- **Deck: one standard 52-card deck, no jokers** — the four suits, ranks A through K, exactly as enumerated in Section 4's value table. No additional decks are combined regardless of player count.
-- Each player is dealt 4 cards, arranged face-down in front of them in fixed **slots**.
-- At the start of the round, each player privately views (Glances at) their first 2 dealt slots, then they're placed face-down again. This is a **cosmetic-only** flip — the game continues to track and display that knowledge to the player for the rest of the round regardless of the visual state. There is no "forgetting" in this game; all player knowledge is permanently and accurately tracked and displayed.
-- Cards cannot be freely rearranged between slots — only specific powers (Smuggle, Decree) or normal swap-in actions change what's in a slot.
-- Turn direction (clockwise/counterclockwise) is chosen once, before the game starts, and stays fixed for the whole game.
+**Players:** 2–5 per game.
+
+**Deck:** One standard 52-card deck (no jokers).
+
+**Hand size:** 4 cards per player, dealt one at a time in order.
+
+**Turn direction:** Chosen at game start (clockwise or counterclockwise), fixed for entire game.
+
+**Initial Glance:** After dealing, each player privately views their first two cards, then all cards return face-down. This is the only time you automatically see your own cards.
 
 ---
 
-## 4. Card Values
+## 5. Card Values
 
 | Card | Value |
-|---|---|
-| A | 1 |
-| 2–10 | face value |
-| J | 11 |
-| Q | 12 |
-| K (black) | 13 |
-| K (red) | **0** |
+|------|-------|
+| A (Ace) | 1 |
+| 2–10 | Face value |
+| J (Jack) | 11 |
+| Q (Queen) | 12 |
+| K (black: ♠ ♣) | 13 |
+| K (red: ♥ ♦) | 0 |
 
-The red/black King split matters strategically — see Section 5.4.
+**True hand sum:** Add all four of your card values. This is your real total (known only to you until revealed).
 
----
+**Eligible:** A hand with a true sum of 7 or less.
 
-## 5. The Turn
-
-Each turn follows this sequence: **Draw → Action → (Spell) → Quick-Discard Window → Trial Call Window.**
-
-### 5.1 Draw
-The active player chooses to either:
-- **Draw blind** from the deck, or
-- **Take the discard pile's top card** (always just the single visible top card — never digging deeper into the pile).
-
-### 5.2 Action
-**If drawn from the deck:**
-- **(A) Discard immediately**, face-up. This may trigger the card's power (see Section 7) — this is the *only* way to trigger a power.
-- **(B) Swap it into any of your own slots**, discarding the replaced card face-up instead. This never triggers a power (neither the newly-placed card's, since it wasn't discarded, nor the discarded card's, since it wasn't freshly drawn).
-
-**If taken from the discard pile:**
-- **(B) Swap it into any of your own slots**, discarding the replaced card, or
-- **Pass it back** — put it right back on the discard pile, unchanged. This is a legal way to consume a turn without altering your hand. It never triggers a power. It still counts as a fresh discard event for the purposes of 5.4 below.
-
-### 5.3 Spell Resolution
-If the card discarded via Action A is a 7, 8, 9, 10, J, or Q, the active player may use its power now (see Section 7). Using it is always optional.
-
-### 5.4 Quick-Discard Window
-Once the discard settles (via Action A, Action B's replaced card, or a pass-back), a window opens: **any player at the table, including the active player**, may throw a card of the **same rank** (suit irrelevant) from their own hand onto the discard pile.
-
-- The game's UI only ever allows a legal, matching card to be selected — an invalid quick-discard attempt is not possible, so there is no penalty for "guessing wrong."
-- This can chain across multiple players in any order, since the required rank never changes during the window.
-- A successful quick-discard shrinks that player's hand by one card. **No replacement card is drawn.**
-- If any player's hand reaches **zero cards** at any point, the round ends immediately — no Trial occurs, jump straight to Scoring (see the Empty-Hand case in Section 6.7).
-- Strategic note: because the red King is worth 0, whoever holds one is incentivized to quick-discard it *fast*, since the next player could otherwise take it straight off the discard pile.
-
-### 5.5 Last-Turn Rule
-If the card drawn in 5.1 was the **last card in the deck**, this turn is automatically the round's final turn. It plays out completely normally through the full Trial sequence below — the round is guaranteed to end at the conclusion of this turn regardless of outcome. See Section 6.8 for the one open question this creates.
+Example: A♠, 2♥, 3♣, K♥ = 1 + 2 + 3 + 0 = 6. This hand is eligible.
 
 ---
 
-## 6. The Trial
+## 6. The Turn
 
-Triggered once per turn, after the Quick-Discard Window closes (assuming no hand reached zero).
+A turn follows this sequence:
 
-### 6.1 Call Window ("Give Testimony")
-Every player sees a single button: **Testimony**. Any player may press it — a public claim of "I'm eligible" — which ends the turn loop and begins the Trial resolution.
+### 6.1 Draw
 
-A short sub-window (exact length TBD, see Section 12) stays open after the very first press. Anyone pressing Testimony within that sub-window is a **first-window caller**, and their claim is subject to Perjury (6.3). Multiple simultaneous first-window callers is a completely valid, intended outcome — two eligible players can peacefully agree and both walk away with 0.
+The active player chooses **one** of two actions:
 
-### 6.2 Match Window (Cross-Testimony)
-Every player who has **not yet** pressed Testimony now sees a single button: **Testimony** (a late, "cross" join). A player who doesn't press it simply passes this window.
+- **Draw blind from the deck** — Take the top card, do not see it yet.
+- **Take the top card from the discard pile** — See it before deciding what to do with it. (Not available on the first turn of the round; the discard pile is empty.)
 
-- A late Testimony press here is **never** subject to Perjury — only first-window callers can commit Perjury.
-- **Plea is not offered here.** It has exactly one home in the Trial: the Final Plea Window (6.5), which comes later, after Perjury Check and any Duel have resolved — so the decision is always made with full information rather than asked repeatedly at earlier points when less was known.
+If the last card in the deck is drawn, [Last Turn](#edge-cases) is flagged.
 
-### 6.3 Perjury Check
-The game checks **first-window callers only**. Any first-window caller who is **not actually eligible** has committed **Perjury**:
-- They receive a capped penalty (+25) **and** their true hand sum, **stacked** — the harshest single outcome in the game.
-- They are immediately and fully resolved — removed from the rest of the Trial. This cannot be Challenged, and does not affect anyone else's fate.
+### 6.2 Action
 
-If **two or more** truly-eligible Testimony-givers remain after the Perjury Check (combining first-window survivors and cross-testimony players), proceed to 6.4. Otherwise, skip directly to the Final Plea Window (6.5).
+If you drew from the deck, you have two choices:
 
-### 6.4 Duel Window (Challenge)
-This window **only appears** if ≥2 truly-eligible Testimony-givers remain post-Perjury Check.
+- **Discard immediately** — Place the drawn card face-up on the discard pile. If this card has a [power](#spell-powers), you may invoke it now.
+- **Swap** — Put the drawn card into one of your four hand slots, and discard the replaced card face-up. The drawn card's power never triggers on a swap.
 
-- **Every remaining Testimony-giver** — genuine and secretly-false cross-testimony players alike, indistinguishable in the UI — gets a **Challenge** button, on a timer.
-- Everyone else has **no action in this window** — they are not Testimony-givers, so there's nothing for them to Challenge or decide here. Their one decision (Plea or not) comes right after, at the Final Plea Window (6.5).
-- A secretly-false cross-testimony player may still press Challenge; it resolves as a harmless no-op ("blank send") once the Trial concludes (see 6.6).
-- **Deliberate design note:** whether this window appears at all is gated on the *true* eligible count, not the publicly visible count. This can theoretically let sharp players infer that a caller was false just from the window not appearing — this is accepted as intentional, since nothing further is at stake by that point regardless.
+If you took from the discard pile, you have two choices:
 
-**Resolution:**
-- If **nobody** presses Challenge during this window, all remaining truly-eligible Testimony-givers simply win: **0 points each**, no Duel needed.
-- If **at least one** Challenge is pressed, a **Duel** occurs among all truly-eligible Testimony-givers/Challengers: the **lowest true hand sum(s)** win (ties share the win), scoring **0**. Every other eligible Duel participant takes **+50**.
+- **Swap** — Put the taken card into one of your four hand slots, and discard the replaced card.
+- **Pass it back** — Return the card to the discard pile. This counts as a turn, but your hand doesn't change.
 
-### 6.5 Final Plea Window
-This is the **one and only** point in the Trial where Plea is offered. It opens once the Perjury Check has resolved (6.3) and, if applicable, the Duel Window has fully resolved (6.4) — so it always comes last, right before Scoring.
+### 6.3 Spell Invocation (if applicable)
 
-- **Who sees it:** every player who is still undetermined at this point — i.e. never gave Testimony (first or cross), and was not just removed for Perjury.
-- **What they see:** two buttons, **Plea** and **Decline**. Declining means being scored as a true bystander (true hand sum).
-- **Why it's placed here, not earlier:** by this point, whether any Perjury occurred is public, and any Duel outcome is public too. A player deciding Plea vs. their true hand sum is always making that call with the most complete information the round can offer, rather than committing blind earlier and having no way to reconsider.
-- This window is also what implements the "true bystander, Perjury occurred this round" choice from the outcome table below (6.6) — it isn't a separate mechanic with its own event type, it's this same Plea/Decline decision, just one made with the knowledge that Perjury happened. A bystander in a Perjury-free round has exactly the same two buttons available; nothing about the window itself changes based on whether Perjury occurred.
-- Every eligible player logs exactly one outcome here — Plea taken, or Plea declined — no silent absence, consistent with every other Trial window.
+If you discarded immediately and the card is a 7, 8, 9, 10, J, or Q, you may invoke its [power](#spell-powers). Using a power is optional. If you decline, proceed to Quick Discard.
 
-### 6.6 Resolving False Cross-Testimony
-A cross-testimony player who turns out **not** to be truly eligible can never become Perjury (only first-window callers can). Regardless of whether they were Challenged, pressed Challenge themselves (always a no-op), or how any Duel among others resolved — they personally default to: **flat +25, no Renaissance this round.**
+### 6.4 Quick Discard Window
 
-### 6.7 Verdict, Scoring — Full Outcome Table
-Computed silently once the Trial concludes; never revealed early.
+After your card settles on the discard pile, a window opens: **any player at the table** (including you) may immediately discard a card of the **same rank** from their own hand onto the discard pile.
 
-| Outcome | Score effect | Renaissance eligible? |
-|---|---|---|
-| **Perjury** (false, first-window, unchallenged) | +25 **and** true hand sum, stacked | No |
-| **Duel winner** (lowest tied hand in a Duel) | +0 | N/A (zero addition never triggers) |
-| **Duel loser** (any other eligible Duel participant) | +50 | No |
-| **Plain agreement** (2+ truly eligible callers, no Challenge ever raised) | +0 | N/A (zero addition never triggers) |
-| **False cross-testimony** | +25 flat | No |
-| **Plea** (voluntary, taken at the Final Plea Window, 6.5) | +25 flat | No — and may "backfire" if true sum was actually < 25 |
-| **True bystander, no Perjury occurred this round** (declined Plea at 6.5) | true hand sum | Yes |
-| **True bystander, Perjury occurred this round** (declined Plea at 6.5, now knowing Perjury happened) | player's choice: true hand sum (Renaissance-eligible) *or* capped +25/no-Renaissance | Depends on choice — an informed gamble now that Perjury's occurrence is public, not gated by their actual hand value |
-| **Empty Hand** (a player discards their last card via quick-discard) | Round ends immediately for everyone, no Trial. That player: +0. Everyone else: scored as true bystanders per the rules above (no Perjury possible in this path). | Yes, for the "everyone else" group |
-| **Forced end, no Testimony given** (last turn per 5.5 completes with zero Testimony) | Round ends. Every player scored as a true bystander: true hand sum (no Perjury possible in this path). | Yes, for all players |
+The rank must match exactly (suit irrelevant). Multiple players can quick-discard in any order. No card is drawn to replace a quick-discarded card.
 
-### 6.8 Forced Round-End on the Last Turn
-If the round reaches its guaranteed final turn (5.5) and **nobody gives any Testimony at all**, the round still ends there. Since no Testimony was ever given, there is no Perjury to check and no Duel to run — **every player is scored as a true bystander**: true hand sum, normal Renaissance rules apply. This mirrors the Empty-Hand case in the table above (6.7).
+If any player's hand reaches **zero cards**, the round ends immediately. That player scores +0. Everyone else scores as [bystanders](#bystander). No [Trial](#trial) occurs.
+
+Example: You discard 7♠. During the quick-discard window, Player A discards 7♣, then Player C discards 7♥. Player B did not quick-discard (they don't have a 7). Three cards are now on the discard pile, and it's Player B's turn next (assuming it's not your turn again).
 
 ---
 
 ## 7. Spell Powers
 
-**Trigger condition, without exception:** a power only activates when its card was **freshly drawn from the deck and immediately discarded** (Action A, Section 5.2). It never triggers on a swapped-in card, a quick-discard, or a discard-pile pickup (including a pass-back).
+Powers are only invoked when their card is **freshly drawn from the deck and immediately discarded**. Swapping or quick-discarding never triggers a power.
 
-All powers operate on **permanently tracked, slot-based knowledge** — there is no memory decay. Any physical repositioning of a card (Smuggle, Decree) is visible to the whole table as an event, even though the values involved stay hidden — so any knowledge a player already had about a specific card correctly follows it to its new slot/owner.
+All powers operate on **permanent, slot-based knowledge**. Any knowledge you have about a specific card stays with that card even if it moves to a new hand via [Smuggle](#smuggle) or [Decree](#decree).
 
-| Power | Cards | Effect |
-|---|---|---|
-| **Glance** | 7 or 8 | View one of your own slots. If you already know that slot's content, this is purely cosmetic — useful only on a currently-unknown slot (one never initially viewed, or changed by another player's swap since). |
-| **Spy** | 9 or 10 | View one of an opponent's slots. Single-sided: you learn the value; the target only knows *that* the slot was peeked, never the value. This has real strategic weight — e.g., spotting a red King informs your Testimony/Challenge/Plea decisions later. |
-| **Smuggle** | J | Choose one of your own slots and a target opponent's slot; the two cards swap positions. **Neither player sees either value.** The swap itself (which slots moved) is visible to the table. |
-| **Decree** | Q | Choose an opponent's slot and view its value (private to you only). Then, optionally, swap it for one of your own slots (any position). If taken, the swap is table-visible in the same way as Smuggle. |
+### Glance (7 or 8)
+
+**Definition:** Privately view one of your own hand slots.
+
+If you already know that slot's card (from initial deal or previous knowledge), this is cosmetic. If the slot is unknown, you now learn its value.
+
+**Example:** You drew 8♦ and discarded immediately. You invoke Glance. You look at your slot 3, which is still unknown to you. It's Q♠. You now know slot 3 is Q♠ for the rest of the round.
+
+### Spy (9 or 10)
+
+**Definition:** Privately view one opponent's hand slot.
+
+Only you see the value. The opponent sees the animation but not the card itself. A small eye icon marks that slot (visible to you) to indicate you've spied on it.
+
+**Example:** You drew 9♣ and discarded immediately. You invoke Spy. You peek at Opponent B's slot 1, which is 2♦. You now know Opponent B's slot 1 is 2♦. Opponent B sees the slot was peeked but doesn't know it's a 2.
+
+### Smuggle (Jack)
+
+**Definition:** Blind-swap one of your cards with one of an opponent's cards by position.
+
+Neither player sees the other's card value. The swap executes immediately. The table sees the animation but not the values.
+
+**Two steps:** Click your slot, then click opponent's slot. After both are selected, the swap executes.
+
+You can press Skip at any time to decline the power.
+
+**Example:** You drew J♠ and discarded immediately. You invoke Smuggle. You select your slot 2 (which is 5♦ to you, but Smuggle doesn't let you see this). Then you select Opponent C's slot 4. The cards swap. Your slot 2 now contains whatever was at Opponent C's slot 4. Opponent C's slot 4 now contains your old 5♦. No one sees the values change.
+
+### Decree (Queen)
+
+**Definition:** View one opponent's slot, then optionally swap it with one of your own slots.
+
+**Two stages:**
+1. **Peek stage:** Select an opponent's slot and view its value (private to you).
+2. **Swap stage:** Choose to swap it with one of your slots or decline the swap.
+
+**Knowledge tracking on swap:**
+
+If you swap:
+- The opponent's card you receive: You now know its value (see [Knowledge Tracking](#9-knowledge)).
+- Your card you give to opponent: If you already knew your card's value, an eye icon marks it at the opponent's new location (knowledge follows the card). If you didn't know your card, no icon.
+
+If you decline the swap:
+- The opponent's card stays in place. you peeked it, so you retain knowledge of it, the target player also knows retains that you have this knowledge.
+
+You can press Skip at any time to decline the power entirely (no peek occurs).
+
+**Example 1 (Swap, knew your card):** You drew Q♥ and discarded immediately. You invoke Decree. You peek at Opponent A's slot 3, which is K♠. You decide to swap it with your slot 1 (which you know is 5♦). Your slot 1 now has K♠. Opponent A's slot 3 now has your old 5♦. 
+
+**Example 2 (Swap, didn't know your card):** You peek at Opponent B's slot 2, which is A♠. You decide to swap it with your slot 4 (which you never saw before). Your slot 4 now has A♠. Opponent B's slot 2 now has whatever was in your slot 4. No eye icon marks the opponent's slot 2 (because you didn't know your card).
+
+**Example 3 (No swap):** You peek at Opponent C's slot 1, which is 7♣. You decide not to swap. Opponent C's slot 1 stays 7♣. An eye icon marks slot 1 (you peeked it, so you have knowledge).
 
 ---
 
-## 8. Quick-Discard
+## 8. The Trial
 
-Covered fully in Section 5.4. Summary: any player, any time the window is open, may throw a same-rank card from their hand onto the discard pile. Never triggers a power. No penalty exists for a wrong attempt — the interface simply doesn't allow selecting a non-matching card.
+A [Trial](#trial) occurs after the [Quick Discard Window](#quick-discard-window) unless:
+- No cards remain in the deck AND no [Testimony](#testimony) was given this turn (forced end, everyone scores as [bystanders](#bystander)), OR
+- A player's hand reached zero during quick-discard (round ended, bystander scoring only).
+
+The Trial has five windows. All eligible players must log an action or pass in each window.
+
+### 8.1 Call Window (First Testimony)
+
+**Definition:** All players see a **Testimony** button. Pressing it claims "I am [eligible](#eligible)."
+
+A short time window stays open after the first press. Any player pressing Testimony within this window is a **first-window caller** and subject to [Perjury](#perjury) if their claim is false.
+
+Players who don't press Testimony or press **Skip** are marked as "passed first."
+
+If zero [Testimony](#testimony) is given:
+- On the last turn of the round: everyone scores as [bystanders](#bystander), round ends.
+- Otherwise: proceed to the next player's turn (no Trial).
+
+Example: Players [A, B, C, D]. Call Window opens. Player A presses Testimony (first press, starts timer). Within the window, Players C and D also press. Players B and A (who didn't press in time) are marked as passed. First-window callers = [A, C, D].
+
+### 8.2 Match Window (Cross-Testimony)
+
+**Definition:** Players who didn't give [Testimony](#testimony) in the Call Window now see a **Testimony** button. Pressing it claims "I am [eligible](#eligible)" late.
+
+Late [Testimony](#testimony) is never subject to [Perjury](#perjury).
+
+Example: Continuing above. Players B passes the Match Window (no action). Players A, C, D see no button (they already decided). Cross-callers = [B] if B pressed.
+
+### 8.3 Perjury Check
+
+**Definition:** The game validates all **first-window callers only**. Any first-window caller whose true sum > 7 has committed [Perjury](#perjury).
+
+A [perjured](#perjury) player is removed from the rest of the Trial. They score +25 + their true hand sum, stacked. No one can challenge them further.
+
+If 2+ truly-[eligible](#eligible) callers remain (first or cross), proceed to [Duel Window](#duel-window). Otherwise, proceed to [Final Plea Window](#final-plea-window).
+
+Example: First-window callers [A, C, D] with true sums [6, 4, 9]. A and C are truly eligible. D is not (9 > 7). D is removed, scores +25 + 9 = +34. Truly eligible = [A, C]. Since 2+ remain, go to Duel Window.
+
+### 8.4 Duel Window
+
+**Definition:** [Eligible](#eligible) [Testimony](#testimony)-givers (first or cross) see a **Challenge** button. Pressing it contests the [Testimony](#testimony), forcing a comparison.
+
+Non-[Testimony](#testimony)-givers cannot act here.
+
+If zero players press Challenge: all truly-[eligible](#eligible) [Testimony](#testimony)-givers score +0 ([Plain Agreement](#plain-agreement)).
+
+If 1+ players press Challenge: a [Duel](#duel) occurs. The truly-[eligible](#eligible) [Testimony](#testimony)-giver with the **lowest true hand sum** scores +0. All others score +50.
+
+Ties are allowed. Multiple players can win +0.
+
+Example: Truly-eligible are [A (sum 6), C (sum 4)]. A presses Challenge. Duel occurs. C's sum 4 is lower, so C scores +0. A scores +50.
+
+Example 2: Truly-eligible are [A (sum 3), C (sum 3), E (sum 7)]. C presses Challenge. Duel occurs. A and C tie at 3 (lowest), both score +0. E scores +50.
+
+### 8.5 Final Plea Window
+
+**Definition:** [Eligible](#eligible) bystanders (players who never gave [Testimony](#testimony), first or cross, and were not removed for [Perjury](#perjury)) see a **Take Plea** button.
+
+**Take Plea:** Press the button to score +25 flat (can be worse than your true sum). [Renaissance](#renaissance) ineligible.
+
+**Decline Plea (automatic):** If you do not press the button before the timer expires, it counts as declining the plea. You score your true hand sum. [Renaissance](#renaissance) eligible if no [Perjury](#perjury) occurred this round (or if [Perjury](#perjury) did occur, the choice is now informed, and you accept the risk).
+
+The plea decision is logged as "plea taken" or "plea declined" based on whether you pressed or let timeout occur.
+
+Example: You're a bystander with true sum 18. You press Take Plea, scoring +25. Better than your actual hand.
+
+Example 2: You're a bystander with true sum 6. You let the timer expire (decline plea). You score +6. Better to decline in this case.
+
+Example 3: You're a bystander with true sum 12, and [Perjury](#perjury) occurred this round. You know the game is tight. You decline plea (score +12, eligible for [Renaissance](#renaissance)). You're betting your hand is good enough.
 
 ---
 
-## 9. Renaissance (Comeback)
+## 9. Knowledge
 
-Triggers only when a **genuine, non-zero, non-penalized** score addition lands a player's total **exactly** on 50 or 100 in a single round's tally:
-- Exactly 50 → resets to **25**.
-- Exactly 100 → resets to **50**.
+All knowledge is **permanent and slot-based**. Once you know a card's value, you remember it for the rest of the round.
 
-In practice, only a **true hand-sum result** (a true bystander, or a Perjury-triggered bystander who chose true-sum) can realistically trigger this — Duel/agreement wins add 0 (never triggers), and every penalty bucket (Perjury, Plea, false cross-testimony, Duel loss) is explicitly and unconditionally blocked, regardless of what the math would otherwise show.
+Two independent knowledge states exist: **Revealed** (you know the card's value) and **Exposed** (an opponent knows your card's value).
 
-Once a score has crossed 50 or 100 in a previous round, it does **not** re-trigger by merely sitting at that value with a +0 result later — only a fresh, qualifying, upward addition landing exactly on the threshold triggers a reset.
+### Revealed
+
+You know a card's actual value. Sources:
+
+- **Initial Glance:** Your first two slots (dealt face-down, peeked by you, returned face-down).
+- **Your own hand:** After you draw from the deck, you know that card's value.
+- **Spy:** After you invoke Spy, you know that opponent's slot value.
+- **Decree peek:** After you invoke Decree and peek, you know that opponent's slot value.
+- **Discard pile top card:** You see it when you take it from the discard pile. If anyone quick-discards it later, you know what rank it was.
+
+### Exposed
+
+An opponent knows the value of one of your cards. Sources:
+
+- **Opponent Spied on your slot:** They invoked Spy (9 or 10).
+- **Opponent peeked via Decree:** They invoked Decree (Queen) and peeked your slot (regardless of swap).
+- **Discard pile draw:** You took a card from the discard pile; all players see its value before you acted on it.
+
+### Visual Indicators
+
+**Rank badge** (visible to you): Shows rank and suit. Appears on any card whose value is [Revealed](#revealed) to you.
+
+**Eye icon** (visible to you, your slots only): Marks a slot that is [Exposed](#exposed). Hover shows opponent color (cosmetic).
+
+**Note:** [Revealed](#revealed) and [Exposed](#exposed) are independent. A slot can have badge only, eye icon only, both, or neither.
+
+### Knowledge Persistence on Swap
+
+When a [Smuggle](#smuggle) or [Decree](#decree) swap occurs, **both knowledge states follow the card to its new location**.
+
+**Revealed** (your knowledge): If you knew a card's value, you keep that knowledge when it moves to a new slot, new hand, or opponent.
+
+**Exposed** (opponent awareness): If an opponent knew a card's value, that knowledge follows the card. You see the eye icon track the card's new location.
+
+Example: You Spy opponent's slot 2 (King). Your slot is now [Revealed](#revealed) as King. Later, Smuggle swaps slot 2 with your slot 1. You now know your slot 1 is King. You see the rank badge at your slot 1.
+
+Example 2: Opponent A Spied your slot 3. Your slot 3 is now [Exposed](#exposed) (marked with eye icon). Later, Decree swaps your slot 3 with Opponent B's slot 2. Your former slot 3 card (now at Opponent B's slot 2) remains [Exposed](#exposed). The eye icon moves to Opponent B's zone, marking Opponent A's knowledge.
+
+Example 3: You Spy opponent A's slot 4 (5). The slot is [Revealed](#revealed) to you (rank badge). Later, Smuggle swaps it to your slot 1. Your slot 1 now has the 5, is [Revealed](#revealed) to you (rank badge), and Opponent A still knows it's a 5 but can no longer see it (no eye icon in your zone—they remember it, but the game doesn't track cross-hand awareness, only same-zone exposure).
 
 ---
 
-## 10. End of Game
+## 10. Renaissance
 
-- At the end of **every** round, all scores are tallied.
-- If **any** player's score is **≥ 120**, the game ends **immediately** — this is a hard wall with **no** Renaissance-style protection, regardless of how the score got there (even via a penalty bucket).
-- **Final ranking:** lowest score = 1st place. Standard competition ranking applies at every tier — ties share a rank, and the next distinct score skips ranks accordingly (e.g., two players tied for 2nd both get "2nd," the next player is "4th").
-- No special handling is given to whichever player specifically triggered the ≥120 stop — ranking is purely by final score for everyone.
+[Renaissance](#renaissance) is a comeback mechanic.
+
+**Definition:** If your score lands **exactly** on 50 or 100 via a genuine addition, your score resets down one tier.
+
+- Exactly 50 → reset to 25.
+- Exactly 100 → reset to 50.
+
+Only [true bystander](#bystander) scores trigger this. All penalty buckets (Perjury, Plea, False Cross-Testimony, Duel loss) explicitly block [Renaissance](#renaissance), even if the math lands on 50 or 100.
+
+Once a score has crossed 50 or 100 in a previous round, sitting at that value with a +0 result does **not** re-trigger [Renaissance](#renaissance). Only a fresh, qualifying, upward addition that lands exactly on the threshold triggers it.
+
+Example: Round 1, you score +25, total = 25. Round 2, you score +25, total = 50. Renaissance triggered! Score resets to 25. Round 3, you score +0, total = 25 (no reset, +0 never triggers). Round 4, you score +50, total = 75. Round 5, you score +25, total = 100. Renaissance triggered! Score resets to 50.
+
+Example 2: Your score is 48. You score +3 (as a true bystander with sum 3), total = 51. No Renaissance (51 ≠ 50, it's past the threshold). You must land exactly on it.
+
+---
+
+## 11. Edge Cases
+
+### Last Turn (Deck Exhausted)
+
+**Definition:** When the last card in the deck is drawn, the turn plays out completely normally.
+
+The player who drew it performs their full [Action](#action). If they discard immediately, [Spell Invocation](#spell-invocation) may occur. [Quick Discard Window](#quick-discard-window) opens. Then, if [Testimony](#testimony) was given, the full [Trial](#trial) proceeds (Call → Match → Perjury → Duel → Plea → Verdict).
+
+After the verdict, the round ends. The game checks: any score ≥ 120? If yes, Game Over. If no, a new round begins with a fresh shuffled deck.
+
+If no [Testimony](#testimony) is given during the last turn: everyone scores as [bystanders](#bystander), round ends, proceed to game check.
+
+**Why:** The deck is finite. Last turn forces conclusion of the turn loop, but the Trial and scoring run normally.
+
+### Empty Hand (Quick Discard)
+
+**Definition:** If a player's hand reaches zero cards via [Quick Discard](#quick-discard-window), the round ends immediately.
+
+No [Trial](#trial) occurs. The player who emptied their hand scores +0. All other players score as [bystanders](#bystander) (true hand sum, Renaissance eligible if no [Perjury](#perjury) occurred).
+
+The game then checks: any score ≥ 120? If yes, Game Over. If no, a new round begins.
+
+**Why:** A hand of zero has no value. There's no point running a Trial.
+
+Example: You have 4 cards. Active player discards 7. During quick-discard window, you discard your only 7 (the fourth card in your hand). Your hand is now empty. Round ends immediately. You score +0. Everyone else scores based on their true sum as bystanders.
+
+### No Testimony on Last Turn
+
+**Definition:** If the last card is drawn, turns out normally, quick-discard window opens, but zero players give [Testimony](#testimony), the round ends.
+
+Everyone scores as [true bystanders](#bystander). [Renaissance](#renaissance) applies.
+
+Example: Last turn is drawn. Quick-discard window closes (no one quick-discarded). Call Window opens, closes (no one pressed Testimony). The round ends. Everyone reveals their true sum and scores it.
+
+### Duel Ties (Multiple Winners)
+
+**Definition:** In a [Duel](#duel), all players tied for the **lowest true hand sum** among [Testimony](#testimony)-givers score +0.
+
+All others score +50.
+
+Example: [Testimony](#testimony)-givers [A (sum 5), B (sum 5), C (sum 8)] duel. A and B tie at 5 (lowest), both score +0. C scores +50.
+
+Example 2: [Testimony](#testimony)-givers [A (sum 1), B (sum 1), C (sum 1)] duel. All three tie at 1 (lowest), all score +0.
+
+### False Cross-Testimony
+
+**Definition:** A [Cross-Testimony](#cross-testimony) player who is **not** truly [eligible](#eligible) (sum > 7).
+
+Never results in [Perjury](#perjury) (only first-window callers can perjure). Scores +25 flat, [Renaissance](#renaissance) ineligible, regardless of Challenge outcome.
+
+Example: You give cross-testimony with true sum 10. You are false. Even if challenged, you score +25 flat.
+
+---
+
+## Glossary
+
+### Bystander
+A player who never gave [Testimony](#testimony) (first or cross) and was not removed for [Perjury](#perjury). Scores their true hand sum at [Final Plea Window](#final-plea-window) or receives [Renaissance](#renaissance) if sum lands exactly on 50/100.
+
+### Challenge
+A button pressed during [Duel Window](#duel-window) by a [Testimony](#testimony)-giver to contest [Testimony](#testimony), forcing a [Duel](#duel). If at least one [Challenge](#challenge) occurs, the [Duel](#duel) proceeds (lowest sum wins +0, others +50).
+
+### Cross-Testimony
+Late [Testimony](#testimony) given during [Match Window](#match-window) by a player who passed the [Call Window](#call-window). Never subject to [Perjury](#perjury), always +25 flat if false.
+
+### Decree
+A Queen power. Peek at an opponent's slot, then optionally swap it with one of your own slots (blind). If you swap with a card you knew, it becomes [Exposed](#exposed) at opponent's hand (eye icon appears). If you don't swap, opponent's peeked slot is [Exposed](#exposed) (eye icon appears).
+
+### Duel
+A Trial resolution. Triggered when at least one [Challenge](#challenge) is pressed during [Duel Window](#duel-window). Compares true hand sums of [Testimony](#testimony)-givers. Lowest sum(s) score +0. All others score +50.
+
+### Eligible
+A hand whose true sum is 7 or less. Required to avoid [Perjury](#perjury) when giving [Testimony](#testimony).
+
+### Empty Hand
+A player's hand reaches zero cards via [Quick Discard](#quick-discard-window). Round ends immediately. No [Trial](#trial). Empty-hand player scores +0.
+
+### Glance
+A 7 or 8 power. Privately view one of your own hand slots.
+
+### Revealed
+Knowledge of a card's actual value (rank and suit). Permanent for the round. Indicated by rank badges. Follows the card to its new location on swap.
+
+### Exposed
+An opponent knows the value of your card. Marked with an eye icon on your slot. Follows the card to its new location on swap (within your hand or to opponent hands). Independent of [Revealed](#revealed).
+
+### Last Turn
+The turn when the last card is drawn from the deck. Plays out completely normally, including [Trial](#trial) if [Testimony](#testimony) given. After verdict, round ends.
+
+### Match Window
+The second [Testimony](#testimony) window. Players who passed the [Call Window](#call-window) now see the **Testimony** button. Late callers cannot commit [Perjury](#perjury).
+
+### Perjury
+A false [Testimony](#testimony) given by a first-window [Testimony](#testimony)-giver that is never [Challenged](#challenge). Harshest outcome. Score: +25 + true hand sum, stacked. [Renaissance](#renaissance) ineligible.
+
+### Plain Agreement
+A [Trial](#trial) outcome: 2+ truly-[eligible](#eligible) [Testimony](#testimony)-givers gave [Testimony](#testimony), but no [Challenge](#challenge) was pressed. All score +0.
+
+### Plea
+A [Final Plea Window](#final-plea-window) button. A [bystander](#bystander) voluntarily takes +25 flat instead of their true sum by pressing the button. If the timer expires without pressing, the plea is declined automatically (score true sum). [Renaissance](#renaissance) ineligible only if plea was taken.
+
+### Quick Discard
+A window after each turn where any player may discard a card matching the rank of the discarded card. If a hand reaches zero, round ends.
+
+### Renaissance
+A comeback reset. If your score lands **exactly** on 50 or 100 via a true [bystander](#bystander) addition, score resets down one tier (50→25, 100→50).
+
+### Smuggle
+A Jack power. Blind-swap one of your cards with one of an opponent's cards by slot position. Neither player sees the values. Executes immediately once both slots are selected.
+
+### Spy
+A 9 or 10 power. Privately view one opponent's hand slot (becomes [Revealed](#revealed) to you). Opponent's slot becomes [Exposed](#exposed) (eye icon visible to you only).
+
+### Testimony
+A public claim "I am [eligible](#eligible)." Starts a [Trial](#trial) if given during [Call Window](#call-window). Can also be given late during [Match Window](#match-window). First-window [Testimony](#testimony) subject to [Perjury](#perjury) if false and unchallenged.
+
+### Trial
+The end-of-turn resolution sequence. Opens if at least one player gave [Testimony](#testimony) (unless last-turn no-[Testimony](#testimony) edge case). Sequence: Call → Match → Perjury Check → Duel → Plea → Verdict.
+
+### True Hand Sum
+The sum of your four cards' values. Known only to you until revealed at end of round. Determines eligibility, [Perjury](#perjury), and scoring.
+
+---
+
+**END OF RULES**
