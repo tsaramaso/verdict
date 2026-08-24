@@ -234,8 +234,12 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
             state.empty_deck = True
     else:
         card = state.discard_pile.pop()
-
-    card.known_by.add(player_id)
+        # Discard pile is face-up; all players see its value (rules.md §6.1, §9).
+        for pid in state.player_order:
+            card.known_by.add(pid)
+    
+    if source is DrawSource.DECK:
+        card.known_by.add(player_id)
     state.drawn_card = card
     state.draw_source = source
     state.turn_id = str(uuid4())
