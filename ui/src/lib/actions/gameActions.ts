@@ -8,6 +8,7 @@
  */
 
 import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
+import { apiCall } from '$lib/api';
 
 // ============================================
 // DRAW PHASE HANDLERS
@@ -347,24 +348,13 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 
 export async function advancePhase(gameId: string): Promise<boolean> {
 	try {
-		const url = getFullUrl(API_ENDPOINTS.draw(gameId)).replace('/draw', '/advance-phase');
-		console.log('[gameActions] advancePhase: POST to', url);
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' }
-		});
-
-		console.log('[gameActions] advancePhase: Response status', response.status);
-		if (!response.ok) {
-			const error = await response.text();
-			console.error('[gameActions] advancePhase failed:', response.status, error);
-			return false;
-		}
-
+		const endpoint = `/games/${gameId}/advance-phase`;
+		console.log('[gameActions] advancePhase: POST to', endpoint);
+		await apiCall(endpoint, { method: 'POST' });
 		console.log('[gameActions] advancePhase: Success');
 		return true;
 	} catch (error) {
-		console.error('[gameActions] advancePhase exception:', error);
+		console.error('[gameActions] advancePhase failed:', error);
 		return false;
 	}
 }
