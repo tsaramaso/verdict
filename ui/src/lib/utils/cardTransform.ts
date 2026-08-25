@@ -56,12 +56,23 @@ export function transformSuit(backendSuit: string): CardSuit {
  * Transform a card object from API (strings) to frontend (enums)
  */
 export function transformCard(apiCard: { rank?: string; suit?: string; known: boolean }) {
-	if (!apiCard.known || !apiCard.rank || !apiCard.suit) {
-		return apiCard as { rank?: CardRank; suit?: CardSuit; known: boolean };
+	// If card is unknown, return with undefined rank/suit (don't preserve API strings)
+	if (!apiCard.known) {
+		return {
+			known: false
+		};
+	}
+
+	// If known but missing rank/suit, this is an API error
+	if (!apiCard.rank || !apiCard.suit) {
+		console.warn('[cardTransform] Known card missing rank or suit:', apiCard);
+		return {
+			known: false
+		};
 	}
 
 	return {
-		known: apiCard.known,
+		known: true,
 		rank: transformRank(apiCard.rank),
 		suit: transformSuit(apiCard.suit)
 	};
