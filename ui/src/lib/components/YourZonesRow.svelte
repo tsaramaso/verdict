@@ -89,6 +89,8 @@
 		background-color: rgba(1, 160, 252, 0.345);
 		transition: box-shadow 0.3s ease;
 		border: 2px solid transparent;
+		padding: clamp(0.25rem, 0.75vw, 0.5rem);
+		box-sizing: border-box;
 	}
 
 	.your-zones-container.is-your-turn {
@@ -105,6 +107,8 @@
 		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
 		flex: 0 0 auto;
+		margin-right: 5%
+
 	}
 
 	.player-info-label {

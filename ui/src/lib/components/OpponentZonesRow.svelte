@@ -67,6 +67,7 @@
 		padding: 0;
 		min-height: 0;
 		min-width: 0;
+		
 	}
 
 	.player-box {
@@ -84,6 +85,8 @@
 		overflow: visible;
 		transition: box-shadow 0.3s ease;
 		border: 2px solid transparent;
+		padding: clamp(0.25rem, 0.75vw, 0.5rem);
+		box-sizing: border-box;
 	}
 
 	.player-box.is-opponent-turn {
@@ -131,5 +134,7 @@
 		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
 		flex: 0 0 auto;
+		margin-right: 5%
+		
 	}
 </style>
