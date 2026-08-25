@@ -49,8 +49,9 @@
 		border: none;
 		cursor: default;
 		transition: all 0.2s ease;
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-rows: 1fr;
 		align-items: center;
 		gap: 0.5rem;
 	}
@@ -77,14 +78,20 @@
 		box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 	}
 
+	.card-face {
+		width: auto !important;
+		min-width: clamp(60px, 8vw, 120px);
+	}
+
 	.empty-label {
 		font-size: 32px;
 		color: var(--color-text-light, #999);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 100%;
-		height: 100%;
+		width: auto;
+		min-width: clamp(60px, 8vw, 120px);
+		aspect-ratio: var(--card-aspect-ratio, 2.5 / 3.5);
 	}
 
 	.card-count {
@@ -93,5 +100,9 @@
 		color: var(--color-text);
 		text-align: center;
 		min-width: 2rem;
+		white-space: nowrap;
+		position: static !important;
+		bottom: auto !important;
+		right: auto !important;
 	}
 </style>

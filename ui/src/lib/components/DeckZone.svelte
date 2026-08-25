@@ -47,8 +47,9 @@
 		position: relative;
 		cursor: default;
 		transition: all 0.2s ease;
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-rows: 1fr;
 		align-items: center;
 		gap: 0.5rem;
 	}
@@ -67,11 +68,18 @@
 		border-radius: var(--card-border-radius);
 	}
 
+	.card-stack {
+		width: auto;
+		min-width: clamp(60px, 8vw, 120px);
+	}
+
 	.card-count {
 		font-weight: var(--font-weight-bold);
 		font-size: clamp(0.75rem, 1.2vw, 1rem);
 		color: var(--color-text);
 		text-align: center;
 		min-width: 2rem;
+		white-space: nowrap;
+		position: static;
 	}
 </style>
