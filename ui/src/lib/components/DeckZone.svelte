@@ -52,6 +52,8 @@
 		grid-template-rows: 1fr;
 		align-items: center;
 		gap: 0.5rem;
+		height: 100%;
+		max-height: 100%;
 	}
 
 	.deck-zone.clickable {
@@ -70,7 +72,8 @@
 
 	.card-stack {
 		width: auto;
-		min-width: clamp(60px, 8vw, 120px);
+		height: 100%;
+		max-height: 100%;
 	}
 
 	.card-count {

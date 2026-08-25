@@ -54,6 +54,8 @@
 		grid-template-rows: 1fr;
 		align-items: center;
 		gap: 0.5rem;
+		height: 100%;
+		max-height: 100%;
 	}
 
 	.discard-zone:disabled {
@@ -80,7 +82,8 @@
 
 	.card-face {
 		width: auto !important;
-		min-width: clamp(60px, 8vw, 120px);
+		height: 100%;
+		max-height: 100%;
 	}
 
 	.empty-label {
@@ -90,8 +93,8 @@
 		align-items: center;
 		justify-content: center;
 		width: auto;
-		min-width: clamp(60px, 8vw, 120px);
-		aspect-ratio: var(--card-aspect-ratio, 2.5 / 3.5);
+		height: 100%;
+		max-height: 100%;
 	}
 
 	.card-count {
