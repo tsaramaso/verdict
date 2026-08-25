@@ -60,7 +60,7 @@ export const SUIT_COLORS: Record<CardSuit, string> = {
 	[CardSuit.HEART]: '#b40808',
 	[CardSuit.DIAMOND]: '#df9409',
 	[CardSuit.CLUB]: '#01788b',
-	[CardSuit.SPADE]: '#000000'
+	[CardSuit.SPADE]: '#7f7f7f'
 };
 /**
  * Power card ranks and their names mapped to the enum values
