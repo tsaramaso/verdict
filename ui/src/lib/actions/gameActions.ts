@@ -18,22 +18,12 @@ export async function drawFromDeck(
 	gameId: string
 ): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
 	try {
-		const url = getFullUrl(API_ENDPOINTS.draw(gameId));
-		console.log('[gameActions] drawFromDeck: POST to', url);
-		const response = await fetch(url, {
+		const endpoint = API_ENDPOINTS.draw(gameId);
+		console.log('[gameActions] drawFromDeck: POST to', endpoint);
+		const data = await apiCall(endpoint, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ source: 'deck' })
 		});
-
-		console.log('[gameActions] drawFromDeck: Response status', response.status);
-		if (!response.ok) {
-			const error = await response.text();
-			console.error('[gameActions] drawFromDeck failed:', response.status, error);
-			return null;
-		}
-
-		const data = await response.json();
 		console.log('[gameActions] drawFromDeck: Success', data);
 		return data;
 	} catch (error) {
@@ -46,22 +36,12 @@ export async function drawFromDiscard(
 	gameId: string
 ): Promise<{ drawn_card?: { rank: string; suit: string } } | null> {
 	try {
-		const url = getFullUrl(API_ENDPOINTS.draw(gameId));
-		console.log('[gameActions] drawFromDiscard: POST to', url);
-		const response = await fetch(url, {
+		const endpoint = API_ENDPOINTS.draw(gameId);
+		console.log('[gameActions] drawFromDiscard: POST to', endpoint);
+		const data = await apiCall(endpoint, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ source: 'discard' })
 		});
-
-		console.log('[gameActions] drawFromDiscard: Response status', response.status);
-		if (!response.ok) {
-			const error = await response.text();
-			console.error('[gameActions] drawFromDiscard failed:', response.status, error);
-			return null;
-		}
-
-		const data = await response.json();
 		console.log('[gameActions] drawFromDiscard: Success', data);
 		return data;
 	} catch (error) {
@@ -79,17 +59,10 @@ export async function discardImmediate(
 	source: 'deck' | 'discard'
 ): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
+		await apiCall(API_ENDPOINTS.action(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ choice: 'discard_immediate', source })
 		});
-
-		if (!response.ok) {
-			console.error('[discardImmediate] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[discardImmediate] Error:', error);
@@ -103,17 +76,10 @@ export async function swapCard(
 	source: 'deck' | 'discard'
 ): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
+		await apiCall(API_ENDPOINTS.action(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ choice: 'swap', slot_index: slotIndex, source })
 		});
-
-		if (!response.ok) {
-			console.error('[swapCard] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[swapCard] Error:', error);
@@ -123,17 +89,10 @@ export async function swapCard(
 
 export async function passBack(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.action(gameId)), {
+		await apiCall(API_ENDPOINTS.action(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ choice: 'pass_back', source: 'discard' })
 		});
-
-		if (!response.ok) {
-			console.error('[passBack] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[passBack] Error:', error);
@@ -152,21 +111,14 @@ export async function invokePower(
 	targetIndex?: number
 ): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.power.invoke(gameId)), {
+		await apiCall(API_ENDPOINTS.power.invoke(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				own_slot: ownSlotIndex,
 				target_player_id: targetOwner,
 				target_slot: targetIndex
 			})
 		});
-
-		if (!response.ok) {
-			console.error('[invokePower] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[invokePower] Error:', error);
@@ -176,16 +128,9 @@ export async function invokePower(
 
 export async function declinePower(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.power.decline(gameId)), {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' }
+		await apiCall(API_ENDPOINTS.power.decline(gameId), {
+			method: 'POST'
 		});
-
-		if (!response.ok) {
-			console.error('[declinePower] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[declinePower] Error:', error);
@@ -199,17 +144,10 @@ export async function decreeSwap(
 	ownSlotIndex?: number
 ): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.power.decreeSwap(gameId)), {
+		await apiCall(API_ENDPOINTS.power.decreeSwap(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ swap, own_slot: ownSlotIndex })
 		});
-
-		if (!response.ok) {
-			console.error('[decreeSwap] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[decreeSwap] Error:', error);
@@ -223,17 +161,10 @@ export async function decreeSwap(
 
 export async function quickDiscard(gameId: string, slotIndex: number): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.quickDiscard(gameId)), {
+		await apiCall(API_ENDPOINTS.quickDiscard(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ slot_index: slotIndex })
 		});
-
-		if (!response.ok) {
-			console.error('[quickDiscard] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[quickDiscard] Error:', error);
@@ -247,16 +178,9 @@ export async function quickDiscard(gameId: string, slotIndex: number): Promise<b
 
 export async function testifyFirst(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.trial.testifyFirst(gameId)), {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' }
+		await apiCall(API_ENDPOINTS.trial.testifyFirst(gameId), {
+			method: 'POST'
 		});
-
-		if (!response.ok) {
-			console.error('[testifyFirst] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[testifyFirst] Error:', error);
@@ -266,16 +190,9 @@ export async function testifyFirst(gameId: string): Promise<boolean> {
 
 export async function testifyCross(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.trial.testifyCross(gameId)), {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' }
+		await apiCall(API_ENDPOINTS.trial.testifyCross(gameId), {
+			method: 'POST'
 		});
-
-		if (!response.ok) {
-			console.error('[testifyCross] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[testifyCross] Error:', error);
@@ -285,16 +202,9 @@ export async function testifyCross(gameId: string): Promise<boolean> {
 
 export async function challenge(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.trial.challenge(gameId)), {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' }
+		await apiCall(API_ENDPOINTS.trial.challenge(gameId), {
+			method: 'POST'
 		});
-
-		if (!response.ok) {
-			console.error('[challenge] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[challenge] Error:', error);
@@ -304,17 +214,10 @@ export async function challenge(gameId: string): Promise<boolean> {
 
 export async function takePlea(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.trial.plea(gameId)), {
+		await apiCall(API_ENDPOINTS.trial.plea(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ plea: true })
 		});
-
-		if (!response.ok) {
-			console.error('[takePlea] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[takePlea] Error:', error);
@@ -324,17 +227,10 @@ export async function takePlea(gameId: string): Promise<boolean> {
 
 export async function declinePlea(gameId: string): Promise<boolean> {
 	try {
-		const response = await fetch(getFullUrl(API_ENDPOINTS.trial.plea(gameId)), {
+		await apiCall(API_ENDPOINTS.trial.plea(gameId), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ plea: false })
 		});
-
-		if (!response.ok) {
-			console.error('[declinePlea] Failed:', response.status);
-			return false;
-		}
-
 		return true;
 	} catch (error) {
 		console.error('[declinePlea] Error:', error);
