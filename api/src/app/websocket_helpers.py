@@ -173,12 +173,11 @@ def scope_state_for_player(
             "max_players": game_state.rules.max_players,
             "perjury_penalty": game_state.rules.perjury_penalty,
             "duel_loss_penalty": game_state.rules.duel_loss_penalty,
-            "false_cross_"
-            "testimony_penalty": game_state.rules.false_cross_testimony_penalty,
+            "false_cross_testimony_penalty": game_state.rules.false_cross_testimony_penalty,
             "plea_penalty": game_state.rules.plea_penalty,
             "renaissance_thresholds": game_state.rules.renaissance_thresholds,
             "game_over_score": game_state.rules.game_over_score,
-            "face_rank_values": game_state.rules.face_rank_values,
+            "rank_values": game_state.rules.rank_values,
         }
     )
 

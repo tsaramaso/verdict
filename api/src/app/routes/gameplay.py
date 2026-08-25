@@ -92,6 +92,7 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
             "my_opponent_knowledge": scoped_state["my_opponent_knowledge"],
             "trial": scoped_state["trial"],
             "discard_pile": scoped_state["discard_pile"],
+            "rules": scoped_state["rules"],
         }
 
         # Send to this specific player
@@ -380,6 +381,15 @@ async def advance_phase(
     Called by UI after animation delay (3s) for all players.
     Only valid during TURN_START phase.
     """
+    from src.logging_config import get_logger
+
+    logger = get_logger("advance_phase")
+    logger.info(
+        "advance_phase_called",
+        player_id=str(player_id)[:8],
+        game_id=str(state.game_id)[:8],
+        phase=str(state.phase),
+    )
 
     if state.phase != Phase.TURN_START:
         raise HTTPException(

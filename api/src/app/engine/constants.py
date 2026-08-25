@@ -210,7 +210,7 @@ class Rules(BaseModel):
     game_over_score: int
     black_king_value: int
     red_king_value: int
-    face_rank_values: dict[str, int]
+    rank_values: dict[str, int]
 
 
 BASE_RULES = Rules(
@@ -227,7 +227,7 @@ BASE_RULES = Rules(
     game_over_score=120,
     black_king_value=13,
     red_king_value=0,
-    face_rank_values={
+    rank_values={
         rank_enum.name: rank_value for rank_enum, rank_value in RANK_FACE_VALUE.items()
     },
 )
