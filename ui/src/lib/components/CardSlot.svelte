@@ -70,7 +70,7 @@
 	{/if}
 
 	{#if card?.known && showRankBadge && card.rank && card.suit}
-		<div class="rank-badge" style="color: {displaySuit(card.suit)}">
+		<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
 			{displayRank(card.rank)}{displaySuit(card.suit)}
 		</div>
 	{/if}

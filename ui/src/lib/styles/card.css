@@ -186,7 +186,7 @@
 	position: absolute;
 	top: clamp(4px, 5%, 8px);
 	right: clamp(4px, 5%, 8px);
-	background: var(--suit-color, var(--suit-red));
+	background: var(--suit-color);
 	color: white;
 	padding: clamp(2px, 2%, 4px) clamp(4px, 4%, 6px);
 	border-radius: clamp(2px, 3%, 4px);
