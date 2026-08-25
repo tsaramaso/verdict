@@ -74,15 +74,17 @@
 			acc[id] = true;
 			return acc;
 		}, {})}
-		<CardSlot
-			{card}
-			slotIndex={slotIdx}
-			isYourCard={isYourCards}
-			isClickable={isClickableInPhase(slotIdx)}
-			isHighlighted={isSlotHighlighted(slotIdx)}
-			opponentKnows={opponentKnowsRecord}
-			onClick={() => handleCardClick(slotIdx)}
-		/>
+		<div style="order: {slotIdx < 2 ? slotIdx + 2 : slotIdx - 2}">
+			<CardSlot
+				{card}
+				slotIndex={slotIdx}
+				isYourCard={isYourCards}
+				isClickable={isClickableInPhase(slotIdx)}
+				isHighlighted={isSlotHighlighted(slotIdx)}
+				opponentKnows={opponentKnowsRecord}
+				onClick={() => handleCardClick(slotIdx)}
+			/>
+		</div>
 	{/each}
 </div>
 
@@ -91,6 +93,13 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		gap: clamp(0.25rem, 0.5vw, 0.5rem);
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		min-width: 0;
+	}
+
+	.card-container > div {
 		width: 100%;
 		height: 100%;
 		min-height: 0;
