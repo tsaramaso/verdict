@@ -294,79 +294,103 @@ async def testify_first(
 
 
 @router.post("/{game_id}/trial/pass-call", response_model=ActionResult)
-def pass_call(
+async def pass_call(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_call_window, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/testify-cross", response_model=ActionResult)
-def testify_cross(
+async def testify_cross(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_cross, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-match", response_model=ActionResult)
-def pass_match(
+async def pass_match(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_match_window, state, player_id)
     _persist(session, events)
+
+    # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/challenge", response_model=ActionResult)
-def challenge(
+async def challenge(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_challenge, state, player_id)
     _persist(session, events)
+        # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-duel", response_model=ActionResult)
-def pass_duel(
+async def pass_duel(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_duel_window, state, player_id)
     _persist(session, events)
+        # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/plea", response_model=ActionResult)
-def plea(
+async def plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_plea, state, player_id)
     _persist(session, events)
+        # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-plea", response_model=ActionResult)
-def pass_plea(
+async def pass_plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_final_plea_window, state, player_id)
     _persist(session, events)
+        # Broadcast update to all players
+    await broadcast_game_update(state.game_id, state, events)
+
     return _result(state, events, player_id)
 
 
