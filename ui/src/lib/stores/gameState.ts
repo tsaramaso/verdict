@@ -27,7 +27,8 @@ export interface Rules {
 	plea_penalty: number;
 	renaissance_thresholds: Record<number, number>;
 	game_over_score: number;
-	rank_values: Record<string, number>;
+	// rank_values uses CardRank enum as numeric keys after transformation (0=ACE, 1=TWO, etc.)
+	rank_values: Record<number, number>;
 }
 
 export interface CardSlot {

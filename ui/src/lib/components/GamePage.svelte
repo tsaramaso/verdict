@@ -8,6 +8,7 @@
 	import RoundOverModal from './RoundOverModal.svelte';
 	import GameOverModal from './GameOverModal.svelte';
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
+	import { transformRules } from '$lib/utils/rulesTransform';
 	import { GAME_PHASES } from '$lib/config';
 	import type { CardRank, CardSuit } from '$lib/constants/cards';
 	import * as gameActions from '$lib/actions/gameActions';
@@ -46,7 +47,7 @@
 	}
 
 	function handleWebSocketMessage(data: string) {
-		console.log('[GamePage] WS message received:', data.substring(0, 200) + '...');
+		console.log('[GamePage] WS message received:', data);
 		const message = JSON.parse(data);
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
@@ -92,7 +93,7 @@
 				my_opponent_knowledge: message.my_opponent_knowledge,
 				trial: message.trial,
 				discard_pile: transformedDiscard,
-				rules: message.rules || getHardcodedBaseRules()
+				rules: transformRules(message.rules || getHardcodedBaseRules())
 			});
 
 			if (phaseUppercase === GAME_PHASES.TURN_START) {

@@ -12,14 +12,20 @@
 
 	const isYourTurn = $derived($gameState.current_player === $gameState.self.player_id);
 
-	const knownSum = $derived(
-		calculateKnownSum(
-			$gameState.self.hand,
-			$gameState.rules.black_king_value,
-			$gameState.rules.red_king_value,
-			$gameState.rules.rank_values
-		)
-	);
+	const knownSum = $derived.by(() => {
+		try {
+			return calculateKnownSum(
+				$gameState.self.hand,
+				$gameState.rules.black_king_value,
+				$gameState.rules.red_king_value,
+				$gameState.rules.rank_values
+			);
+		} catch (error) {
+			console.error('[YourZonesRow] Failed to calculate known sum:', error);
+			// Return -1 as sentinel to display error state
+			return -1;
+		}
+	});
 
 	const nextRenaissance = $derived(
 		getPointsToRenaissance(
@@ -28,7 +34,11 @@
 		)
 	);
 
-	const knownSumColor = $derived(knownSum <= 7 ? '#4caf50' : '#f44336');
+	const knownSumColor = $derived.by(() => {
+		const allKnown = $gameState.self.hand.every(slot => slot.known);
+		if (!allKnown) return '#000000'; // default black - incomplete hand
+		return knownSum <= $gameState.rules.eligible_threshold ? '#4caf50' : '#f44336';
+	});
 </script>
 
 <div class="your-zones-row">
