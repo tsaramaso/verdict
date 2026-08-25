@@ -67,7 +67,6 @@
 		padding: 0;
 		min-height: 0;
 		min-width: 0;
-		
 	}
 
 	.player-box {
@@ -134,7 +133,6 @@
 		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
 		flex: 0 0 auto;
-		margin-right: 5%
-		
+		margin-right: 5%;
 	}
 </style>

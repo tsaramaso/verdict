@@ -35,7 +35,7 @@
 	);
 
 	const knownSumColor = $derived.by(() => {
-		const allKnown = $gameState.self.hand.every(slot => slot.known);
+		const allKnown = $gameState.self.hand.every((slot) => slot.known);
 		if (!allKnown) return '#000000'; // default black - incomplete hand
 		return knownSum <= $gameState.rules.eligible_threshold ? '#4caf50' : '#f44336';
 	});
@@ -117,8 +117,7 @@
 		aspect-ratio: 2.5 / 3.5;
 		height: 100%;
 		flex: 0 0 auto;
-		margin-right: 5%
-
+		margin-right: 5%;
 	}
 
 	.player-info-label {

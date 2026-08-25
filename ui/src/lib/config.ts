@@ -197,20 +197,33 @@ export function getCardValue(
 	if (rank == CardRank.KING) {
 		return suit == CardSuit.SPADE || suit == CardSuit.CLUB ? black_king_value : red_king_value;
 	}
-	
+
 	const value = face_rank_values[rank];
 	if (value === undefined) {
-		const rankNames = ['ACE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'JACK', 'QUEEN'];
+		const rankNames = [
+			'ACE',
+			'TWO',
+			'THREE',
+			'FOUR',
+			'FIVE',
+			'SIX',
+			'SEVEN',
+			'EIGHT',
+			'NINE',
+			'TEN',
+			'JACK',
+			'QUEEN'
+		];
 		const rankName = rankNames[rank] || `UNKNOWN(${rank})`;
 		const error = new Error(
 			`[CONFIG] Missing rank value for ${rankName} (enum ${rank}). ` +
-			`rank_values keys: ${Object.keys(face_rank_values).join(', ')}. ` +
-			`This indicates a rules transformation or API response error.`
+				`rank_values keys: ${Object.keys(face_rank_values).join(', ')}. ` +
+				`This indicates a rules transformation or API response error.`
 		);
 		console.error(error);
 		throw error;
 	}
-	
+
 	return value;
 }
 
