@@ -24,6 +24,7 @@ class EventType(StrEnum):
     GAME_STARTED = auto()
     ROUND_STARTED = auto()
     INITIAL_GLANCE = auto()
+    TURN_START_ADVANCED = auto()  # TURN_START → DRAWING phase transition
     ROUND_ENDED = auto()
     SCORES_UPDATED = auto()
     RENAISSANCE_TRIGGERED = auto()

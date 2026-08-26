@@ -339,62 +339,50 @@ async def pass_match(
 
 
 @router.post("/{game_id}/trial/challenge", response_model=ActionResult)
-async def challenge(
+def challenge(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_challenge, state, player_id)
     _persist(session, events)
-        # Broadcast update to all players
-    await broadcast_game_update(state.game_id, state, events)
-
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-duel", response_model=ActionResult)
-async def pass_duel(
+def pass_duel(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_duel_window, state, player_id)
     _persist(session, events)
-        # Broadcast update to all players
-    await broadcast_game_update(state.game_id, state, events)
-
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/plea", response_model=ActionResult)
-async def plea(
+def plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_plea, state, player_id)
     _persist(session, events)
-        # Broadcast update to all players
-    await broadcast_game_update(state.game_id, state, events)
-
     return _result(state, events, player_id)
 
 
 @router.post("/{game_id}/trial/pass-plea", response_model=ActionResult)
-async def pass_plea(
+def pass_plea(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_final_plea_window, state, player_id)
     _persist(session, events)
-        # Broadcast update to all players
-    await broadcast_game_update(state.game_id, state, events)
-
     return _result(state, events, player_id)
 
 
-@router.post("/{game_id}/advance-phase")
+@router.post("/{game_id}/advance-phase", response_model=ActionResult)
 async def advance_phase(
     player_id: str = Depends(get_current_player),
     state: GameState = Depends(get_locked_game_state),
@@ -403,30 +391,10 @@ async def advance_phase(
     """
     Advance TURN_START → DRAWING phase.
     Called by UI after animation delay (3s) for all players.
+    Emits TURN_START_ADVANCED event for audit trail.
     Only valid during TURN_START phase.
     """
-    from src.logging_config import get_logger
-
-    logger = get_logger("advance_phase")
-    logger.info(
-        "advance_phase_called",
-        player_id=str(player_id)[:8],
-        game_id=str(state.game_id)[:8],
-        phase=str(state.phase),
-    )
-
-    if state.phase != Phase.TURN_START:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Cannot advance phase from {state.phase}."
-            " Only valid during TURN_START.",
-        )
-
-    # Advance phase
-    state.phase = Phase.DRAWING
-
-    # No events needed (pure phase transition)
-    events = []
+    events = _call(engine.advance_turn_start, state)
     _persist(session, events)
 
     # Broadcast update to all players

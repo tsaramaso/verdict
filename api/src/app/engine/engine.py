@@ -219,6 +219,29 @@ def _start_round(state: GameState) -> list[Event]:
 
 
 @require_phase(Phase.TURN_START)
+def advance_turn_start(state: GameState) -> list[Event]:
+    """
+    Advance TURN_START → DRAWING phase.
+    Called after TURN_START animation completes (Initial Glance reveal).
+    Emits TURN_START_ADVANCED event for audit trail.
+    """
+    state.phase = Phase.DRAWING
+
+    return [
+        Event(
+            type=EventType.TURN_START_ADVANCED,
+            game_id=state.game_id,
+            round_id=state.round_id,
+            sequence=state.next_sequence(),
+            actor=None,  # System event, not player-triggered
+            public_fields={
+                "round_number": state.round_number,
+            },
+        )
+    ]
+
+
+@require_phase(Phase.TURN_START)
 def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Event]:
     if source is DrawSource.DISCARD_PILE and not state.discard_pile:
         raise IllegalAction("Discard pile is empty")
@@ -227,7 +250,7 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
             "Deck is empty"
         )  # should never happen given empty_deck gating
 
-    if source is DrawSource.DISCARD and not state.discard_pile:
+    if source is DrawSource.DISCARD_PILE and not state.discard_pile:
         raise IllegalAction(
             "Discard pile is empty"
         )  # First turn of round; discard pile not yet populated (rules.md §6.1)
