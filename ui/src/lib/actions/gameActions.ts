@@ -26,7 +26,7 @@ export async function drawFromDeck(
 		console.log('[gameActions] drawFromDeck: Success', data);
 		return data;
 	} catch (error) {
-		console.error('[gameActions] drawFromDeck exception:', error);
+		console.error('[gameActions] drawFromDeck exception:', error instanceof Error ? error.message : error);
 		return null;
 	}
 }
@@ -44,7 +44,7 @@ export async function drawFromDiscard(
 		console.log('[gameActions] drawFromDiscard: Success', data);
 		return data;
 	} catch (error) {
-		console.error('[gameActions] drawFromDiscard exception:', error);
+		console.error('[gameActions] drawFromDiscard exception:', error instanceof Error ? error.message : error);
 		return null;
 	}
 }

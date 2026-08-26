@@ -115,7 +115,14 @@ export async function apiCall(endpoint: string, options: RequestInit = {}, token
 	});
 
 	if (!response.ok) {
-		throw new Error(`API error: ${response.statusText}`);
+		let errorDetail = response.statusText;
+		try {
+			const errorBody = await response.json();
+			errorDetail = errorBody.detail || response.statusText;
+		} catch (e) {
+			// Fallback to statusText if response isn't JSON
+		}
+		throw new Error(`API error: ${response.status} - ${errorDetail}`);
 	}
 
 	return response.json();
