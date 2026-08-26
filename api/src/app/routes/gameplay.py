@@ -28,6 +28,9 @@ from src.app.engine import engine
 from src.app.engine.state import GameState
 from src.app.game_registry import get_locked_game_state
 from src.app.routes._shared import _call, _persist, _result
+from src.app.websocket_helpers import scope_state_for_player
+from src.logging_config import get_logger
+
 
 from src.app.schemas import (
     ActionRequest,
@@ -46,11 +49,6 @@ router = APIRouter(prefix="/api/games", tags=["gameplay"])
 # ===== Broadcast Helper =====
 async def broadcast_game_update(game_id: str, game_state, events: list):
     """Broadcast game state update to all connected players (scoped per player)."""
-    from src.app.websocket_helpers import scope_state_for_player
-    from src.app.models.db import User
-    from src.db.session import get_session
-    from sqlalchemy import select
-    from src.logging_config import get_logger
 
     logger = get_logger("broadcast")
 
@@ -61,13 +59,8 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
         logger.debug("broadcast_no_players", game_id=str(game_id)[:8])
         return
 
-    # Get player names for responses
-    session = get_session().__next__()
-    users = session.exec(
-        select(User).where(User.uuid.in_(game_state.player_order))
-    ).all()
-    player_names = {u.uuid: u.name or u.uuid for u in users}
-    session.close()
+    # Get player names from game state (no DB query needed)
+    player_names = {pid: game_state.players[pid].player_name for pid in game_state.player_order}
 
     # Send scoped message to each player
     for player_id in connected_players:
