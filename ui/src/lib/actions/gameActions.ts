@@ -7,8 +7,7 @@
  * Fallback functions handle timeout auto-actions per phase.
  */
 
-import { API_ENDPOINTS, getFullUrl } from '$lib/constants/api';
-import { apiCall } from '$lib/api';
+import { API_ENDPOINTS, apiCall } from '$lib/api';
 
 // ============================================
 // DRAW PHASE HANDLERS
@@ -244,7 +243,7 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 
 export async function advancePhase(gameId: string): Promise<boolean> {
 	try {
-		const endpoint = `/games/${gameId}/advance-phase`;
+		const endpoint = API_ENDPOINTS.advancePhase(gameId);
 		console.log('[gameActions] advancePhase: POST to', endpoint);
 		await apiCall(endpoint, { method: 'POST' });
 		console.log('[gameActions] advancePhase: Success');
