@@ -41,7 +41,7 @@ from src.app.schemas import (
 from src.app.websocket import manager
 from src.db.session import get_session
 
-router = APIRouter(prefix="/games", tags=["gameplay"])
+router = APIRouter(prefix="/api/games", tags=["gameplay"])
 
 
 # ===== Broadcast Helper =====

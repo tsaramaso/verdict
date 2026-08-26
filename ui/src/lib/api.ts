@@ -93,16 +93,24 @@ function getAuthToken(): string | null {
 	return null;
 }
 
-export async function apiCall(endpoint: string, options: RequestInit = {}) {
-	const token = getAuthToken();
+export async function apiCall(
+	endpoint: string,
+	options: RequestInit = {},
+	token?: string
+) {
+	// Determine auth token source: parameter (server-side) or localStorage (client-side)
+	let authToken = token;
+	if (!authToken && typeof window !== 'undefined') {
+		authToken = getAuthToken();
+	}
 
 	const headers: HeadersInit = {
 		'Content-Type': 'application/json',
 		...(options.headers || {})
 	};
 
-	if (token) {
-		headers['Authorization'] = `Bearer ${token}`;
+	if (authToken) {
+		headers['Authorization'] = `Bearer ${authToken}`;
 	}
 
 	const response = await fetch(`${API_URL}${endpoint}`, {
@@ -117,14 +125,14 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 	return response.json();
 }
 
-export async function login(uuid: string) {
-	const response = await apiCall('/users/login', {
+export async function login(uuid: string, token?: string) {
+	const response = await apiCall('/api/users/login', {
 		method: 'POST',
 		body: JSON.stringify({ uuid })
-	});
+	}, token);
 
-	// Store token in localStorage for subsequent requests
-	if (response.token) {
+	// Store token in localStorage for subsequent requests (client-side only)
+	if (response.token && typeof window !== 'undefined') {
 		localStorage.setItem('auth_token', response.token);
 	}
 
@@ -152,35 +160,59 @@ export interface GameSummary {
 }
 
 // API Functions
-export async function getCurrentUser(): Promise<User> {
-	return apiCall('/users/me');
+export async function getCurrentUser(token?: string): Promise<User> {
+	return apiCall('/api/users/me', {}, token);
 }
 
-export async function listUsers(): Promise<User[]> {
-	const data = await apiCall('/users');
-	const currentUser = await getCurrentUser();
+export async function listUsers(token?: string): Promise<User[]> {
+	const data = await apiCall('/api/users', {}, token);
+	const currentUser = await getCurrentUser(token);
 	return (data.users || []).filter((u: User) => u.uuid !== currentUser.uuid);
 }
 
-export async function listGames(): Promise<GameSummary[]> {
-	const data = await apiCall('/games');
+export async function listGames(token?: string): Promise<GameSummary[]> {
+	const data = await apiCall('/api/games', {}, token);
 	return data.games;
 }
 
-export async function getGameStatus(gameId: string) {
-	return apiCall(`/games/${gameId}/status`);
+export async function getGameStatus(gameId: string, token?: string) {
+	return apiCall(`/api/games/${gameId}/status`, {}, token);
 }
 
-export async function createGame(playerIds: string[], rulesConfig?: Record<string, any>) {
-	return apiCall('/games', {
+export async function createGame(playerIds: string[], rulesConfig?: Record<string, any>, token?: string) {
+	return apiCall('/api/games', {
 		method: 'POST',
 		body: JSON.stringify({
 			player_ids: playerIds,
 			rules_config: rulesConfig || {}
 		})
-	});
+	}, token);
 }
 
-export async function getGameRecap(gameId: string) {
-	return apiCall(`/games/${gameId}/recap`);
+export async function getGameRecap(gameId: string, token?: string) {
+	return apiCall(`/api/games/${gameId}/recap`, {}, token);
+}
+
+// ============================================
+// LOBBIES
+// ============================================
+
+export async function listLobbies(token?: string) {
+	return apiCall('/api/lobbies', {}, token);
+}
+
+export async function getLobby(lobbyId: string, token?: string) {
+	return apiCall(`/api/lobbies/${lobbyId}`, {}, token);
+}
+
+export async function createLobby(token?: string) {
+	return apiCall('/api/lobbies/create', {
+		method: 'POST'
+	}, token);
+}
+
+export async function joinLobby(lobbyId: string, token?: string) {
+	return apiCall(`/api/lobbies/${lobbyId}/join`, {
+		method: 'POST'
+	}, token);
 }

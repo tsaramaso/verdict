@@ -42,8 +42,7 @@ from src.app.auth import create_access_token
 from src.app.models.db import User
 from src.db.session import get_session
 
-router = APIRouter(prefix="/users", tags=["users"])
-
+router = APIRouter(prefix="/api/users", tags=["users"])
 
 # ------------------------------------------------------------------
 # Request / response schemas (users-only, kept local — not in

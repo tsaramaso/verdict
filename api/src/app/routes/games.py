@@ -45,7 +45,7 @@ from src.app.schemas import (
 )
 from src.db.session import get_session
 
-router = APIRouter(prefix="/games", tags=["games"])
+router = APIRouter(prefix="/api/games", tags=["games"])
 
 
 @router.post("", response_model=GameCreateResult, status_code=status.HTTP_201_CREATED)

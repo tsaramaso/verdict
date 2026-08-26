@@ -1,5 +1,6 @@
 // ui/src/routes/login/+page.server.js
 import { redirect } from '@sveltejs/kit';
+import { login } from '$lib/api';
 
 export function load({ cookies }) {
 	const token = cookies.get('auth_token');
@@ -20,20 +21,10 @@ export const actions = {
 		}
 
 		try {
-			const response = await fetch('http://localhost:8000/users/login', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ uuid })
-			});
-
-			if (!response.ok) {
-				return { error: 'Invalid UUID' };
-			}
-
-			const { token } = await response.json();
+			const response = await login(uuid as string);
 
 			// Set token in non-httpOnly cookie so client-side JS can access it
-			cookies.set('auth_token', token, {
+			cookies.set('auth_token', response.token, {
 				path: '/',
 				maxAge: 60 * 60 * 24 * 100, // 100 days
 				httpOnly: false // Allow client-side JS access (for WebSocket)
@@ -43,7 +34,7 @@ export const actions = {
 			throw redirect(303, '/home');
 		} catch (err) {
 			// Re-throw redirect errors
-			if (err.status === 303) throw err;
+			if (err instanceof Error && (err as any).status === 303) throw err;
 			return { error: 'Login failed' };
 		}
 	}
