@@ -20,7 +20,7 @@ Grouped by rules.md section:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from src.app.auth import get_current_player
@@ -28,7 +28,6 @@ from src.app.engine import engine
 from src.app.engine.state import GameState
 from src.app.game_registry import get_locked_game_state
 from src.app.routes._shared import _call, _persist, _result
-from src.app.engine.state import Phase
 
 from src.app.schemas import (
     ActionRequest,
