@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
-export async function load({ cookies }) {
+export const load: PageServerLoad = ({ cookies }) => {
 	const token = cookies.get('auth_token');
 
 	if (!token) {
@@ -9,4 +10,4 @@ export async function load({ cookies }) {
 
 	// Token exists, redirect to home
 	throw redirect(303, '/home');
-}
+};

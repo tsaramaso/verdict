@@ -1,8 +1,9 @@
-// ui/src/routes/game/[game_id]/play/+page.server.js
+// ui/src/routes/game/[game_id]/play/+page.server.ts
 import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { getCurrentUser, getGameStatus } from '$lib/api';
 
-export async function load({ params, cookies }) {
+export const load: PageServerLoad = async ({ params, cookies }) => {
 	const token = cookies.get('auth_token');
 	const gameId = params.game_id;
 
@@ -29,4 +30,4 @@ export async function load({ params, cookies }) {
 			error: err instanceof Error ? err.message : 'Failed to load game'
 		};
 	}
-}
+};

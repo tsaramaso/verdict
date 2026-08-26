@@ -1,51 +1,58 @@
 import { redirect } from '@sveltejs/kit';
-import { getLobby, createGame } from '$lib/api';
+import type { PageServerLoad, Actions } from './$types';
+import { getCurrentUser, listLobbies, createLobby } from '$lib/api';
 
-export async function load({ params, cookies }) {
+export const load: PageServerLoad = async ({ cookies }) => {
 	const token = cookies.get('auth_token');
-	const lobbyId = params.lobbyId;
 
 	if (!token) {
 		throw redirect(303, '/login');
 	}
 
 	try {
-		const lobbyData = await getLobby(lobbyId, token);
+		// Fetch current user
+		const user = await getCurrentUser(token);
+
+		// Fetch active lobbies
+		const lobbiesData = await listLobbies(token);
 
 		return {
-			lobbyId,
-			lobbyData
+			user,
+			lobbies: lobbiesData.lobbies || []
 		};
 	} catch (err) {
-		if (err instanceof Error && (err as any).status === 303) throw err;
-		throw redirect(303, '/home');
+		// Check if it's a redirect error
+		if (err instanceof Error && (err as any).status === 303) {
+			throw err;
+		}
+		// If getCurrentUser fails, token is invalid
+		cookies.delete('auth_token', { path: '/' });
+		throw redirect(303, '/login');
 	}
-}
+};
 
-export const actions = {
-	startGame: async ({ params, cookies }) => {
+export const actions: Actions = {
+	logout: async ({ cookies }) => {
+		cookies.delete('auth_token', { path: '/' });
+		throw redirect(303, '/login');
+	},
+
+	createLobby: async ({ cookies }) => {
 		const token = cookies.get('auth_token');
-		const lobbyId = params.lobbyId;
 
 		if (!token) {
 			return { error: 'Not authenticated' };
 		}
 
 		try {
-			// Get lobby players first
-			const lobbyData = await getLobby(lobbyId, token);
-			const playerIds = Object.keys(lobbyData.players);
-
-			// Create game with lobby players
-			const gameData = await createGame(playerIds, undefined, token);
-			throw redirect(303, `/game/${gameData.game_id}/play`);
+			const data = await createLobby(token);
+			throw redirect(303, `/lobby/${data.lobby_id}`);
 		} catch (err) {
-			if (err instanceof Error && (err as any).status === 303) throw err;
-			return { error: err instanceof Error ? err.message : 'Failed to start game' };
+			// Check if it's a redirect error
+			if (err instanceof Error && (err as any).status === 303) {
+				throw err;
+			}
+			return { error: err instanceof Error ? err.message : 'Failed to create lobby' };
 		}
-	},
-
-	returnHome: async () => {
-		throw redirect(303, '/home');
 	}
 };
