@@ -223,9 +223,20 @@ export async function createLobby(token?: string) {
 	);
 }
 
-export async function joinLobby(lobbyId: string, token?: string) {
+export async function setPlayerReady(lobbyId: string, ready: boolean, token?: string) {
 	return apiCall(
-		`/api/lobbies/${lobbyId}/join`,
+		`/api/lobbies/${lobbyId}/player/ready`,
+		{
+			method: 'POST',
+			body: JSON.stringify({ ready })
+		},
+		token
+	);
+}
+
+export async function startGame(lobbyId: string, token?: string) {
+	return apiCall(
+		`/api/lobbies/${lobbyId}/start`,
 		{
 			method: 'POST'
 		},

@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
     )
 
     # API routes at /api/*, WebSocket routes at /ws/*
-    app.include_router(router, prefix="/api")
+    app.include_router(router)
     app.include_router(ws_router)
     return app
 

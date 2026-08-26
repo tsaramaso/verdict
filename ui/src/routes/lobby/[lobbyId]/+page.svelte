@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { LobbyState, PlayerInfo } from '$lib/types/lobby';
 	import { WebSocketClient, type WebSocketMessage } from '$lib/utils/websocket';
+	import { setPlayerReady, startGame } from '$lib/api';
 
 	interface Props {
 		data: {
@@ -14,7 +15,7 @@
 		};
 	}
 
-	let { data } = $props();
+	let { data }: Props = $props();
 
 	// Reactive state
 	let lobbyState = $state<LobbyState>({
@@ -53,7 +54,6 @@
 
 	// WebSocket client
 	let wsClient: WebSocketClient | null = null;
-	const API_URL = 'http://localhost:8000';
 
 	function getToken(): string | null {
 		const cookieString = document.cookie;
@@ -145,20 +145,7 @@
 			const token = getToken();
 			if (!token) throw new Error('No auth token');
 
-			const response = await fetch(`${API_URL}/lobbies/${data.lobbyId}/player/ready`, {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ ready: !isReady })
-			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.detail || 'Failed to update ready status');
-			}
-
+			await setPlayerReady(data.lobbyId, !isReady, token);
 			isReady = !isReady;
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to update status';
@@ -167,8 +154,7 @@
 		}
 	}
 
-	async function startGame() {
-		// Check all conditions before allowing
+	async function handleStartGame() {
 		if (!isHost) {
 			errorMessage = 'Only the host can start the game';
 			return;
@@ -189,7 +175,6 @@
 			return;
 		}
 
-		// All checks pass, proceed with starting game
 		isLoading = true;
 		errorMessage = '';
 
@@ -197,22 +182,10 @@
 			const token = getToken();
 			if (!token) throw new Error('No auth token');
 
-			const response = await fetch(`${API_URL}/lobbies/${data.lobbyId}/start`, {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.detail || 'Failed to start game');
-			}
-
-			const gameData = await response.json();
+			const result = await startGame(data.lobbyId, token);
 			successMessage = 'Game started! Redirecting...';
 			setTimeout(() => {
-				window.location.href = `/game/${gameData.game_id}/play`;
+				window.location.href = `/game/${result.game_id}/play`;
 			}, 500);
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to start game';
@@ -320,7 +293,7 @@
 			<button
 				class="btn btn-primary btn-lg"
 				disabled={!isHost || !canStart || isLoading}
-				onclick={() => startGame()}
+				onclick={() => handleStartGame()}
 			>
 				{#if isLoading}
 					Starting...
