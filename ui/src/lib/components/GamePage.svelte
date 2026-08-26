@@ -51,7 +51,28 @@
 		const message = JSON.parse(data);
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
-			console.log('[GamePage] Game state update, phase:', message.game.phase);
+			// Handle both old (top-level) and new (wrapped in game object) formats
+			const gameInfo = message.game || {
+				game_id: message.game_id,
+				phase: message.phase,
+				current_player: message.current_player,
+				round_number: message.round_number
+			};
+			
+			console.log('[GamePage] Game state update, phase:', gameInfo.phase);
+
+			// Extract drawn card from events if present
+			if (message.events && message.events.length > 0) {
+				const cardDrawnEvent = message.events.find((e: any) => e.type === 'card_drawn');
+				if (cardDrawnEvent && cardDrawnEvent.scoped_fields?.true_card) {
+					const card = cardDrawnEvent.scoped_fields.true_card;
+					drawnCard = {
+						rank: transformRank(card.rank),
+						suit: transformSuit(card.suit)
+					};
+					console.log('[GamePage] Extracted drawn card from event:', drawnCard);
+				}
+			}
 
 			// Check for Last Turn (deck empty)
 			const deckEmpty = message.deck?.card_count === 0;
@@ -81,13 +102,13 @@
 				}))
 			};
 
-			const phaseUppercase = message.game.phase.toUpperCase();
+			const phaseUppercase = gameInfo.phase.toUpperCase();
 
 			gameState.set({
-				game_id: message.game.game_id,
+				game_id: gameInfo.game_id,
 				phase: phaseUppercase,
-				current_player: message.game.current_player,
-				round_number: message.game.round_number,
+				current_player: gameInfo.current_player,
+				round_number: gameInfo.round_number,
 				self: transformedSelf,
 				opponents: transformedOpponents,
 				my_opponent_knowledge: message.my_opponent_knowledge,
@@ -124,15 +145,10 @@
 		console.log('[GamePage] Deck clicked, gameId:', gameId);
 		const result = await gameActions.drawFromDeck(gameId);
 		console.log('[GamePage] Deck draw result:', result);
-		if (result?.drawn_card) {
-			console.log('[GamePage] Card drawn:', result.drawn_card);
-			drawnCard = {
-				rank: transformRank(result.drawn_card.rank),
-				suit: transformSuit(result.drawn_card.suit)
-			};
-			drawnCardSource = 'deck';
-		} else {
-			console.error('[GamePage] No card drawn from deck');
+		// Card info comes via WebSocket in game_state_update, not API response
+		// The drawnCard will be populated when the WS message updates gameState
+		if (!result) {
+			console.error('[GamePage] Draw action failed');
 		}
 	}
 
@@ -140,15 +156,10 @@
 		console.log('[GamePage] Discard clicked, gameId:', gameId);
 		const result = await gameActions.drawFromDiscard(gameId);
 		console.log('[GamePage] Discard draw result:', result);
-		if (result?.drawn_card) {
-			console.log('[GamePage] Card drawn:', result.drawn_card);
-			drawnCard = {
-				rank: transformRank(result.drawn_card.rank),
-				suit: transformSuit(result.drawn_card.suit)
-			};
-			drawnCardSource = 'discard';
-		} else {
-			console.error('[GamePage] No card drawn from discard');
+		// Card info comes via WebSocket in game_state_update, not API response
+		// The drawnCard will be populated when the WS message updates gameState
+		if (!result) {
+			console.error('[GamePage] Draw action failed');
 		}
 	}
 
