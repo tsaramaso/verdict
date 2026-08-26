@@ -93,11 +93,7 @@ function getAuthToken(): string | null {
 	return null;
 }
 
-export async function apiCall(
-	endpoint: string,
-	options: RequestInit = {},
-	token?: string
-) {
+export async function apiCall(endpoint: string, options: RequestInit = {}, token?: string) {
 	// Determine auth token source: parameter (server-side) or localStorage (client-side)
 	let authToken = token;
 	if (!authToken && typeof window !== 'undefined') {
@@ -126,10 +122,14 @@ export async function apiCall(
 }
 
 export async function login(uuid: string, token?: string) {
-	const response = await apiCall('/api/users/login', {
-		method: 'POST',
-		body: JSON.stringify({ uuid })
-	}, token);
+	const response = await apiCall(
+		'/api/users/login',
+		{
+			method: 'POST',
+			body: JSON.stringify({ uuid })
+		},
+		token
+	);
 
 	// Store token in localStorage for subsequent requests (client-side only)
 	if (response.token && typeof window !== 'undefined') {
@@ -179,14 +179,22 @@ export async function getGameStatus(gameId: string, token?: string) {
 	return apiCall(`/api/games/${gameId}/status`, {}, token);
 }
 
-export async function createGame(playerIds: string[], rulesConfig?: Record<string, any>, token?: string) {
-	return apiCall('/api/games', {
-		method: 'POST',
-		body: JSON.stringify({
-			player_ids: playerIds,
-			rules_config: rulesConfig || {}
-		})
-	}, token);
+export async function createGame(
+	playerIds: string[],
+	rulesConfig?: Record<string, any>,
+	token?: string
+) {
+	return apiCall(
+		'/api/games',
+		{
+			method: 'POST',
+			body: JSON.stringify({
+				player_ids: playerIds,
+				rules_config: rulesConfig || {}
+			})
+		},
+		token
+	);
 }
 
 export async function getGameRecap(gameId: string, token?: string) {
@@ -206,13 +214,21 @@ export async function getLobby(lobbyId: string, token?: string) {
 }
 
 export async function createLobby(token?: string) {
-	return apiCall('/api/lobbies/create', {
-		method: 'POST'
-	}, token);
+	return apiCall(
+		'/api/lobbies/create',
+		{
+			method: 'POST'
+		},
+		token
+	);
 }
 
 export async function joinLobby(lobbyId: string, token?: string) {
-	return apiCall(`/api/lobbies/${lobbyId}/join`, {
-		method: 'POST'
-	}, token);
+	return apiCall(
+		`/api/lobbies/${lobbyId}/join`,
+		{
+			method: 'POST'
+		},
+		token
+	);
 }
