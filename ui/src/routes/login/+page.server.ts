@@ -33,9 +33,10 @@ export const actions = {
 			// Redirect to home
 			throw redirect(303, '/home');
 		} catch (err) {
-			// Re-throw redirect errors
-			if (err instanceof Error && (err as any).status === 303) throw err;
-			return { error: 'Login failed' };
+			// Re-throw redirect errors (from redirect())
+			if (err && typeof err === 'object' && (err as any).status === 303) throw err;
+			// API errors or network errors
+			return { error: err instanceof Error ? err.message : 'Login failed' };
 		}
 	}
 };
