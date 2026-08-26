@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 
 from src.app.routes import router
+from src.app.routes.ws import router as ws_router
 from src.db.session import engine
 
 
@@ -28,7 +29,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(router)
+    # API routes at /api/*, WebSocket routes at /ws/*
+    app.include_router(router, prefix="/api")
+    app.include_router(ws_router)
     return app
 
 
