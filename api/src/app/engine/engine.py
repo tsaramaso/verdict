@@ -241,7 +241,7 @@ def advance_turn_start(state: GameState) -> list[Event]:
     ]
 
 
-@require_phase(Phase.TURN_START)
+@require_phase(Phase.DRAWING)
 def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Event]:
     if source is DrawSource.DISCARD_PILE and not state.discard_pile:
         raise IllegalAction("Discard pile is empty")
