@@ -37,12 +37,11 @@ import functools
 import inspect
 from uuid import uuid4
 
+from src.app.engine.timer import OTHER_TIMERS, PHASE_TIMERS
 from src.app.engine import scoring
 from src.app.engine.cards import build_deck
 from src.app.engine.constants import (
     BASE_RULES,
-    OTHER_TIMERS,
-    PHASE_TIMERS,
     POWER_RANKS,
     ActionChoice,
     DrawSource,
