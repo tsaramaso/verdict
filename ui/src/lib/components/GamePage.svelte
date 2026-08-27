@@ -58,7 +58,7 @@
 				current_player: message.current_player,
 				round_number: message.round_number
 			};
-			
+
 			console.log('[GamePage] Game state update, phase:', gameInfo.phase);
 
 			// Extract drawn card from events if present
@@ -82,12 +82,12 @@
 
 			// Debug: log what self data arrived
 			console.log('[GamePage] Self data from WS:', message.self);
-			
+
 			const transformedSelf = {
 				...message.self,
-				hand: [...transformCardList(message.self.hand)]  // Spread to create new array reference
+				hand: [...transformCardList(message.self.hand)] // Spread to create new array reference
 			};
-			
+
 			// Debug: log hand changes with detail
 			console.log('[GamePage] Hand updated:', transformedSelf.hand);
 			transformedSelf.hand.forEach((c, i) => {
@@ -100,14 +100,16 @@
 				});
 			});
 
-			const transformedOpponents = [...message.opponents.map((opp: any) => ({
-				...opp,
-				known_cards: opp.known_cards.map((card: any) => ({
-					slot: card.slot,
-					rank: transformRank(card.rank),
-					suit: transformSuit(card.suit)
+			const transformedOpponents = [
+				...message.opponents.map((opp: any) => ({
+					...opp,
+					known_cards: opp.known_cards.map((card: any) => ({
+						slot: card.slot,
+						rank: transformRank(card.rank),
+						suit: transformSuit(card.suit)
+					}))
 				}))
-			}))];
+			];
 
 			const transformedDiscard = {
 				...message.discard_pile,

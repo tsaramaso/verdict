@@ -41,6 +41,8 @@ from src.app.engine import scoring
 from src.app.engine.cards import build_deck
 from src.app.engine.constants import (
     BASE_RULES,
+    OTHER_TIMERS,
+    PHASE_TIMERS,
     POWER_RANKS,
     ActionChoice,
     DrawSource,
@@ -59,7 +61,6 @@ from src.app.engine.errors import IllegalAction
 from src.app.engine.events import Event, EventType, ScopedField
 from src.app.engine.state import GameState, PendingPower, Phase, PlayerState, TrialState
 from datetime import datetime, UTC
-from src.app.engine.constants import TIMERS
 
 
 def require_phase(phase: Phase):
@@ -309,9 +310,7 @@ def take_action(
         )
     if slot_index is None:
         raise IllegalAction("swap requires a valid slot_index is None")
-    if choice is ActionChoice.SWAP and (
-         not (0 <= slot_index < state.rules.hand_size)
-    ):
+    if choice is ActionChoice.SWAP and (not (0 <= slot_index < state.rules.hand_size)):
         raise IllegalAction("swap requires a valid slot_index")
 
     assert state.drawn_card is not None
@@ -440,7 +439,9 @@ def invoke_power(
         state.hand_emptied_this_window = False
 
     elif power is Power.SPY:
-        state, target_owner, target_index = _validate_target(state, target_owner, target_index)
+        state, target_owner, target_index = _validate_target(
+            state, target_owner, target_index
+        )
         card = state.players[target_owner].hand[target_index]  # type: ignore[index]
         if card is None:
             raise IllegalAction("That slot is empty")
@@ -456,7 +457,9 @@ def invoke_power(
         state.hand_emptied_this_window = False
 
     elif power is Power.DECREE:
-        state, target_owner, target_index = _validate_target(state, target_owner, target_index)
+        state, target_owner, target_index = _validate_target(
+            state, target_owner, target_index
+        )
         card = state.players[target_owner].hand[target_index]  # type: ignore[index]
         if card is None:
             raise IllegalAction("That slot is empty")
@@ -1138,10 +1141,7 @@ def _require_not_yet_responded(
         raise IllegalAction("Already responded in this window")
 
 
-# ============================================
-# SIMULTANEOUS PHASES (collection window)
-# ============================================
-
+# Simultaneous phases (collection window)
 SIMULTANEOUS_PHASES = {
     Phase.AWAITING_QUICK_DISCARD,
     Phase.AWAITING_CALL_WINDOW,
@@ -1150,10 +1150,7 @@ SIMULTANEOUS_PHASES = {
     Phase.AWAITING_FINAL_PLEA_WINDOW,
 }
 
-# ============================================
-# SINGLE-PLAYER PHASES (direct timeout)
-# ============================================
-
+# Single-player phases (direct timeout)
 SINGLE_PLAYER_PHASES = {
     Phase.DRAWING,
     Phase.AWAITING_ACTION,
@@ -1165,7 +1162,7 @@ SINGLE_PLAYER_PHASES = {
 def enter_phase(state: GameState, new_phase: Phase) -> None:
     """
     Called whenever phase transitions. Sets up timer & response tracking.
-    
+
     For simultaneous phases: identify participants, init response dict
     For single-player phases: set single participant
     """
@@ -1173,7 +1170,7 @@ def enter_phase(state: GameState, new_phase: Phase) -> None:
     state.phase_started_at = datetime.now(UTC)
     state.phase_responses.clear()
     state.phase_participants.clear()
-    
+
     if new_phase in SIMULTANEOUS_PHASES:
         # Identify eligible participants based on phase
         state.phase_participants = get_phase_participants(state, new_phase)
@@ -1185,31 +1182,37 @@ def enter_phase(state: GameState, new_phase: Phase) -> None:
 
 def get_phase_participants(state: GameState, phase: Phase) -> set[str]:
     """Determine which players should act in this phase."""
-    
+
     all_players = set(state.player_order)
-    
+
     if phase == Phase.AWAITING_QUICK_DISCARD:
         # All players can quick-discard
         return all_players
-    
+
     elif phase == Phase.AWAITING_CALL_WINDOW:
         # All players can give first-window testimony
         return all_players
-    
+
     elif phase == Phase.AWAITING_MATCH_WINDOW:
         # Only players who passed Call Window can give cross-testimony
         return all_players - set(state.trial.first_window_callers)
-    
+
     elif phase == Phase.AWAITING_DUEL_WINDOW:
         # Only Testimony-givers can challenge
-        testimony_givers = set(state.trial.first_window_callers) | set(state.trial.cross_callers)
+        testimony_givers = set(state.trial.first_window_callers) | set(
+            state.trial.cross_callers
+        )
         # Exclude perjured players
         return testimony_givers - state.trial.perjury_removed
-    
+
     elif phase == Phase.AWAITING_FINAL_PLEA_WINDOW:
         # Only bystanders can take plea
-        return set(state.player_after_perjury_and_testimony_removed())
-    
+        # Bystanders = all players - testimony givers - perjured
+        testimony_givers = set(state.trial.first_window_callers) | set(
+            state.trial.cross_callers
+        )
+        return all_players - testimony_givers - state.trial.perjury_removed
+
     return all_players
 
 
@@ -1223,7 +1226,7 @@ def check_collection_complete(state: GameState) -> bool:
     """Check if all phase participants have responded."""
     if state.phase not in SIMULTANEOUS_PHASES:
         return False
-    
+
     return all(pid in state.phase_responses for pid in state.phase_participants)
 
 
@@ -1237,69 +1240,67 @@ def get_phase_elapsed_seconds(state: GameState) -> float:
 def apply_timeout_fallbacks(state: GameState) -> list:
     """
     Apply fallback actions for all players who didn't respond.
-    Returns list of Event objects from fallback actions.
+    Returns empty list (fallback actions are recorded in state, not events).
+    Events are generated by phase close functions.
     """
     if state.phase not in SIMULTANEOUS_PHASES:
         return []
-    
-    events = []
+
     non_responders = state.phase_participants - set(state.phase_responses.keys())
-    
+
     for player_id in non_responders:
         # Determine fallback action per phase
         if state.phase == Phase.AWAITING_QUICK_DISCARD:
             # No action (player passes quick-discard)
             pass
-        
+
         elif state.phase == Phase.AWAITING_CALL_WINDOW:
             # Mark as passed first
             state.trial.passed_first.add(player_id)
-            # Event logged by caller
-        
+
         elif state.phase == Phase.AWAITING_MATCH_WINDOW:
             # Mark as passed cross
             state.trial.passed_cross.add(player_id)
-        
+
         elif state.phase == Phase.AWAITING_DUEL_WINDOW:
             # Mark as passed challenge
             state.trial.passed_challenge.add(player_id)
-        
+
         elif state.phase == Phase.AWAITING_FINAL_PLEA_WINDOW:
             # Player declines plea (scores true sum, eligible for Renaissance)
             state.trial.plea_declined.add(player_id)
-    
-    return events
+
+    return []
 
 
 def validate_timeout_attempt(state: GameState, phase_str: str) -> tuple[bool, str]:
     """
     Validate timeout request from client (single-player phases only).
-    
+
     Returns: (is_valid, error_message)
     """
     try:
         claimed_phase = Phase(phase_str)
     except ValueError:
         return False, "Invalid phase"
-    
+
     # Check phase hasn't changed (client wasn't reloaded)
     if state.phase != claimed_phase:
-        return False, f"Phase mismatch: server={state.phase}, client={claimed_phase}"
-    
+        return False, f"Phase mismatch: server={state.phase.value}, client={phase_str}"
+
     # Only allow timeout on single-player phases
     if state.phase not in SINGLE_PLAYER_PHASES:
         return False, "Timeout not allowed on this phase"
-    
+
     # Check enough time has elapsed
     if not state.phase_started_at:
         return False, "Phase not properly initialized"
-    
+
     elapsed = get_phase_elapsed_seconds(state)
-    expected_duration = TIMERS.get(str(state.phase), 10)
-    
-    if elapsed < expected_duration:
-        # Give 500ms grace for network jitter
-        if elapsed < expected_duration - 0.5:
-            return False, f"Too early: {elapsed:.1f}s < {expected_duration}s"
-    
+
+    expected_duration = PHASE_TIMERS.get(state.phase, 10)
+
+    if elapsed < expected_duration - OTHER_TIMERS["TIMEOUT_GRACE_PERIOD"]:
+        return False, f"Too early: {elapsed:.1f}s < {expected_duration}s"
+
     return True, ""

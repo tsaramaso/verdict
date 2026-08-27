@@ -20,7 +20,7 @@ Grouped by rules.md section:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from src.app.auth import get_current_player
@@ -60,7 +60,9 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
         return
 
     # Get player names from game state (no DB query needed)
-    player_names = {pid: game_state.players[pid].player_name for pid in game_state.player_order}
+    player_names = {
+        pid: game_state.players[pid].player_name for pid in game_state.player_order
+    }
 
     # Send scoped message to each player
     for player_id in connected_players:
@@ -232,6 +234,7 @@ async def quick_discard(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.quick_discard, state, player_id, request.slot_index)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
 
     # Broadcast update to all players
@@ -277,6 +280,7 @@ async def testify_first(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_first, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
 
     # Broadcast update to all players
@@ -292,6 +296,7 @@ async def pass_call(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_call_window, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
 
     # Broadcast update to all players
@@ -307,6 +312,7 @@ async def testify_cross(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_testimony_cross, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
 
     # Broadcast update to all players
@@ -322,6 +328,7 @@ async def pass_match(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_match_window, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
 
     # Broadcast update to all players
@@ -337,6 +344,7 @@ def challenge(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.give_challenge, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
     return _result(state, events, player_id)
 
@@ -348,6 +356,7 @@ def pass_duel(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_duel_window, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
     return _result(state, events, player_id)
 
@@ -359,6 +368,7 @@ def plea(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.take_plea, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
     return _result(state, events, player_id)
 
@@ -370,8 +380,240 @@ def pass_plea(
     session: Session = Depends(get_session),
 ) -> ActionResult:
     events = _call(engine.pass_final_plea_window, state, player_id)
+    engine.log_player_response(state, player_id)  # Log response for collection window
     _persist(session, events)
     return _result(state, events, player_id)
+
+
+# ============================================
+# TIMER & COLLECTION WINDOW (NEW)
+# ============================================
+
+
+@router.post("/{game_id}/timeout", response_model=ActionResult)
+async def handle_timeout(
+    game_id: str,
+    phase: str,  # Query param: phase name for validation
+    player_id: str = Depends(get_current_player),
+    state: GameState = Depends(get_locked_game_state),
+    session: Session = Depends(get_session),
+) -> ActionResult:
+    """
+    Handle timeout for single-player phases (DRAWING, AWAITING_ACTION, etc).
+
+    Validates:
+    1. Phase matches server state
+    2. Enough time has elapsed (prevents reload exploitation)
+    3. Player is active player
+
+    Applies fallback action per gameplay.md §7 and broadcasts to all players.
+    """
+    logger = get_logger("timeout")
+
+    # Auth: must be active player
+    if player_id != state.current_player:
+        logger.warning(
+            "timeout_not_active",
+            game_id=str(game_id)[:8],
+            claimed_player=str(player_id)[:8],
+            actual_player=str(state.current_player)[:8],
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Only active player can timeout",
+        )
+
+    # Validate timeout is valid (phase match + time elapsed)
+    is_valid, error_msg = engine.validate_timeout_attempt(state, phase)
+    if not is_valid:
+        logger.warning(
+            "timeout_rejected",
+            game_id=str(game_id)[:8],
+            phase=phase,
+            reason=error_msg,
+        )
+        raise HTTPException(status_code=409, detail=error_msg)
+
+    logger.info("timeout_accepted", game_id=str(game_id)[:8], phase=phase)
+
+    # Apply timeout action per phase
+    events = []
+
+    if state.phase.value == "DRAWING":
+        events = _call(engine.draw_card, state, player_id, "discard")
+
+    elif state.phase.value == "AWAITING_ACTION":
+        # Use draw_source from state to determine fallback
+        source = state.draw_source or "deck"
+        if source == "deck":
+            events = _call(
+                engine.take_action, state, player_id, "discard_immediate", None
+            )
+        else:
+            events = _call(engine.take_action, state, player_id, "pass_back", None)
+
+    elif state.phase.value == "AWAITING_SPELL_INVOCATION":
+        events = _call(engine.decline_power, state, player_id)
+
+    elif state.phase.value == "AWAITING_SPELL_SWAP_DECISION":
+        # Decree swap declined
+        events = _call(engine.decree_swap_decision, state, player_id, False, None)
+
+    else:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Timeout not allowed on phase {state.phase}",
+        )
+
+    # Persist events
+    _persist(session, events)
+
+    # Broadcast to all players
+    await broadcast_game_update(game_id, state, events)
+
+    logger.info(
+        "timeout_applied",
+        game_id=str(game_id)[:8],
+        phase=phase,
+        player=str(player_id)[:8],
+        events_count=len(events),
+    )
+
+    return _result(state, events, player_id)
+
+
+@router.post("/{game_id}/close-phase-window", response_model=ActionResult)
+async def close_phase_window(
+    game_id: str,
+    player_id: str = Depends(get_current_player),
+    state: GameState = Depends(get_locked_game_state),
+    session: Session = Depends(get_session),
+) -> ActionResult:
+    """
+    Close collection window for simultaneous phases (QUICK_DISCARD, CALL_WINDOW, etc).
+
+    Can be called by any seated player (typically first to finish or background job).
+    Server validates phase is actually a collection window.
+
+    Applies fallbacks to non-responders and advances phase.
+    Works for: AWAITING_QUICK_DISCARD, AWAITING_CALL_WINDOW, AWAITING_MATCH_WINDOW,
+               AWAITING_DUEL_WINDOW, AWAITING_FINAL_PLEA_WINDOW
+    """
+    logger = get_logger("phase_window")
+
+    # Only proceed if we're in a simultaneous phase
+    if state.phase not in engine.SIMULTANEOUS_PHASES:
+        logger.warning(
+            "window_close_invalid_phase",
+            game_id=str(game_id)[:8],
+            phase=str(state.phase),
+        )
+        raise HTTPException(
+            status_code=409,
+            detail=f"Phase {state.phase} is not a collection window",
+        )
+
+    # Check if we should close (all responded OR enough time elapsed)
+    all_responded = engine.check_collection_complete(state)
+    elapsed = engine.get_phase_elapsed_seconds(state)
+    min_window = 2.0  # Minimum collection window (seconds) — can tune
+
+    if not all_responded and elapsed < min_window:
+        logger.debug(
+            "window_still_open",
+            game_id=str(game_id)[:8],
+            phase=str(state.phase),
+            elapsed=elapsed,
+            min_window=min_window,
+        )
+        raise HTTPException(
+            status_code=409,
+            detail=f"Collection window still open ({elapsed:.1f}s / {min_window}s)",
+        )
+
+    logger.info(
+        "phase_window_closing",
+        game_id=str(game_id)[:8],
+        phase=str(state.phase),
+        responded=len(state.phase_responses),
+        total=len(state.phase_participants),
+        elapsed=elapsed,
+    )
+
+    # Apply fallbacks for non-responders
+    fallback_events = engine.apply_timeout_fallbacks(state)
+
+    # Advance phase based on current phase
+    # NOTE: These use existing engine functions that check "maybe" conditions
+    # For MVP, we force-advance by calling the _maybe functions which will
+    # cascade through phase transitions automatically
+    events = []
+
+    if state.phase.value == "AWAITING_QUICK_DISCARD":
+        # Transition through trial or end round
+        events = _call(engine.close_quick_discard_window, state)
+
+    elif state.phase.value == "AWAITING_CALL_WINDOW":
+        # Force close call window and cascade to match window
+        # Mark any remaining players as passed_first
+        for pid in state.phase_participants - set(state.trial.first_window_callers):
+            if pid not in state.trial.passed_first:
+                state.trial.passed_first.add(pid)
+        # Now call the maybe function which will handle cascading
+        events = engine._maybe_close_call_window(state)
+
+    elif state.phase.value == "AWAITING_MATCH_WINDOW":
+        # Force close match window
+        # Mark any remaining players as passed_cross
+        for pid in state.phase_participants - set(state.trial.cross_callers):
+            if pid not in state.trial.passed_cross:
+                state.trial.passed_cross.add(pid)
+        # Now cascade through perjury check to duel or plea
+        events = engine._maybe_close_match_window(state)
+
+    elif state.phase.value == "AWAITING_DUEL_WINDOW":
+        # Force close duel window
+        # Mark any remaining testifiers as passed challenge
+        for pid in state.phase_participants - set(state.trial.passed_challenge):
+            state.trial.passed_challenge.add(pid)
+        # Cascade to plea window
+        events = engine._maybe_close_duel_window(state)
+
+    elif state.phase.value == "AWAITING_FINAL_PLEA_WINDOW":
+        # Force close plea window
+        # Mark any remaining bystanders as plea_declined
+        for pid in (
+            state.phase_participants
+            - set(state.trial.plea_taken)
+            - set(state.trial.plea_declined)
+        ):
+            state.trial.plea_declined.add(pid)
+        # End round
+        events = engine._maybe_close_final_plea_window(state)
+
+    # Combine fallback events + phase advance events
+    all_events = fallback_events + events
+
+    # Persist
+    _persist(session, all_events)
+
+    # Broadcast
+    await broadcast_game_update(game_id, state, all_events)
+
+    logger.info(
+        "phase_window_closed",
+        game_id=str(game_id)[:8],
+        phase=str(state.phase),
+        fallbacks_applied=len(fallback_events),
+        events_total=len(all_events),
+    )
+
+    return _result(state, all_events, player_id)
+
+
+# ============================================
+# PHASE ADVANCEMENT (existing)
+# ============================================
 
 
 @router.post("/{game_id}/advance-phase", response_model=ActionResult)

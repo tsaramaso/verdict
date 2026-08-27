@@ -26,7 +26,10 @@ export async function drawFromDeck(
 		console.log('[gameActions] drawFromDeck: Success', data);
 		return data;
 	} catch (error) {
-		console.error('[gameActions] drawFromDeck exception:', error instanceof Error ? error.message : error);
+		console.error(
+			'[gameActions] drawFromDeck exception:',
+			error instanceof Error ? error.message : error
+		);
 		return null;
 	}
 }
@@ -44,7 +47,10 @@ export async function drawFromDiscard(
 		console.log('[gameActions] drawFromDiscard: Success', data);
 		return data;
 	} catch (error) {
-		console.error('[gameActions] drawFromDiscard exception:', error instanceof Error ? error.message : error);
+		console.error(
+			'[gameActions] drawFromDiscard exception:',
+			error instanceof Error ? error.message : error
+		);
 		return null;
 	}
 }
@@ -254,38 +260,101 @@ export async function advancePhase(gameId: string): Promise<boolean> {
 	}
 }
 
-export async function timeoutDrawing(gameId: string): Promise<boolean> {
-	return await drawFromDiscard(gameId).then((result) => !!result);
-}
+// ============================================
+// SINGLE-PLAYER TIMEOUT (replaces old handlers)
+// ============================================
 
-export async function timeoutAction(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {
-	if (source === 'deck') {
-		return await discardImmediate(gameId, source);
-	} else {
-		return await passBack(gameId);
+/**
+ * Send timeout validation to server for single-player phases.
+ * Server validates phase match + elapsed time before applying fallback.
+ */
+export async function submitTimeout(gameId: string, phase: string): Promise<boolean> {
+	try {
+		const endpoint = `${API_ENDPOINTS.timeout(gameId)}`;
+		console.log('[gameActions] submitTimeout:', endpoint);
+
+		const data = await apiCall(endpoint, {
+			method: 'POST'
+		});
+
+		console.log('[gameActions] submitTimeout success:', data);
+		return true;
+	} catch (error) {
+		console.error('[gameActions] submitTimeout error:', error);
+		return false;
 	}
 }
 
+/**
+ * Legacy timeout handlers (kept for compatibility, now delegates to submitTimeout).
+ * Each phase still has its own method for clarity in call sites.
+ */
+
+export async function timeoutDrawing(gameId: string): Promise<boolean> {
+	console.log('[gameActions] timeoutDrawing → submitTimeout(DRAWING)');
+	return await submitTimeout(gameId, 'DRAWING');
+}
+
+export async function timeoutAction(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {
+	// Server uses draw_source from state, no need to pass here
+	console.log('[gameActions] timeoutAction → submitTimeout(AWAITING_ACTION)');
+	return await submitTimeout(gameId, 'AWAITING_ACTION');
+}
+
 export async function timeoutSpell(gameId: string): Promise<boolean> {
-	return await declinePower(gameId);
+	console.log('[gameActions] timeoutSpell → submitTimeout(AWAITING_SPELL_INVOCATION)');
+	return await submitTimeout(gameId, 'AWAITING_SPELL_INVOCATION');
 }
 
 export async function timeoutQuickDiscard(gameId: string): Promise<boolean> {
-	// No action needed, game continues
-	return true;
+	// Server will auto-close collection window. Client can request early close.
+	return await closePhaseWindow(gameId);
 }
 
 export async function timeoutTestifyWindow(gameId: string): Promise<boolean> {
-	// No action needed, player passes automatically
-	return true;
+	// Server will auto-close collection window. Client can request early close.
+	return await closePhaseWindow(gameId);
 }
 
 export async function timeoutDuelWindow(gameId: string): Promise<boolean> {
-	// No action needed, player didn't challenge
-	return true;
+	return await closePhaseWindow(gameId);
 }
 
 export async function timeoutPleaWindow(gameId: string): Promise<boolean> {
-	// No action needed, player declines plea (takes true sum)
-	return true;
+	return await closePhaseWindow(gameId);
+}
+
+/**
+ * Manually close phase collection window (all players responded or minimum wait time passed).
+ * Server validates before closing.
+ */
+export async function closePhaseWindow(gameId: string): Promise<boolean> {
+	try {
+		const endpoint = `${API_ENDPOINTS.closePhaseWindow(gameId)}`;
+		console.log('[gameActions] closePhaseWindow:', endpoint);
+
+		const data = await apiCall(endpoint, {
+			method: 'POST'
+		});
+
+		console.log('[gameActions] closePhaseWindow success:', data);
+		return true;
+	} catch (error) {
+		console.error('[gameActions] closePhaseWindow error:', error);
+		return false;
+	}
+}
+
+// ============================================
+// RESPONSE LOGGING (Optional Client-side)
+// ============================================
+
+/**
+ * Optional: Log that player has submitted action in simultaneous phase.
+ * Server tracks this via endpoint call (action routes call log_player_response).
+ * This is informational only; server is source of truth.
+ */
+export function logLocalResponse(phase: string): void {
+	console.log(`[gameActions] Local response logged for phase: ${phase}`);
+	// Can be used for optimistic UI updates (e.g., disable button if already voted)
 }

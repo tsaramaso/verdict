@@ -13,10 +13,11 @@ from src.app.engine.constants import (
     TurnDirection,
 )
 from datetime import datetime
- 
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from datetime import datetime as DateTime
+    pass
 
 
 class Phase(StrEnum):
@@ -128,12 +129,12 @@ class GameState:
     empty_deck: bool = False
     game_over: bool = False
     host_player_id: str | None = None
-    
+
     # TIMER & COLLECTION WINDOW
     phase_started_at: datetime | None = None
     phase_participants: set[str] = field(default_factory=set)
     phase_responses: dict[str, bool] = field(default_factory=dict)
-    
+
     # TURN-SCOPED FIELDS
     drawn_card: Card | None = None
     draw_source: DrawSource | None = None
