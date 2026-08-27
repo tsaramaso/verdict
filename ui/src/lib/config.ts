@@ -12,24 +12,24 @@ import type { CardSlot, GamePhase } from './stores/gameState';
 // Adjust per-phase in development as needed (from testing + watching gameplay)
 // ============================================
 export const TIMERS = {
-	// Phase durations (milliseconds)
+	// Phase durations (seconds)
 	// TURN_START: auto-advance, no timer shown
 	TURN_START: 3000, // cosmetic animation only, no player input
-	DRAWING: 30000, // 30s to choose deck or discard
-	AWAITING_ACTION: 30000, // 30s to choose action (discard immediate, swap, pass back)
-	AWAITING_SPELL_INVOCATION: 15000, // 15s to invoke or skip spell
-	AWAITING_QUICK_DISCARD: 10000, // 10s for all players to quick-discard (simultaneous)
-	AWAITING_CALL_WINDOW: 10000, // 10s for first-window testimony (simultaneous)
-	AWAITING_MATCH_WINDOW: 10000, // 10s for cross-testimony (simultaneous)
-	AWAITING_DUEL_WINDOW: 10000, // 10s for challenge window (simultaneous)
-	AWAITING_FINAL_PLEA_WINDOW: 10000, // 10s for plea decisions (simultaneous)
-	ROUND_OVER: 10000, // 10s to display verdict, then auto-advance
-	GAME_OVER: 10000, // 10s to display final standings
+	DRAWING: 30000, // to choose deck or discard
+	AWAITING_ACTION: 30000, // to choose action (discard immediate, swap, pass back)
+	AWAITING_SPELL_INVOCATION: 15000, // to invoke or skip spell
+	AWAITING_QUICK_DISCARD: 10, // for all players to quick-discard (simultaneous)
+	AWAITING_CALL_WINDOW: 10000, // for first-window testimony (simultaneous)
+	AWAITING_MATCH_WINDOW: 10000, // for cross-testimony (simultaneous)
+	AWAITING_DUEL_WINDOW: 10000, // for challenge window (simultaneous)
+	AWAITING_FINAL_PLEA_WINDOW: 10000, // for plea decisions (simultaneous)
+	ROUND_OVER: 10000, // to display verdict, then auto-advance
+	GAME_OVER: 10000, // to display final standings
 
 	// Timer color transitions (milliseconds)
 	// Used by Timer component to change color as countdown approaches 0
-	TIMER_WARNING_THRESHOLD: 5000, // Below 5s = yellow
-	TIMER_CRITICAL_THRESHOLD: 2000 // Below 2s = red, pulsing
+	TIMER_WARNING_THRESHOLD: 5, // Below 5s = yellow
+	TIMER_CRITICAL_THRESHOLD: 2 // Below 2s = red, pulsing
 } as const;
 
 // ============================================
