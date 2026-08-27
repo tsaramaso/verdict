@@ -82,6 +82,7 @@
 				isClickable={isClickableInPhase(slotIdx)}
 				isHighlighted={isSlotHighlighted(slotIdx)}
 				opponentKnows={opponentKnowsRecord}
+				showRankBadge={showKnowledge}
 				onClick={() => handleCardClick(slotIdx)}
 			/>
 		</div>
