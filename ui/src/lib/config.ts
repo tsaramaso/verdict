@@ -14,16 +14,16 @@ import type { CardSlot, GamePhase } from './stores/gameState';
 export const TIMERS = {
 	// Phase durations (seconds)
 	// TURN_START: auto-advance, no timer shown
-	TURN_START: 3000, // cosmetic animation only, no player input
-	DRAWING: 30000, // to choose deck or discard
-	AWAITING_ACTION: 30000, // to choose action (discard immediate, swap, pass back)
-	AWAITING_SPELL_INVOCATION: 15000, // to invoke or skip spell
+	TURN_START: 10, // cosmetic animation only, no player input
+	DRAWING: 10, // to choose deck or discard
+	AWAITING_ACTION: 10, // to choose action (discard immediate, swap, pass back)
+	AWAITING_SPELL_INVOCATION: 10, // to invoke or skip spell
 	AWAITING_QUICK_DISCARD: 10, // for all players to quick-discard (simultaneous)
-	AWAITING_CALL_WINDOW: 10000, // for first-window testimony (simultaneous)
-	AWAITING_MATCH_WINDOW: 10000, // for cross-testimony (simultaneous)
-	AWAITING_DUEL_WINDOW: 10000, // for challenge window (simultaneous)
-	AWAITING_FINAL_PLEA_WINDOW: 10000, // for plea decisions (simultaneous)
-	ROUND_OVER: 10000, // to display verdict, then auto-advance
+	AWAITING_CALL_WINDOW: 10, // for first-window testimony (simultaneous)
+	AWAITING_MATCH_WINDOW: 10, // for cross-testimony (simultaneous)
+	AWAITING_DUEL_WINDOW: 10, // for challenge window (simultaneous)
+	AWAITING_FINAL_PLEA_WINDOW: 10, // for plea decisions (simultaneous)
+	ROUND_OVER: 10, // to display verdict, then auto-advance
 	GAME_OVER: 10000, // to display final standings
 
 	// Timer color transitions (milliseconds)
