@@ -12,6 +12,11 @@ from src.app.engine.constants import (
     Rules,
     TurnDirection,
 )
+from datetime import datetime
+ 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from datetime import datetime as DateTime
 
 
 class Phase(StrEnum):
@@ -121,6 +126,24 @@ class GameState:
     current_turn_index: int = 0
     phase: Phase = Phase.TURN_START
     empty_deck: bool = False
+    game_over: bool = False
+    host_player_id: str | None = None
+    
+    # TIMER & COLLECTION WINDOW
+    phase_started_at: datetime | None = None
+    phase_participants: set[str] = field(default_factory=set)
+    phase_responses: dict[str, bool] = field(default_factory=dict)
+    
+    # TURN-SCOPED FIELDS
+    drawn_card: Card | None = None
+    draw_source: DrawSource | None = None
+    pending_power: PendingPower | None = None
+    quick_discard_rank: Rank | None = None
+    hand_emptied_this_window: bool = False
+    trial: TrialState = field(default_factory=TrialState)
+    round_id: str | None = None
+    turn_id: str | None = None
+    sequence: int = 0
 
     @property
     def is_last_turn(self) -> bool:
@@ -131,24 +154,6 @@ class GameState:
     @is_last_turn.setter
     def is_last_turn(self, value: bool):
         self.empty_deck = value
-
-    game_over: bool = False
-
-    # Lobby phase tracking
-    host_player_id: str | None = None  # Who created the game
-
-    # Turn-scoped scratch state
-    drawn_card: Card | None = None
-    draw_source: DrawSource | None = None
-    pending_power: PendingPower | None = None
-    quick_discard_rank: Rank | None = None
-    hand_emptied_this_window: bool = False
-
-    trial: TrialState = field(default_factory=TrialState)
-
-    round_id: str | None = None
-    turn_id: str | None = None
-    sequence: int = 0  # next sequence number to assign
 
     def __post_init__(self) -> None:
         """Initialize player hands after rules are set. Called automatically
