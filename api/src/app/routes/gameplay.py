@@ -23,6 +23,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
+from api.src.app.engine.timer import SIMULTANEOUS_PHASES
 from src.app.auth import get_current_player
 from src.app.engine import engine
 from src.app.engine.state import GameState
@@ -502,7 +503,7 @@ async def close_phase_window(
     logger = get_logger("phase_window")
 
     # Only proceed if we're in a simultaneous phase
-    if state.phase not in engine.SIMULTANEOUS_PHASES:
+    if state.phase not in SIMULTANEOUS_PHASES:
         logger.warning(
             "window_close_invalid_phase",
             game_id=str(game_id)[:8],

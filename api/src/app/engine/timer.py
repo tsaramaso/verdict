@@ -1,6 +1,4 @@
-
 from src.app.engine.state import Phase
-
 
 PHASE_TIMERS: dict[Phase, int | float] = {
     Phase.TURN_START: 10,

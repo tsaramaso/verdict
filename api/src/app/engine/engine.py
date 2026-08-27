@@ -37,7 +37,12 @@ import functools
 import inspect
 from uuid import uuid4
 
-from src.app.engine.timer import OTHER_TIMERS, PHASE_TIMERS
+from src.app.engine.timer import (
+    OTHER_TIMERS,
+    PHASE_TIMERS,
+    SIMULTANEOUS_PHASES,
+    SINGLE_PLAYER_PHASES,
+)
 from src.app.engine import scoring
 from src.app.engine.cards import build_deck
 from src.app.engine.constants import (
@@ -60,6 +65,63 @@ from src.app.engine.errors import IllegalAction
 from src.app.engine.events import Event, EventType, ScopedField
 from src.app.engine.state import GameState, PendingPower, Phase, PlayerState, TrialState
 from datetime import datetime, UTC
+
+
+def get_phase_participants(state: GameState, phase: Phase) -> set[str]:
+    """Determine which players should act in this phase."""
+
+    all_players = set(state.player_order)
+
+    if phase == Phase.AWAITING_QUICK_DISCARD:
+        # All players can quick-discard
+        return all_players
+
+    elif phase == Phase.AWAITING_CALL_WINDOW:
+        # All players can give first-window testimony
+        return all_players
+
+    elif phase == Phase.AWAITING_MATCH_WINDOW:
+        # Only players who passed Call Window can give cross-testimony
+        return all_players - set(state.trial.first_window_callers)
+
+    elif phase == Phase.AWAITING_DUEL_WINDOW:
+        # Only Testimony-givers can challenge
+        testimony_givers = set(state.trial.first_window_callers) | set(
+            state.trial.cross_callers
+        )
+        # Exclude perjured players
+        return testimony_givers - state.trial.perjury_removed
+
+    elif phase == Phase.AWAITING_FINAL_PLEA_WINDOW:
+        # Only bystanders can take plea
+        # Bystanders = all players - testimony givers - perjured
+        testimony_givers = set(state.trial.first_window_callers) | set(
+            state.trial.cross_callers
+        )
+        return all_players - testimony_givers - state.trial.perjury_removed
+
+    return all_players
+
+
+def enter_phase(state: GameState, new_phase: Phase) -> None:
+    """
+    Called whenever phase transitions. Sets up timer & response tracking.
+
+    For simultaneous phases: identify participants, init response dict
+    For single-player phases: set single participant
+    """
+    state.phase = new_phase
+    state.phase_started_at = datetime.now(UTC)
+    state.phase_responses.clear()
+    state.phase_participants.clear()
+
+    if new_phase in SIMULTANEOUS_PHASES:
+        # Identify eligible participants based on phase
+        state.phase_participants = get_phase_participants(state, new_phase)
+    elif new_phase in SINGLE_PLAYER_PHASES:
+        # Single active player
+        state.phase_participants = {state.current_player}
+    # else: TURN_START, ROUND_OVER, GAME_OVER — no timer participants
 
 
 def require_phase(phase: Phase):
@@ -227,7 +289,7 @@ def advance_turn_start(state: GameState) -> list[Event]:
     Called after TURN_START animation completes (Initial Glance reveal).
     Emits TURN_START_ADVANCED event for audit trail.
     """
-    state.phase = Phase.DRAWING
+    enter_phase(state, Phase.DRAWING)
 
     return [
         Event(
@@ -273,7 +335,7 @@ def draw_card(state: GameState, player_id: str, source: DrawSource) -> list[Even
     state.drawn_card = card
     state.draw_source = source
     state.turn_id = str(uuid4())
-    state.phase = Phase.AWAITING_ACTION
+    enter_phase(state, Phase.AWAITING_ACTION)
 
     return [
         Event(
@@ -354,9 +416,9 @@ def take_action(
     # (rules.md §7), and only for POWER_RANKS.
     top_rank = state.discard_pile[-1].rank
     if choice is ActionChoice.DISCARD_IMMEDIATE and top_rank in POWER_RANKS:
-        state.phase = Phase.AWAITING_SPELL_INVOCATION
+        enter_phase(state, Phase.AWAITING_SPELL_INVOCATION)
     else:
-        state.phase = Phase.AWAITING_QUICK_DISCARD
+        enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
         state.quick_discard_rank = top_rank if state.discard_pile else None
         state.hand_emptied_this_window = False
 
@@ -386,7 +448,7 @@ def decline_power(state: GameState, player_id: str) -> list[Event]:
             },
         )
     ]
-    state.phase = Phase.AWAITING_QUICK_DISCARD
+    enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
     state.quick_discard_rank = rank
     state.hand_emptied_this_window = False
     return events
@@ -433,7 +495,7 @@ def invoke_power(
                 state, player_id, power, player_id, own_slot_index, [player_id]
             )
         )
-        state.phase = Phase.AWAITING_QUICK_DISCARD
+        enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
         state.quick_discard_rank = rank
         state.hand_emptied_this_window = False
 
@@ -451,7 +513,7 @@ def invoke_power(
                 state, player_id, power, target_owner, target_index, [player_id]
             )
         )
-        state.phase = Phase.AWAITING_QUICK_DISCARD
+        enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
         state.quick_discard_rank = rank
         state.hand_emptied_this_window = False
 
@@ -471,7 +533,7 @@ def invoke_power(
         state.pending_power = PendingPower(
             power=power, target_owner=target_owner, target_index=target_index
         )
-        state.phase = Phase.AWAITING_SPELL_SWAP_DECISION
+        enter_phase(state, Phase.AWAITING_SPELL_SWAP_DECISION)
 
     elif power is Power.SMUGGLE:
         if own_slot_index is None or not (0 <= own_slot_index < state.rules.hand_size):
@@ -494,7 +556,7 @@ def invoke_power(
                 },
             )
         )
-        state.phase = Phase.AWAITING_QUICK_DISCARD
+        enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
         state.quick_discard_rank = rank
         state.hand_emptied_this_window = False
 
@@ -535,7 +597,7 @@ def decree_swap_decision(
     ]
     rank = state.discard_pile[-1].rank
     state.pending_power = None
-    state.phase = Phase.AWAITING_QUICK_DISCARD
+    enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
     state.quick_discard_rank = rank
     state.hand_emptied_this_window = False
     return events
@@ -654,7 +716,7 @@ def close_quick_discard_window(state: GameState) -> list[Event]:
     if state.hand_emptied_this_window:
         return _end_round_empty_hand(state)
     state.trial = TrialState()
-    state.phase = Phase.AWAITING_CALL_WINDOW
+    enter_phase(state, Phase.AWAITING_CALL_WINDOW)
     return []
 
 
@@ -700,7 +762,7 @@ def _maybe_close_call_window(state: GameState) -> list[Event]:
     responded = set(state.trial.first_window_callers) | state.trial.passed_first
     if responded != set(state.player_order):
         return []
-    state.phase = Phase.AWAITING_MATCH_WINDOW
+    enter_phase(state, Phase.AWAITING_MATCH_WINDOW)
     # Same class of stall as the Final Plea Window below: if literally
     # everyone testified in the Call Window, the Match Window's
     # population (players who passed_first) is already empty — nothing
@@ -803,7 +865,7 @@ def _resolve_perjury_check(state: GameState) -> list[Event]:
     ]
 
     if len(truly_eligible) >= 2:
-        state.phase = Phase.AWAITING_DUEL_WINDOW
+        enter_phase(state, Phase.AWAITING_DUEL_WINDOW)
         return events
     return events + _enter_final_plea_window(state)
 
@@ -900,7 +962,7 @@ def _maybe_close_duel_window(state: GameState) -> list[Event]:
 
 
 def _enter_final_plea_window(state: GameState) -> list[Event]:
-    state.phase = Phase.AWAITING_FINAL_PLEA_WINDOW
+    enter_phase(state, Phase.AWAITING_FINAL_PLEA_WINDOW)
     if not state.player_after_perjury_and_testimony_removed():
         # Nobody is eligible to act here — e.g. every player gave
         # Testimony (first or cross) this Trial. Nothing to wait for;
@@ -1023,7 +1085,7 @@ def _advance_to_next_player(state: GameState) -> list[Event]:
     state.current_turn_index = (state.current_turn_index + 1) % len(state.player_order)
     state.trial = TrialState()
     state.turn_id = None
-    state.phase = Phase.TURN_START
+    enter_phase(state, Phase.TURN_START)
     return []
 
 
@@ -1082,7 +1144,7 @@ def _resolve_scoring(
             )
         state.scores[player_id] = final_score
 
-    state.phase = Phase.ROUND_OVER
+    enter_phase(state, Phase.ROUND_OVER)
 
     if any(score >= state.rules.game_over_score for score in state.scores.values()):
         events += _end_game(state)
@@ -1098,7 +1160,7 @@ def _resolve_scoring(
 
 def _end_game(state: GameState) -> list[Event]:
     state.game_over = True
-    state.phase = Phase.GAME_OVER
+    enter_phase(state, Phase.GAME_OVER)
     ranked = sorted(state.player_order, key=lambda p: state.scores[p])
     return [
         Event(
@@ -1138,81 +1200,6 @@ def _require_not_yet_responded(
 ) -> None:
     if player_id in called or player_id in passed:
         raise IllegalAction("Already responded in this window")
-
-
-# Simultaneous phases (collection window)
-SIMULTANEOUS_PHASES = {
-    Phase.AWAITING_QUICK_DISCARD,
-    Phase.AWAITING_CALL_WINDOW,
-    Phase.AWAITING_MATCH_WINDOW,
-    Phase.AWAITING_DUEL_WINDOW,
-    Phase.AWAITING_FINAL_PLEA_WINDOW,
-}
-
-# Single-player phases (direct timeout)
-SINGLE_PLAYER_PHASES = {
-    Phase.DRAWING,
-    Phase.AWAITING_ACTION,
-    Phase.AWAITING_SPELL_INVOCATION,
-    Phase.AWAITING_SPELL_SWAP_DECISION,
-}
-
-
-def enter_phase(state: GameState, new_phase: Phase) -> None:
-    """
-    Called whenever phase transitions. Sets up timer & response tracking.
-
-    For simultaneous phases: identify participants, init response dict
-    For single-player phases: set single participant
-    """
-    state.phase = new_phase
-    state.phase_started_at = datetime.now(UTC)
-    state.phase_responses.clear()
-    state.phase_participants.clear()
-
-    if new_phase in SIMULTANEOUS_PHASES:
-        # Identify eligible participants based on phase
-        state.phase_participants = get_phase_participants(state, new_phase)
-    elif new_phase in SINGLE_PLAYER_PHASES:
-        # Single active player
-        state.phase_participants = {state.current_player}
-    # else: TURN_START, ROUND_OVER, GAME_OVER — no timer participants
-
-
-def get_phase_participants(state: GameState, phase: Phase) -> set[str]:
-    """Determine which players should act in this phase."""
-
-    all_players = set(state.player_order)
-
-    if phase == Phase.AWAITING_QUICK_DISCARD:
-        # All players can quick-discard
-        return all_players
-
-    elif phase == Phase.AWAITING_CALL_WINDOW:
-        # All players can give first-window testimony
-        return all_players
-
-    elif phase == Phase.AWAITING_MATCH_WINDOW:
-        # Only players who passed Call Window can give cross-testimony
-        return all_players - set(state.trial.first_window_callers)
-
-    elif phase == Phase.AWAITING_DUEL_WINDOW:
-        # Only Testimony-givers can challenge
-        testimony_givers = set(state.trial.first_window_callers) | set(
-            state.trial.cross_callers
-        )
-        # Exclude perjured players
-        return testimony_givers - state.trial.perjury_removed
-
-    elif phase == Phase.AWAITING_FINAL_PLEA_WINDOW:
-        # Only bystanders can take plea
-        # Bystanders = all players - testimony givers - perjured
-        testimony_givers = set(state.trial.first_window_callers) | set(
-            state.trial.cross_callers
-        )
-        return all_players - testimony_givers - state.trial.perjury_removed
-
-    return all_players
 
 
 def log_player_response(state: GameState, player_id: str) -> None:
