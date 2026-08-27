@@ -80,19 +80,34 @@
 				console.warn('[GamePage] LAST TURN: Deck is empty');
 			}
 
+			// Debug: log what self data arrived
+			console.log('[GamePage] Self data from WS:', message.self);
+			
 			const transformedSelf = {
 				...message.self,
-				hand: transformCardList(message.self.hand)
+				hand: [...transformCardList(message.self.hand)]  // Spread to create new array reference
 			};
+			
+			// Debug: log hand changes with detail
+			console.log('[GamePage] Hand updated:', transformedSelf.hand);
+			transformedSelf.hand.forEach((c, i) => {
+				console.log(`  [Slot ${i}]`, {
+					known: c?.known,
+					rank: c?.rank,
+					suit: c?.suit,
+					displayRank: c?.rank !== undefined ? c.rank : 'N/A',
+					displaySuit: c?.suit !== undefined ? c.suit : 'N/A'
+				});
+			});
 
-			const transformedOpponents = message.opponents.map((opp: any) => ({
+			const transformedOpponents = [...message.opponents.map((opp: any) => ({
 				...opp,
 				known_cards: opp.known_cards.map((card: any) => ({
 					slot: card.slot,
 					rank: transformRank(card.rank),
 					suit: transformSuit(card.suit)
 				}))
-			}));
+			}))];
 
 			const transformedDiscard = {
 				...message.discard_pile,

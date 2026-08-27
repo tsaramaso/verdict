@@ -69,7 +69,7 @@
 		<div class="card-back"></div>
 	{/if}
 
-	{#if card?.known && showRankBadge && card.rank && card.suit}
+	{#if card?.known && showRankBadge && card.rank !== undefined && card.suit !== undefined}
 		<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
 			{displayRank(card.rank)}{displaySuit(card.suit)}
 		</div>
