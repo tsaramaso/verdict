@@ -20,6 +20,7 @@ If you're tempted to add a new magic number, it belongs in rules.md
 first, not here.
 """
 
+from dataclasses import dataclass
 from enum import StrEnum, auto
 
 from pydantic import BaseModel
@@ -238,3 +239,72 @@ BASE_RULES = Rules(
 # not anything a player could trigger.
 assert RED_SUITS | BLACK_SUITS == set(Suit)
 assert not (RED_SUITS & BLACK_SUITS)
+
+# api/src/app/engine/constants.py — Timer Additions
+
+from enum import StrEnum, auto
+from typing import Final
+
+# ============================================
+# TIMER DURATIONS (seconds)
+# ============================================
+
+@dataclass
+class Timers:
+    """Timeout durations per phase. Adjusted via playtesting."""
+    
+    # Single-player phases (active player only)
+    DRAWING: Final[int] = 10
+    AWAITING_ACTION: Final[int] = 10
+    AWAITING_SPELL_INVOCATION: Final[int] = 8
+    AWAITING_SPELL_SWAP_DECISION: Final[int] = 8
+    
+    # Simultaneous phases (collection window)
+    AWAITING_QUICK_DISCARD: Final[int] = 10  # for all players to quick-discard
+    AWAITING_CALL_WINDOW: Final[int] = 10  # for first-window testimony
+    AWAITING_MATCH_WINDOW: Final[int] = 10  # for cross-testimony
+    AWAITING_DUEL_WINDOW: Final[int] = 10  # for challenge window
+    AWAITING_FINAL_PLEA_WINDOW: Final[int] = 10  # for plea decisions
+    
+    # Collection window settings
+    MIN_COLLECTION_WINDOW: Final[float] = 2.0  # Close if all responded after 2s
+    MAX_COLLECTION_WINDOW: Final[float] = 12.0  # Force close after 12s max
+    TIMEOUT_GRACE_PERIOD: Final[float] = 0.5  # 500ms grace for network jitter
+    
+    # UI thresholds (display only)
+    TIMER_WARNING_THRESHOLD: Final[int] = 3  # Yellow at ≤3s
+    TIMER_CRITICAL_THRESHOLD: Final[int] = 1  # Red at ≤1s
+    
+    @staticmethod
+    def get(phase_name: str, default: int = 10) -> int:
+        """Get timer duration by phase name string."""
+        return getattr(TIMERS, phase_name, default)
+
+
+TIMERS = Timers()
+# ============================================
+# PHASE GROUPINGS
+# ============================================
+
+SIMULTANEOUS_PHASES = frozenset([
+    'AWAITING_QUICK_DISCARD',
+    'AWAITING_CALL_WINDOW',
+    'AWAITING_MATCH_WINDOW',
+    'AWAITING_DUEL_WINDOW',
+    'AWAITING_FINAL_PLEA_WINDOW',
+])
+
+SINGLE_PLAYER_PHASES = frozenset([
+    'DRAWING',
+    'AWAITING_ACTION',
+    'AWAITING_SPELL_INVOCATION',
+    'AWAITING_SPELL_SWAP_DECISION',
+])
+
+NO_TIMER_PHASES = frozenset([
+    'TURN_START',
+    'ROUND_OVER',
+    'GAME_OVER',
+])
+
+TIMED_PHASES = SIMULTANEOUS_PHASES | SINGLE_PLAYER_PHASES
