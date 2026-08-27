@@ -50,6 +50,12 @@ export const API_ENDPOINTS = {
 	},
 
 	// ============================================
+	// TIMEOUT & COLLECTION WINDOW (NEW)
+	// ============================================
+	timeout: (gameId: string) => `/api/games/${gameId}/timeout`,
+	closePhaseWindow: (gameId: string) => `/api/games/${gameId}/close-phase-window`,
+
+	// ============================================
 	// GAME LIFECYCLE
 	// ============================================
 	game: {
