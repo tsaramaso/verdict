@@ -20,7 +20,11 @@
 		onQuickDiscard
 	}: Props = $props();
 
-	const discardTopCard = $derived($gameState.discard_pile.visible_cards[0]);
+	const discardTopCard = $derived(
+		$gameState.discard_pile.visible_cards.length > 0
+			? $gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1]
+			: undefined
+	);
 	const isQuickDiscardPhase = $derived($gameState.phase === GAME_PHASES.AWAITING_QUICK_DISCARD);
 
 	function isSlotHighlighted(slotIdx: number): boolean {

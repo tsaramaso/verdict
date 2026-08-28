@@ -23,11 +23,11 @@
 	onmouseenter={() => (isHovered = true)}
 	onmouseleave={() => (isHovered = false)}
 	title={$gameState.discard_pile.visible_cards.length > 0
-		? `${displayRank($gameState.discard_pile.visible_cards[0].rank)}${displaySuit($gameState.discard_pile.visible_cards[0].suit)}`
+		? `${displayRank($gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1].rank)}${displaySuit($gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1].suit)}`
 		: 'Empty discard pile'}
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
-		{@const topCard = $gameState.discard_pile.visible_cards[0]}
+		{@const topCard = $gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1]}
 		<div class="card-face" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
 			<div class="card-face__rank">{displayRank(topCard.rank)}</div>
 			<div class="card-face__suit">{displaySuit(topCard.suit)}</div>
