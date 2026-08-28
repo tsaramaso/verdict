@@ -62,24 +62,27 @@
 	onmouseenter={() => (isHovered = true)}
 	onmouseleave={() => (isHovered = false)}
 >
-	{#if !card || !card.known}
+	{#if card && card.known}
+		<!-- Card exists and known: show back + badge -->
 		<div class="card-back"></div>
-	{:else if card.known}
-		<!-- Face-down but known: show badge only -->
+		{#if showRankBadge && card.rank !== undefined && card.suit !== undefined}
+			<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
+				{displayRank(card.rank)}{displaySuit(card.suit)}
+			</div>
+		{/if}
+	{:else if card && !card.known}
+		<!-- Card exists but unknown: show back only -->
 		<div class="card-back"></div>
+	{:else}
+		<!-- No card (discarded): empty slot -->
+		<!-- Nothing renders here -->
 	{/if}
 
-	{#if card?.known && showRankBadge && card.rank !== undefined && card.suit !== undefined}
-		<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
-			{displayRank(card.rank)}{displaySuit(card.suit)}
-		</div>
-	{/if}
-
-	{#if hasOpponentKnowledge()}
+	{#if card && hasOpponentKnowledge()}
 		<div class="opponent-knows-icon" title={opponentsWhoKnow.join(', ')}>👁️</div>
 	{/if}
 
-	{#if isHovered && isYourCard && opponentsWhoKnow.length > 0}
+	{#if isHovered && isYourCard && card && opponentsWhoKnow.length > 0}
 		<div class="hover-tooltip">
 			<div class="hover-tooltip__title">Known by:</div>
 			<div class="hover-tooltip__list">
