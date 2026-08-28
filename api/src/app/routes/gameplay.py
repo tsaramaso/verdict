@@ -23,7 +23,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from api.src.app.engine.timer import SIMULTANEOUS_PHASES
+from src.app.engine.timer import SIMULTANEOUS_PHASES
 from src.app.auth import get_current_player
 from src.app.engine import engine
 from src.app.engine.state import GameState
@@ -31,6 +31,7 @@ from src.app.game_registry import get_locked_game_state
 from src.app.routes._shared import _call, _persist, _result
 from src.app.websocket_helpers import scope_state_for_player
 from src.logging_config import get_logger
+from src.app.engine.state import Phase
 
 
 from src.app.schemas import (
@@ -440,10 +441,10 @@ async def handle_timeout(
     # Apply timeout action per phase
     events = []
 
-    if state.phase.value == "DRAWING":
+    if state.phase is Phase.DRAWING:
         events = _call(engine.draw_card, state, player_id, "discard")
 
-    elif state.phase.value == "AWAITING_ACTION":
+    elif state.phase is Phase.AWAITING_ACTION:
         # Use draw_source from state to determine fallback
         source = state.draw_source or "deck"
         if source == "deck":
@@ -453,10 +454,10 @@ async def handle_timeout(
         else:
             events = _call(engine.take_action, state, player_id, "pass_back", None)
 
-    elif state.phase.value == "AWAITING_SPELL_INVOCATION":
+    elif state.phase is Phase.AWAITING_SPELL_INVOCATION:
         events = _call(engine.decline_power, state, player_id)
 
-    elif state.phase.value == "AWAITING_SPELL_SWAP_DECISION":
+    elif state.phase is Phase.AWAITING_SPELL_SWAP_DECISION:
         # Decree swap declined
         events = _call(engine.decree_swap_decision, state, player_id, False, None)
 
@@ -550,20 +551,23 @@ async def close_phase_window(
     # cascade through phase transitions automatically
     events = []
 
-    if state.phase.value == "AWAITING_QUICK_DISCARD":
+    if state.phase is Phase.AWAITING_QUICK_DISCARD:
         # Transition through trial or end round
+        print(f"DEBUG: hand_emptied_this_window = {state.hand_emptied_this_window}")  # ADD THIS
         events = _call(engine.close_quick_discard_window, state)
 
-    elif state.phase.value == "AWAITING_CALL_WINDOW":
-        # Force close call window and cascade to match window
+    elif state.phase is Phase.AWAITING_CALL_WINDOW:
         # Mark any remaining players as passed_first
         for pid in state.phase_participants - set(state.trial.first_window_callers):
             if pid not in state.trial.passed_first:
                 state.trial.passed_first.add(pid)
-        # Now call the maybe function which will handle cascading
-        events = engine._maybe_close_call_window(state)
+        
+        # Now manually cascade instead of calling _maybe_close_call_window
+        # because we've artificially filled passed_first
+        engine.enter_phase(state, Phase.AWAITING_MATCH_WINDOW)
+        events = engine._maybe_close_match_window(state)
 
-    elif state.phase.value == "AWAITING_MATCH_WINDOW":
+    elif state.phase is Phase.AWAITING_MATCH_WINDOW:
         # Force close match window
         # Mark any remaining players as passed_cross
         for pid in state.phase_participants - set(state.trial.cross_callers):
@@ -572,7 +576,7 @@ async def close_phase_window(
         # Now cascade through perjury check to duel or plea
         events = engine._maybe_close_match_window(state)
 
-    elif state.phase.value == "AWAITING_DUEL_WINDOW":
+    elif state.phase is Phase.AWAITING_DUEL_WINDOW:
         # Force close duel window
         # Mark any remaining testifiers as passed challenge
         for pid in state.phase_participants - set(state.trial.passed_challenge):
@@ -580,7 +584,7 @@ async def close_phase_window(
         # Cascade to plea window
         events = engine._maybe_close_duel_window(state)
 
-    elif state.phase.value == "AWAITING_FINAL_PLEA_WINDOW":
+    elif state.phase is Phase.AWAITING_FINAL_PLEA_WINDOW:
         # Force close plea window
         # Mark any remaining bystanders as plea_declined
         for pid in (

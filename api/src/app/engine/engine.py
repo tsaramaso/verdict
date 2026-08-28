@@ -37,6 +37,8 @@ import functools
 import inspect
 from uuid import uuid4
 
+from loguru import logger
+
 from src.app.engine.timer import (
     OTHER_TIMERS,
     PHASE_TIMERS,
@@ -110,6 +112,7 @@ def enter_phase(state: GameState, new_phase: Phase) -> None:
     For simultaneous phases: identify participants, init response dict
     For single-player phases: set single participant
     """
+    logger.info(f"🔄 ENTER_PHASE: {state.phase} → {new_phase}")  # DEBUG
     state.phase = new_phase
     state.phase_started_at = datetime.now(UTC)
     state.phase_responses.clear()
