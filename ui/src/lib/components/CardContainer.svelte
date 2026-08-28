@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CardSlot from './CardSlot.svelte';
-	import { gameState, getOpponentsThatKnowSlot, myOpponentKnowledge } from '$lib/stores/gameState';
+	import { gameState, getOpponentsThatKnowSlot, getOpponentNameMap, myOpponentKnowledge } from '$lib/stores/gameState';
 	import { GAME_PHASES } from '$lib/config';
 	import type { CardData } from '$lib/components/CardSlot.svelte';
 
@@ -74,10 +74,8 @@
 		{@const oppsWhoKnow = isYourCards
 			? getOpponentsThatKnowSlot($myOpponentKnowledge, slotIdx)
 			: []}
-		{@const opponentKnowsRecord = oppsWhoKnow.reduce((acc, id) => {
-			acc[id] = true;
-			return acc;
-		}, {})}
+		{@const nameMap = getOpponentNameMap($gameState.opponents)}
+		{@const opponentNames = oppsWhoKnow.map((id) => nameMap[id] || id)}
 		<div style="order: {slotIdx < 2 ? slotIdx + 2 : slotIdx - 2}">
 			<CardSlot
 				{card}
@@ -85,7 +83,7 @@
 				isYourCard={isYourCards}
 				isClickable={isClickableInPhase(slotIdx)}
 				isHighlighted={isSlotHighlighted(slotIdx)}
-				opponentKnows={opponentKnowsRecord}
+				opponentNames={opponentNames}
 				showRankBadge={showKnowledge}
 				onClick={() => handleCardClick(slotIdx)}
 			/>

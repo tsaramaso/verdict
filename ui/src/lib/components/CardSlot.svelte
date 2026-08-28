@@ -14,7 +14,7 @@
 		isYourCard?: boolean;
 		isClickable?: boolean;
 		isHighlighted?: boolean;
-		opponentKnows?: Record<string, boolean>;
+		opponentNames?: string[];  // List of opponent names who know this slot
 		onClick?: () => void;
 		showRankBadge?: boolean;
 	}
@@ -25,7 +25,7 @@
 		isYourCard = false,
 		isClickable = false,
 		isHighlighted = false,
-		opponentKnows,
+		opponentNames = [],
 		onClick,
 		showRankBadge = true
 	}: Props = $props();
@@ -33,16 +33,10 @@
 	let isHovered = $state(false);
 
 	function hasOpponentKnowledge(): boolean {
-		if (!opponentKnows) return false;
-		return Object.values(opponentKnows).some((v) => v === true);
+		return opponentNames.length > 0;
 	}
 
-	function getOpponentNames(): string[] {
-		if (!opponentKnows) return [];
-		return Object.keys(opponentKnows).filter((id) => opponentKnows![id]);
-	}
-
-	const opponentsWhoKnow = $derived(getOpponentNames());
+	const opponentsWhoKnow = $derived(opponentNames);
 </script>
 
 <div
@@ -65,17 +59,17 @@
 	{#if card && card.known}
 		<!-- Card exists and known: show back + badge -->
 		<div class="card-back"></div>
-		{#if showRankBadge && card.rank !== undefined && card.suit !== undefined}
-			<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
-				{displayRank(card.rank)}{displaySuit(card.suit)}
-			</div>
-		{/if}
 	{:else if card && !card.known}
 		<!-- Card exists but unknown: show back only -->
 		<div class="card-back"></div>
 	{:else}
-		<!-- No card (discarded): empty slot -->
-		<!-- Nothing renders here -->
+		<!-- No card (discarded): empty slot, render nothing -->
+	{/if}
+
+	{#if card && card.known && showRankBadge && card.rank !== undefined && card.suit !== undefined}
+		<div class="rank-badge" style="color: {SUIT_COLORS[card.suit]}">
+			{displayRank(card.rank)}{displaySuit(card.suit)}
+		</div>
 	{/if}
 
 	{#if card && hasOpponentKnowledge()}
@@ -86,8 +80,8 @@
 		<div class="hover-tooltip">
 			<div class="hover-tooltip__title">Known by:</div>
 			<div class="hover-tooltip__list">
-				{#each opponentsWhoKnow as oppId}
-					<div class="hover-tooltip__item">{oppId.slice(0, 8)}</div>
+				{#each opponentsWhoKnow as name}
+					<div class="hover-tooltip__item">{name}</div>
 				{/each}
 			</div>
 		</div>

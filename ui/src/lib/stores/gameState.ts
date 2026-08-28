@@ -226,3 +226,13 @@ export function getOpponentsThatKnowSlot(
 	}
 	return opponents;
 }
+
+export function getOpponentNameMap(
+	opponents: OpponentInfo[]
+): Record<string, string> {
+	const nameMap: Record<string, string> = {};
+	for (const opp of opponents) {
+		nameMap[opp.player_id] = opp.player_name;
+	}
+	return nameMap;
+}
