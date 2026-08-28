@@ -14,7 +14,7 @@ import type { CardSlot, GamePhase } from './stores/gameState';
 export const TIMERS = {
 	// Phase durations (seconds)
 	// TURN_START: auto-advance, no timer shown
-	TURN_START: 10, // cosmetic animation only, no player input
+	TURN_START: 3, // cosmetic animation only, no player input
 	DRAWING: 10, // to choose deck or discard
 	AWAITING_ACTION: 10, // to choose action (discard immediate, swap, pass back)
 	AWAITING_SPELL_INVOCATION: 10, // to invoke or skip spell
