@@ -8,8 +8,13 @@
 
 	let { isClickable, onClick }: Props = $props();
 
-	const deckCount = $derived($gameState.discard_pile?.count ?? 0);
-	const cardCount = $derived(52 - deckCount);
+	const totalCardsDealt = $derived(
+		$gameState.rules.hand_size * $gameState.opponents.length + 1
+		);
+
+		const deckCount = $derived(
+		52 - totalCardsDealt - ($gameState.discard_pile?.count ?? 0)
+		);;
 
 	function handleClick() {
 		console.log('[DeckZone] Clicked, isClickable:', isClickable);
@@ -36,7 +41,7 @@
 		<div class="card-stack__layer card-back"></div>
 		<div class="card-stack__layer card-back"></div>
 	</div>
-	<div class="card-count">{cardCount}</div>
+	<div class="card-count">{deckCount}</div>
 </div>
 
 <style>
