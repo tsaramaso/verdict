@@ -42,7 +42,7 @@ export async function drawFromDiscard(
 		console.log('[gameActions] drawFromDiscard: POST to', endpoint);
 		const data = await apiCall(endpoint, {
 			method: 'POST',
-			body: JSON.stringify({ source: 'discard' })
+			body: JSON.stringify({ source: 'discard_pile' })
 		});
 		console.log('[gameActions] drawFromDiscard: Success', data);
 		return data;
