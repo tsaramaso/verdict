@@ -6,6 +6,7 @@ Converts GameState into player-scoped views for WebSocket transmission.
 Reference: WEBSOCKET_STATE_SCOPING_CORRECTED.md
 """
 
+from loguru import logger
 from src.app.engine.state import GameState
 
 
@@ -49,9 +50,14 @@ def scope_state_for_player(
     self_hand = []
     self_player = game_state.players[player_id]
 
+    logger.debug(f"[HAND_DEBUG] Player {player_id[:8]} hand before scoping", 
+                 hand_length=len(self_player.hand),
+                 hand_state=[f"Slot{i}: {c.rank.name if c else 'None'}" for i, c in enumerate(self_player.hand)])
+
     for slot_idx, card in enumerate(self_player.hand):
         if card is None:
             # Slot was quick-discarded
+            logger.debug(f"[HAND_DEBUG] Slot {slot_idx}: None (discarded) → sending null")
             self_hand.append(None)
         else:
             # Check if this player knows this card

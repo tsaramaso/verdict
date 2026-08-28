@@ -88,15 +88,17 @@
 				hand: [...transformCardList(message.self.hand)] // Spread to create new array reference
 			};
 
+			// Debug: log raw server data first
+			console.log('[GamePage] RAW message.self.hand from server:', message.self.hand);
+			
 			// Debug: log hand changes with detail
-			console.log('[GamePage] Hand updated:', transformedSelf.hand);
+			console.log('[GamePage] Hand updated after transform:', transformedSelf.hand);
 			transformedSelf.hand.forEach((c, i) => {
 				console.log(`  [Slot ${i}]`, {
+					raw: c,
 					known: c?.known,
 					rank: c?.rank,
-					suit: c?.suit,
-					displayRank: c?.rank !== undefined ? c.rank : 'N/A',
-					displaySuit: c?.suit !== undefined ? c.suit : 'N/A'
+					suit: c?.suit
 				});
 			});
 
@@ -110,6 +112,14 @@
 					}))
 				}))
 			];
+
+			// Log discard pile state
+			console.log('[GamePage] Discard pile:', {
+				count: message.discard_pile?.count,
+				total_visible: message.discard_pile?.visible_cards?.length,
+				last_card: message.discard_pile?.visible_cards?.[message.discard_pile.visible_cards.length - 1],
+				all_cards: message.discard_pile?.visible_cards
+			});
 
 			const transformedDiscard = {
 				...message.discard_pile,
