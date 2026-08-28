@@ -372,9 +372,10 @@ def take_action(
         raise IllegalAction(
             "pass_back is only legal after drawing from the discard pile"
         )
-    if slot_index is None:
-        raise IllegalAction("swap requires a valid slot_index is None")
-    if choice is ActionChoice.SWAP and (not (0 <= slot_index < state.rules.hand_size)):
+    # Only check slot_index for SWAP; DISCARD_IMMEDIATE and PASS_BACK don't need it
+    if choice is ActionChoice.SWAP and slot_index is None:
+        raise IllegalAction("swap requires a valid slot_index")
+    if choice is ActionChoice.SWAP and slot_index is not None and (not (0 <= slot_index < state.rules.hand_size)):
         raise IllegalAction("swap requires a valid slot_index")
 
     assert state.drawn_card is not None
@@ -385,7 +386,7 @@ def take_action(
     if choice is ActionChoice.DISCARD_IMMEDIATE:
         state.discard_pile.append(drawn)
         public_fields["discarded_card"] = drawn.to_public_dict()
-    elif choice is ActionChoice.SWAP:
+    elif choice is ActionChoice.SWAP and slot_index is not None:
         player = state.players[player_id]
         outgoing = player.hand[slot_index]
         assert outgoing is not None
@@ -765,11 +766,23 @@ def _maybe_close_call_window(state: GameState) -> list[Event]:
     responded = set(state.trial.first_window_callers) | state.trial.passed_first
     if responded != set(state.player_order):
         return []
+    
+    total_testimony = len(state.trial.first_window_callers)
+    
+    # If zero testimony in Call Window, skip Match Window and resolve immediately
+    if total_testimony == 0:
+        if state.empty_deck:
+            return _end_round_forced_no_testimony(state)
+        return _advance_to_next_player(state)
+    
+    # Check if any players passed the Call Window (eligible for Match Window)
+    # If all players testified in Call, skip Match Window entirely
+    if not state.trial.passed_first:
+        # All players gave testimony in Call Window, go directly to perjury check
+        return _resolve_perjury_check(state)
+    
+    # Some players passed Call Window, enter Match Window for them
     enter_phase(state, Phase.AWAITING_MATCH_WINDOW)
-    # Same class of stall as the Final Plea Window below: if literally
-    # everyone testified in the Call Window, the Match Window's
-    # population (players who passed_first) is already empty — nothing
-    # will ever fire the player action that would otherwise close it.
     return _maybe_close_match_window(state)
 
 

@@ -52,7 +52,7 @@ def scope_state_for_player(
     for slot_idx, card in enumerate(self_player.hand):
         if card is None:
             # Slot was quick-discarded
-            self_hand.append({"known": False})
+            self_hand.append(None)
         else:
             # Check if this player knows this card
             # Initially: know slots 0-1 from initial glance
