@@ -419,7 +419,8 @@ def take_action(
     # RankCheck — only DISCARD_IMMEDIATE can ever trigger a power
     # (rules.md §7), and only for POWER_RANKS.
     top_rank = state.discard_pile[-1].rank
-    if choice is ActionChoice.DISCARD_IMMEDIATE and top_rank in POWER_RANKS:
+
+    if (choice is ActionChoice.DISCARD_IMMEDIATE and state.draw_source is DrawSource.DECK and top_rank in POWER_RANKS):
         enter_phase(state, Phase.AWAITING_SPELL_INVOCATION)
     else:
         enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
