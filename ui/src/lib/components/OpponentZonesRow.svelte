@@ -10,8 +10,11 @@
 		onOpponentCardClick?: (opponentId: string, slotIndex: number) => void;
 	}
 
-	let { opponents = $gameState.opponents, currentPlayer = $gameState.current_player, onOpponentCardClick }: Props =
-		$props();
+	let {
+		opponents = $gameState.opponents,
+		currentPlayer = $gameState.current_player,
+		onOpponentCardClick
+	}: Props = $props();
 </script>
 
 <div class="opponent-zones-row">
@@ -26,7 +29,10 @@
 					</div>
 				</div>
 				<div class="opponent-zone">
-					<OpponentCardsZone {opponent} onCardClick={(slotIdx) => onOpponentCardClick?.(opponent.player_id, slotIdx)} />
+					<OpponentCardsZone
+						{opponent}
+						onCardClick={(slotIdx) => onOpponentCardClick?.(opponent.player_id, slotIdx)}
+					/>
 				</div>
 			</div>
 		{/each}

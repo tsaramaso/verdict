@@ -12,7 +12,11 @@
 	let { drawnCard, drawnCardSource, isVisible = false }: Props = $props();
 
 	const sourceLabel = $derived(
-		drawnCardSource === 'deck' ? 'From Deck' : drawnCardSource === 'discard_pile' ? 'From Discard' : null
+		drawnCardSource === 'deck'
+			? 'From Deck'
+			: drawnCardSource === 'discard_pile'
+				? 'From Discard'
+				: null
 	);
 </script>
 

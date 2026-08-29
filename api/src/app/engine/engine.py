@@ -375,7 +375,11 @@ def take_action(
     # Only check slot_index for SWAP; DISCARD_IMMEDIATE and PASS_BACK don't need it
     if choice is ActionChoice.SWAP and slot_index is None:
         raise IllegalAction("swap requires a valid slot_index")
-    if choice is ActionChoice.SWAP and slot_index is not None and (not (0 <= slot_index < state.rules.hand_size)):
+    if (
+        choice is ActionChoice.SWAP
+        and slot_index is not None
+        and (not (0 <= slot_index < state.rules.hand_size))
+    ):
         raise IllegalAction("swap requires a valid slot_index")
 
     assert state.drawn_card is not None
@@ -420,7 +424,11 @@ def take_action(
     # (rules.md §7), and only for POWER_RANKS.
     top_rank = state.discard_pile[-1].rank
 
-    if (choice is ActionChoice.DISCARD_IMMEDIATE and state.draw_source is DrawSource.DECK and top_rank in POWER_RANKS):
+    if (
+        choice is ActionChoice.DISCARD_IMMEDIATE
+        and state.draw_source is DrawSource.DECK
+        and top_rank in POWER_RANKS
+    ):
         enter_phase(state, Phase.AWAITING_SPELL_INVOCATION)
     else:
         enter_phase(state, Phase.AWAITING_QUICK_DISCARD)
@@ -767,21 +775,21 @@ def _maybe_close_call_window(state: GameState) -> list[Event]:
     responded = set(state.trial.first_window_callers) | state.trial.passed_first
     if responded != set(state.player_order):
         return []
-    
+
     total_testimony = len(state.trial.first_window_callers)
-    
+
     # If zero testimony in Call Window, skip Match Window and resolve immediately
     if total_testimony == 0:
         if state.empty_deck:
             return _end_round_forced_no_testimony(state)
         return _advance_to_next_player(state)
-    
+
     # Check if any players passed the Call Window (eligible for Match Window)
     # If all players testified in Call, skip Match Window entirely
     if not state.trial.passed_first:
         # All players gave testimony in Call Window, go directly to perjury check
         return _resolve_perjury_check(state)
-    
+
     # Some players passed Call Window, enter Match Window for them
     enter_phase(state, Phase.AWAITING_MATCH_WINDOW)
     return _maybe_close_match_window(state)

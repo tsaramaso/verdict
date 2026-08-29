@@ -81,7 +81,9 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
             "phase": str(game_state.phase),
             "current_player": game_state.current_player,
             "round_number": game_state.round_number,
-            "draw_source": str(game_state.draw_source) if game_state.draw_source else None,
+            "draw_source": (
+                str(game_state.draw_source) if game_state.draw_source else None
+            ),
             "events": scoped_events,
             # Include updated state snapshot
             "self": scoped_state["self"],
@@ -554,7 +556,9 @@ async def close_phase_window(
 
     if state.phase is Phase.AWAITING_QUICK_DISCARD:
         # Transition through trial or end round
-        print(f"DEBUG: hand_emptied_this_window = {state.hand_emptied_this_window}")  # ADD THIS
+        print(
+            f"DEBUG: hand_emptied_this_window = {state.hand_emptied_this_window}"
+        )  # ADD THIS
         events = _call(engine.close_quick_discard_window, state)
 
     elif state.phase is Phase.AWAITING_CALL_WINDOW:
@@ -562,7 +566,7 @@ async def close_phase_window(
         for pid in state.phase_participants - set(state.trial.first_window_callers):
             if pid not in state.trial.passed_first:
                 state.trial.passed_first.add(pid)
-        
+
         # Now manually cascade instead of calling _maybe_close_call_window
         # because we've artificially filled passed_first
         engine.enter_phase(state, Phase.AWAITING_MATCH_WINDOW)

@@ -1,12 +1,12 @@
 /**
  * Frontend logger utility using loglevel
  * Mirrors backend loguru setup with structured logging
- * 
+ *
  * Usage:
  *   const log = getLogger('myModule')
  *   log.info('action_name', { key: 'value' })
  *   log.error('error_event', { error: 'details' })
- * 
+ *
  * Levels: trace, debug, info, warn, error
  * Control via: localStorage.setItem('loglevel', 'info')
  */
@@ -27,9 +27,7 @@ function initializeLogLevel(): void {
 	const stored = typeof window !== 'undefined' ? localStorage.getItem('loglevel') : null;
 
 	// Fall back to environment or defaults
-	const level =
-		stored || 
-		(import.meta.env.MODE === 'production' ? 'info' : 'debug');
+	const level = stored || (import.meta.env.MODE === 'production' ? 'info' : 'debug');
 
 	loglevel.setLevel(level as LogLevel);
 }

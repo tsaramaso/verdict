@@ -71,7 +71,7 @@
 			// Extract draw_source from message (if present)
 			if (message.draw_source) {
 				drawnCardSource = message.draw_source === 'DrawSource.DECK' ? 'deck' : 'discard_pile';
-				log.debug('Set drawnCardSource:', {drawnCardSource});
+				log.debug('Set drawnCardSource:', { drawnCardSource });
 			}
 
 			// Extract drawn card from events if present
@@ -103,7 +103,7 @@
 
 			// Debug: log raw server data first
 			log.debug('RAW message.self.hand from server:', message.self.hand);
-			
+
 			// Debug: log hand changes with detail
 			log.debug('hand_updated', {
 				slot_count: transformedSelf.hand.length,
@@ -125,7 +125,8 @@
 			log.debug('Discard pile:', {
 				count: message.discard_pile?.count,
 				total_visible: message.discard_pile?.visible_cards?.length,
-				last_card: message.discard_pile?.visible_cards?.[message.discard_pile.visible_cards.length - 1],
+				last_card:
+					message.discard_pile?.visible_cards?.[message.discard_pile.visible_cards.length - 1],
 				all_cards: message.discard_pile?.visible_cards
 			});
 
@@ -192,7 +193,7 @@
 
 	async function handleOpponentZoneClick(opponentId: string, slotIndex: number) {
 		const power = getPowerType();
-		log.debug('opponent_card_clicked', {power, opponentId, slotIndex, spellSelectedOwnSlot});
+		log.debug('opponent_card_clicked', { power, opponentId, slotIndex, spellSelectedOwnSlot });
 
 		if (power === 'spy') {
 			await gameActions.invokePower(gameId, undefined, opponentId, slotIndex);
@@ -201,7 +202,7 @@
 			if (spellSelectedOwnSlot === null) {
 				spellSelectedTargetId = opponentId;
 				spellSelectedTargetSlot = slotIndex;
-				log.debug('smuggle_target_selected', {opponentId, slotIndex});
+				log.debug('smuggle_target_selected', { opponentId, slotIndex });
 			} else {
 				await gameActions.invokePower(gameId, spellSelectedOwnSlot, opponentId, slotIndex);
 				clearDrawnCard();
@@ -210,12 +211,12 @@
 			spellSelectedTargetId = opponentId;
 			spellSelectedTargetSlot = slotIndex;
 			spellDecreeStage = 'swap';
-			log.debug('decree_peeked', {opponentId, slotIndex});
+			log.debug('decree_peeked', { opponentId, slotIndex });
 		}
 	}
 
 	async function handleDrawDeck() {
-		log.debug('Deck clicked, gameId:', {gameId});
+		log.debug('Deck clicked, gameId:', { gameId });
 		const result = await gameActions.drawFromDeck(gameId);
 		log.debug('draw_deck_result', { success: !!result });
 		// Card info comes via WebSocket in game_state_update, not API response
@@ -321,7 +322,7 @@
 
 	async function handleTimeout() {
 		const phase = $gameState.phase;
-		log.debug('Timer expired for phase:', {phase});
+		log.debug('Timer expired for phase:', { phase });
 
 		if (phase === GAME_PHASES.DRAWING) {
 			await gameActions.timeoutDrawing(gameId);
@@ -386,11 +387,11 @@
 			onStateChange={(state) => {
 				if (state.selectedOwnSlot !== undefined) {
 					spellSelectedOwnSlot = state.selectedOwnSlot;
-					log.debug('modal_spell_state_updated', {selectedOwnSlot: spellSelectedOwnSlot});
+					log.debug('modal_spell_state_updated', { selectedOwnSlot: spellSelectedOwnSlot });
 				}
 				if (state.decreeStage !== undefined) {
 					spellDecreeStage = state.decreeStage;
-					log.debug('modal_spell_state_updated', {decreeStage: spellDecreeStage});
+					log.debug('modal_spell_state_updated', { decreeStage: spellDecreeStage });
 				}
 			}}
 		/>

@@ -22,7 +22,12 @@
 </script>
 
 <div class="opponent-cards-zone">
-	<CardContainer cards={opponentCards} isYourCards={false} showKnowledge={false} onOpponentCardClick={onCardClick} />
+	<CardContainer
+		cards={opponentCards}
+		isYourCards={false}
+		showKnowledge={false}
+		onOpponentCardClick={onCardClick}
+	/>
 </div>
 
 <style>

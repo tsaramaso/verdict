@@ -10,10 +10,14 @@
 		onInvoke?: (slotIndex?: number, targetId?: string, targetIndex?: number) => void;
 		onDecline?: () => void;
 		onDecreeSwap?: (swap: boolean, ownSlot?: number) => void;
-		onStateChange?: (state: { selectedOwnSlot?: number | null; decreeStage?: 'peek' | 'swap' }) => void;
+		onStateChange?: (state: {
+			selectedOwnSlot?: number | null;
+			decreeStage?: 'peek' | 'swap';
+		}) => void;
 	}
 
-	let { drawnCard, drawnCardSource, onInvoke, onDecline, onDecreeSwap, onStateChange }: Props = $props();
+	let { drawnCard, drawnCardSource, onInvoke, onDecline, onDecreeSwap, onStateChange }: Props =
+		$props();
 
 	let selectedOwnSlot: number | null = $state(null);
 	let selectedTargetSlot: number | null = $state(null);

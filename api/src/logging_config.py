@@ -32,21 +32,29 @@ MODULE_LEVELS = {
     "websocket": "INFO",  # Only log connections, disconnects, errors (not pong/ping)
 }
 
+
 def should_log(record):
     """Filter function to suppress noisy debug logs by module."""
     module = record.get("module")
-    
+
     if module in MODULE_LEVELS:
         module_level = MODULE_LEVELS[module]
         # Parse level string to number (DEBUG=10, INFO=20, etc.)
-        level_map = {"DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+        level_map = {
+            "DEBUG": 10,
+            "INFO": 20,
+            "WARNING": 30,
+            "ERROR": 40,
+            "CRITICAL": 50,
+        }
         record_level = level_map.get(record["level"].name, 20)
         module_threshold = level_map.get(module_level, 20)
-        
+
         if record_level < module_threshold:
             return False
-    
+
     return True
+
 
 # Console handler (different format for dev vs prod)
 if IS_PRODUCTION:

@@ -1,6 +1,11 @@
 <script lang="ts">
 	import CardSlot from './CardSlot.svelte';
-	import { gameState, getOpponentsThatKnowSlot, getOpponentNameMap, myOpponentKnowledge } from '$lib/stores/gameState';
+	import {
+		gameState,
+		getOpponentsThatKnowSlot,
+		getOpponentNameMap,
+		myOpponentKnowledge
+	} from '$lib/stores/gameState';
 	import { GAME_PHASES } from '$lib/config';
 	import type { CardData } from '$lib/components/CardSlot.svelte';
 
@@ -74,7 +79,11 @@
 		}
 
 		// Opponent cards: clickable during spell invocation if handler exists
-		if (!isYourCards && $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION && onOpponentCardClick) {
+		if (
+			!isYourCards &&
+			$gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION &&
+			onOpponentCardClick
+		) {
 			return true;
 		}
 
@@ -97,7 +106,7 @@
 				isYourCard={isYourCards}
 				isClickable={isClickableInPhase(slotIdx)}
 				isHighlighted={isSlotHighlighted(slotIdx)}
-				opponentNames={opponentNames}
+				{opponentNames}
 				showRankBadge={showKnowledge}
 				onClick={() => handleCardClick(slotIdx)}
 			/>

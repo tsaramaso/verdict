@@ -27,7 +27,8 @@
 		: 'Empty discard pile'}
 >
 	{#if $gameState.discard_pile.visible_cards.length > 0}
-		{@const topCard = $gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1]}
+		{@const topCard =
+			$gameState.discard_pile.visible_cards[$gameState.discard_pile.visible_cards.length - 1]}
 		<div class="card-face" style="--suit-color: {SUIT_COLORS[topCard.suit]}">
 			<div class="card-face__rank">{displayRank(topCard.rank)}</div>
 			<div class="card-face__suit">{displaySuit(topCard.suit)}</div>

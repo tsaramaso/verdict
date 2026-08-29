@@ -14,7 +14,7 @@
 		isYourCard?: boolean;
 		isClickable?: boolean;
 		isHighlighted?: boolean;
-		opponentNames?: string[];  // List of opponent names who know this slot
+		opponentNames?: string[]; // List of opponent names who know this slot
 		onClick?: () => void;
 		showRankBadge?: boolean;
 	}

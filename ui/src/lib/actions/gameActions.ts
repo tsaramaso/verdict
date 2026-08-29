@@ -82,7 +82,7 @@ export async function swapCard(
 		});
 		return true;
 	} catch (error) {
-		log.error('swapcard_failed', { error: error} );
+		log.error('swapcard_failed', { error: error });
 		return false;
 	}
 }
@@ -95,7 +95,7 @@ export async function passBack(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('passback_failed', { error: error} );
+		log.error('passback_failed', { error: error });
 		return false;
 	}
 }
@@ -167,7 +167,7 @@ export async function quickDiscard(gameId: string, slotIndex: number): Promise<b
 		});
 		return true;
 	} catch (error) {
-		log.error('quickdiscard_failed', { error: error} );
+		log.error('quickdiscard_failed', { error: error });
 		return false;
 	}
 }
@@ -183,7 +183,7 @@ export async function testifyFirst(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('testifyfirst_failed', { error: error} );
+		log.error('testifyfirst_failed', { error: error });
 		return false;
 	}
 }
@@ -195,7 +195,7 @@ export async function testifyCross(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('testifycross_failed', { error: error});
+		log.error('testifycross_failed', { error: error });
 		return false;
 	}
 }
@@ -207,7 +207,7 @@ export async function challenge(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('challenge_failed', { error: error});
+		log.error('challenge_failed', { error: error });
 		return false;
 	}
 }
@@ -220,7 +220,7 @@ export async function takePlea(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('takeplea_failed', { error: error});
+		log.error('takeplea_failed', { error: error });
 		return false;
 	}
 }
@@ -233,7 +233,7 @@ export async function declinePlea(gameId: string): Promise<boolean> {
 		});
 		return true;
 	} catch (error) {
-		log.error('declineplea_failed', { error: error});
+		log.error('declineplea_failed', { error: error });
 		return false;
 	}
 }
@@ -286,7 +286,10 @@ export async function timeoutDrawing(gameId: string): Promise<boolean> {
 	return await submitTimeout(gameId, 'DRAWING');
 }
 
-export async function timeoutAction(gameId: string, source: 'deck' | 'discard_pile'): Promise<boolean> {
+export async function timeoutAction(
+	gameId: string,
+	source: 'deck' | 'discard_pile'
+): Promise<boolean> {
 	// Server uses draw_source from state, no need to pass here
 	return await submitTimeout(gameId, 'AWAITING_ACTION');
 }
