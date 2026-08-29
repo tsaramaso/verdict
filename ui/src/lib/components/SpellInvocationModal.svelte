@@ -10,9 +10,10 @@
 		onInvoke?: (slotIndex?: number, targetId?: string, targetIndex?: number) => void;
 		onDecline?: () => void;
 		onDecreeSwap?: (swap: boolean, ownSlot?: number) => void;
+		onStateChange?: (state: { selectedOwnSlot?: number | null; decreeStage?: 'peek' | 'swap' }) => void;
 	}
 
-	let { drawnCard, drawnCardSource, onInvoke, onDecline, onDecreeSwap }: Props = $props();
+	let { drawnCard, drawnCardSource, onInvoke, onDecline, onDecreeSwap, onStateChange }: Props = $props();
 
 	let selectedOwnSlot: number | null = $state(null);
 	let selectedTargetSlot: number | null = $state(null);
@@ -37,6 +38,7 @@
 		} else if (power === 'smuggle') {
 			if (selectedOwnSlot === null) {
 				selectedOwnSlot = slotIndex;
+				onStateChange?.({ selectedOwnSlot });
 			} else {
 				onInvoke?.(selectedOwnSlot, selectedTargetId, selectedTargetSlot ?? undefined);
 				resetSelection();
@@ -63,6 +65,7 @@
 			selectedTargetId = targetId;
 			selectedTargetSlot = slotIndex;
 			decreeStage = 'swap';
+			onStateChange?.({ decreeStage });
 		}
 	}
 

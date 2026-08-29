@@ -7,9 +7,10 @@
 	interface Props {
 		opponents?: OpponentInfo[];
 		currentPlayer?: string;
+		onOpponentCardClick?: (opponentId: string, slotIndex: number) => void;
 	}
 
-	let { opponents = $gameState.opponents, currentPlayer = $gameState.current_player }: Props =
+	let { opponents = $gameState.opponents, currentPlayer = $gameState.current_player, onOpponentCardClick }: Props =
 		$props();
 </script>
 
@@ -25,7 +26,7 @@
 					</div>
 				</div>
 				<div class="opponent-zone">
-					<OpponentCardsZone {opponent} />
+					<OpponentCardsZone {opponent} onCardClick={(slotIdx) => onOpponentCardClick?.(opponent.player_id, slotIdx)} />
 				</div>
 			</div>
 		{/each}

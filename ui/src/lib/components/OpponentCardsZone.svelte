@@ -5,9 +5,10 @@
 
 	interface Props {
 		opponent: OpponentInfo;
+		onCardClick?: (slotIndex: number) => void;
 	}
 
-	let { opponent }: Props = $props();
+	let { opponent, onCardClick }: Props = $props();
 
 	// Convert known_cards to card data format for CardContainer
 	const opponentCards = $derived.by(() => {
@@ -21,7 +22,7 @@
 </script>
 
 <div class="opponent-cards-zone">
-	<CardContainer cards={opponentCards} isYourCards={false} showKnowledge={false} />
+	<CardContainer cards={opponentCards} isYourCards={false} showKnowledge={false} onOpponentCardClick={onCardClick} />
 </div>
 
 <style>

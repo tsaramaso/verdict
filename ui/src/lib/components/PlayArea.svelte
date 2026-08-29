@@ -11,6 +11,7 @@
 		onDiscardDrawClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;
 		onQuickDiscard?: (slotIndex: number) => void;
+		onOpponentCardClick?: (opponentId: string, slotIndex: number) => void;
 	}
 
 	let {
@@ -19,13 +20,14 @@
 		onDeckClick,
 		onDiscardDrawClick,
 		onAction,
-		onQuickDiscard
+		onQuickDiscard,
+		onOpponentCardClick
 	}: Props = $props();
 </script>
 
 <div class="play-area">
 	<div class="opponent-zones-row">
-		<OpponentZonesRow />
+		<OpponentZonesRow {onOpponentCardClick} />
 	</div>
 
 	<div class="central-section">

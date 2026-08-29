@@ -10,6 +10,7 @@
 		onCardClick?: (slotIndex: number) => void;
 		showKnowledge?: boolean;
 		onQuickDiscard?: (slotIndex: number) => void;
+		onOpponentCardClick?: (slotIndex: number) => void;
 	}
 
 	let {
@@ -17,7 +18,8 @@
 		isYourCards = false,
 		onCardClick,
 		showKnowledge = true,
-		onQuickDiscard
+		onQuickDiscard,
+		onOpponentCardClick
 	}: Props = $props();
 
 	const discardTopCard = $derived(
@@ -40,27 +42,39 @@
 	}
 
 	function handleCardClick(slotIdx: number) {
-		if (isQuickDiscardPhase && isYourCards) {
-			// Quick discard phase: only allow clicking matching cards
-			if (isSlotHighlighted(slotIdx)) {
-				onQuickDiscard?.(slotIdx);
+		if (isYourCards) {
+			if (isQuickDiscardPhase) {
+				// Quick discard phase: only allow clicking matching cards
+				if (isSlotHighlighted(slotIdx)) {
+					onQuickDiscard?.(slotIdx);
+				}
+			} else {
+				// Action phase: normal card selection
+				onCardClick?.(slotIdx);
 			}
-		} else if (!isQuickDiscardPhase && isYourCards) {
-			// Action phase: normal card selection
-			onCardClick?.(slotIdx);
+		} else if (!isYourCards && $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION) {
+			// Spell invocation: opponent card click
+			onOpponentCardClick?.(slotIdx);
 		}
 	}
 
 	function isClickableInPhase(slotIdx: number): boolean {
-		if (!isYourCards) return false;
+		if (isYourCards) {
+			if (isQuickDiscardPhase) {
+				// Quick discard: only matching-rank cards clickable
+				return isSlotHighlighted(slotIdx);
+			}
 
-		if (isQuickDiscardPhase) {
-			// Quick discard: only matching-rank cards clickable
-			return isSlotHighlighted(slotIdx);
+			// Action phase: all cards clickable
+			if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
+				return true;
+			}
+
+			return false;
 		}
 
-		// Action phase: all cards clickable
-		if ($gameState.phase === GAME_PHASES.AWAITING_ACTION) {
+		// Opponent cards: clickable during spell invocation if handler exists
+		if (!isYourCards && $gameState.phase === GAME_PHASES.AWAITING_SPELL_INVOCATION && onOpponentCardClick) {
 			return true;
 		}
 

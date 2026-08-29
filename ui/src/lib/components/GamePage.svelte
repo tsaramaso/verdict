@@ -10,7 +10,7 @@
 	import { transformCardList, transformRank, transformSuit } from '$lib/utils/cardTransform';
 	import { transformRules } from '$lib/utils/rulesTransform';
 	import { GAME_PHASES } from '$lib/config';
-	import type { CardRank, CardSuit } from '$lib/constants/cards';
+	import { CardRank, type CardSuit } from '$lib/constants/cards';
 	import * as gameActions from '$lib/actions/gameActions';
 	import { getHardcodedBaseRules } from '$lib/utils/baseRules';
 	import { getLogger } from '$lib/utils/logger';
@@ -27,6 +27,12 @@
 	let drawnCard: { rank: CardRank; suit: CardSuit } | null = $state(null);
 	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
+
+	// Spell state for coordinating between modal and opponent zone clicks
+	let spellSelectedOwnSlot: number | null = $state(null);
+	let spellSelectedTargetId: string | undefined = $state(undefined);
+	let spellSelectedTargetSlot: number | null = $state(null);
+	let spellDecreeStage: 'peek' | 'swap' = $state('peek');
 
 	onMount(() => {
 		setCurrentPlayerId(playerId);
@@ -168,6 +174,44 @@
 	function clearDrawnCard() {
 		drawnCard = null;
 		drawnCardSource = null;
+		spellSelectedOwnSlot = null;
+		spellSelectedTargetId = undefined;
+		spellSelectedTargetSlot = null;
+		spellDecreeStage = 'peek';
+	}
+
+	function getPowerType(): string {
+		if (!drawnCard) return '';
+		const rank = drawnCard.rank;
+		if (rank === CardRank.SEVEN || rank === CardRank.EIGHT) return 'glance';
+		if (rank === CardRank.NINE || rank === CardRank.TEN) return 'spy';
+		if (rank === CardRank.JACK) return 'smuggle';
+		if (rank === CardRank.QUEEN) return 'decree';
+		return '';
+	}
+
+	async function handleOpponentZoneClick(opponentId: string, slotIndex: number) {
+		const power = getPowerType();
+		log.debug('opponent_card_clicked', {power, opponentId, slotIndex, spellSelectedOwnSlot});
+
+		if (power === 'spy') {
+			await gameActions.invokePower(gameId, undefined, opponentId, slotIndex);
+			clearDrawnCard();
+		} else if (power === 'smuggle') {
+			if (spellSelectedOwnSlot === null) {
+				spellSelectedTargetId = opponentId;
+				spellSelectedTargetSlot = slotIndex;
+				log.debug('smuggle_target_selected', {opponentId, slotIndex});
+			} else {
+				await gameActions.invokePower(gameId, spellSelectedOwnSlot, opponentId, slotIndex);
+				clearDrawnCard();
+			}
+		} else if (power === 'decree' && spellDecreeStage === 'peek') {
+			spellSelectedTargetId = opponentId;
+			spellSelectedTargetSlot = slotIndex;
+			spellDecreeStage = 'swap';
+			log.debug('decree_peeked', {opponentId, slotIndex});
+		}
 	}
 
 	async function handleDrawDeck() {
@@ -309,6 +353,7 @@
 		onDiscardDrawClick={handleDrawDiscard}
 		onAction={handleAction}
 		onQuickDiscard={handleQuickDiscard}
+		onOpponentCardClick={handleOpponentZoneClick}
 	/>
 
 	<RightPanel gameState={$gameState} onTimeOut={handleTimeout} />
@@ -325,9 +370,29 @@
 		<SpellInvocationModal
 			{drawnCard}
 			{drawnCardSource}
-			onInvoke={handlePowerInvoke}
+			onInvoke={(ownSlot, targetId, targetSlot) => {
+				spellSelectedOwnSlot = ownSlot ?? null;
+				spellSelectedTargetId = targetId;
+				spellSelectedTargetSlot = targetSlot ?? null;
+				handlePowerInvoke(ownSlot, targetId, targetSlot);
+			}}
 			onDecline={handlePowerDecline}
-			onDecreeSwap={handlePowerDecreeSwap}
+			onDecreeSwap={(swap, ownSlot) => {
+				if (!swap) {
+					spellDecreeStage = 'swap';
+				}
+				handlePowerDecreeSwap(swap, ownSlot);
+			}}
+			onStateChange={(state) => {
+				if (state.selectedOwnSlot !== undefined) {
+					spellSelectedOwnSlot = state.selectedOwnSlot;
+					log.debug('modal_spell_state_updated', {selectedOwnSlot: spellSelectedOwnSlot});
+				}
+				if (state.decreeStage !== undefined) {
+					spellDecreeStage = state.decreeStage;
+					log.debug('modal_spell_state_updated', {decreeStage: spellDecreeStage});
+				}
+			}}
 		/>
 	{/if}
 
