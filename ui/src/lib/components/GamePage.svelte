@@ -62,6 +62,12 @@
 
 			log.debug('Game state update, phase:', gameInfo.phase);
 
+			// Extract draw_source from message (if present)
+			if (message.draw_source) {
+				drawnCardSource = message.draw_source === 'DrawSource.DECK' ? 'deck' : 'discard';
+				log.debug('Set drawnCardSource:', {drawnCardSource});
+			}
+
 			// Extract drawn card from events if present
 			if (message.events && message.events.length > 0) {
 				const cardDrawnEvent = message.events.find((e: any) => e.type === 'card_drawn');

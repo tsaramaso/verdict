@@ -81,6 +81,7 @@ async def broadcast_game_update(game_id: str, game_state, events: list):
             "phase": str(game_state.phase),
             "current_player": game_state.current_player,
             "round_number": game_state.round_number,
+            "draw_source": str(game_state.draw_source) if game_state.draw_source else None,
             "events": scoped_events,
             # Include updated state snapshot
             "self": scoped_state["self"],
