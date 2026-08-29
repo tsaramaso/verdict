@@ -8,7 +8,7 @@
 
 	interface Props {
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
-		drawnCardSource?: 'deck' | 'discard' | null;
+		drawnCardSource?: 'deck' | 'discard_pile' | null;
 		onDeckClick?: () => void;
 		onDiscardDrawClick?: () => void;
 		onAction?: (choice: 'discard_immediate' | 'swap' | 'pass_back', slotIndex?: number) => void;

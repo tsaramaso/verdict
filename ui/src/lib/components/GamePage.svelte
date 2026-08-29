@@ -25,7 +25,7 @@
 	let { playerId, gameId }: Props = $props();
 
 	let drawnCard: { rank: CardRank; suit: CardSuit } | null = $state(null);
-	let drawnCardSource: 'deck' | 'discard' | null = $state(null);
+	let drawnCardSource: 'deck' | 'discard_pile' | null = $state(null);
 	let ws: WebSocket | null = $state(null);
 
 	// Spell state for coordinating between modal and opponent zone clicks
@@ -70,7 +70,7 @@
 
 			// Extract draw_source from message (if present)
 			if (message.draw_source) {
-				drawnCardSource = message.draw_source === 'DrawSource.DECK' ? 'deck' : 'discard';
+				drawnCardSource = message.draw_source === 'DrawSource.DECK' ? 'deck' : 'discard_pile';
 				log.debug('Set drawnCardSource:', {drawnCardSource});
 			}
 
@@ -232,7 +232,7 @@
 		// Card info comes via WebSocket in game_state_update, not API response
 		// The drawnCard will be populated when the WS message updates gameState
 		if (!result) {
-			log.error('draw_action_failed', { source: 'discard' });
+			log.error('draw_action_failed', { source: 'discard_pile' });
 		}
 	}
 

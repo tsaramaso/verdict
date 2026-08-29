@@ -5,14 +5,14 @@
 
 	interface Props {
 		drawnCard?: { rank: CardRank; suit: CardSuit } | null;
-		drawnCardSource?: 'deck' | 'discard' | null;
+		drawnCardSource?: 'deck' | 'discard_pile' | null;
 		isVisible?: boolean;
 	}
 
 	let { drawnCard, drawnCardSource, isVisible = false }: Props = $props();
 
 	const sourceLabel = $derived(
-		drawnCardSource === 'deck' ? 'From Deck' : drawnCardSource === 'discard' ? 'From Discard' : null
+		drawnCardSource === 'deck' ? 'From Deck' : drawnCardSource === 'discard_pile' ? 'From Discard' : null
 	);
 </script>
 

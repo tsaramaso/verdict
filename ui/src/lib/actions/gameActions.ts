@@ -56,7 +56,7 @@ export async function drawFromDiscard(
 
 export async function discardImmediate(
 	gameId: string,
-	source: 'deck' | 'discard'
+	source: 'deck' | 'discard_pile'
 ): Promise<boolean> {
 	try {
 		await apiCall(API_ENDPOINTS.action(gameId), {
@@ -73,7 +73,7 @@ export async function discardImmediate(
 export async function swapCard(
 	gameId: string,
 	slotIndex: number,
-	source: 'deck' | 'discard'
+	source: 'deck' | 'discard_pile'
 ): Promise<boolean> {
 	try {
 		await apiCall(API_ENDPOINTS.action(gameId), {
@@ -91,7 +91,7 @@ export async function passBack(gameId: string): Promise<boolean> {
 	try {
 		await apiCall(API_ENDPOINTS.action(gameId), {
 			method: 'POST',
-			body: JSON.stringify({ choice: 'pass_back', source: 'discard' })
+			body: JSON.stringify({ choice: 'pass_back', source: 'discard_pile' })
 		});
 		return true;
 	} catch (error) {
@@ -286,7 +286,7 @@ export async function timeoutDrawing(gameId: string): Promise<boolean> {
 	return await submitTimeout(gameId, 'DRAWING');
 }
 
-export async function timeoutAction(gameId: string, source: 'deck' | 'discard'): Promise<boolean> {
+export async function timeoutAction(gameId: string, source: 'deck' | 'discard_pile'): Promise<boolean> {
 	// Server uses draw_source from state, no need to pass here
 	return await submitTimeout(gameId, 'AWAITING_ACTION');
 }

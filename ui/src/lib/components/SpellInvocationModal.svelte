@@ -6,7 +6,7 @@
 
 	interface Props {
 		drawnCard: { rank: CardRank; suit: CardSuit } | null;
-		drawnCardSource?: 'deck' | 'discard' | null;
+		drawnCardSource?: 'deck' | 'discard_pile' | null;
 		onInvoke?: (slotIndex?: number, targetId?: string, targetIndex?: number) => void;
 		onDecline?: () => void;
 		onDecreeSwap?: (swap: boolean, ownSlot?: number) => void;
