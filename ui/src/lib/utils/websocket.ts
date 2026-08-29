@@ -2,6 +2,10 @@
  * WebSocket utilities for real-time lobby/game updates
  */
 
+import { getLogger } from './logger';
+
+const log = getLogger('ws');
+
 export type WebSocketMessageType =
 	| 'player_connected'
 	| 'player_ready'
@@ -69,7 +73,7 @@ export class WebSocketClient {
 			this.ws = new WebSocket(wsUrl);
 
 			this.ws.onopen = () => {
-				console.log('WebSocket connected');
+				log.info('connected');
 				this.reconnectAttempts = 0;
 				this.startPingInterval();
 			};
@@ -79,7 +83,7 @@ export class WebSocketClient {
 					const message = JSON.parse(event.data);
 					this.options.onMessage(message);
 				} catch (err) {
-					console.error('Failed to parse WebSocket message:', err);
+					log.error('message_parse_failed', { error: String(err) });
 				}
 			};
 
@@ -115,7 +119,7 @@ export class WebSocketClient {
 		if (this.reconnectAttempts < this.maxReconnectAttempts) {
 			this.reconnectAttempts++;
 			const delay = this.reconnectDelay * this.reconnectAttempts;
-			console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
+			log.info('reconnecting', { attempt: this.reconnectAttempts, delay_ms: delay });
 			setTimeout(() => this.connect(), delay);
 		} else {
 			this.options.onError('Max reconnection attempts reached');
@@ -127,7 +131,7 @@ export class WebSocketClient {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			this.ws.send(JSON.stringify(message));
 		} else {
-			console.warn('WebSocket not connected');
+			log.warn('not_connected');
 		}
 	}
 

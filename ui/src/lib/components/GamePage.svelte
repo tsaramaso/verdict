@@ -13,6 +13,9 @@
 	import type { CardRank, CardSuit } from '$lib/constants/cards';
 	import * as gameActions from '$lib/actions/gameActions';
 	import { getHardcodedBaseRules } from '$lib/utils/baseRules';
+	import { getLogger } from '$lib/utils/logger';
+
+	const log = getLogger('game');
 
 	interface Props {
 		playerId: string;
@@ -37,17 +40,15 @@
 		const apiHost = new URL(apiUrl).host;
 		const url = `${protocol}//${apiHost}/ws/games/${gameId}?token=${token}`;
 
-		console.log('[WS] Connecting to:', url);
 		ws = new WebSocket(url);
 
-		ws.onopen = () => console.log('[WS] Connected');
+		ws.onopen = () => log.info('ws_connected');
 		ws.onmessage = (event) => handleWebSocketMessage(event.data);
-		ws.onerror = (error) => console.error('[WS] Error:', error);
-		ws.onclose = () => console.log('[WS] Closed, will auto-reconnect');
+		ws.onerror = (error) => log.error('ws_error', { error: String(error) });
+		ws.onclose = () => log.info('ws_closed');
 	}
 
 	function handleWebSocketMessage(data: string) {
-		console.log('[GamePage] WS message received:', data);
 		const message = JSON.parse(data);
 
 		if (message.type === 'game_state' || message.type === 'game_state_update') {
@@ -59,7 +60,7 @@
 				round_number: message.round_number
 			};
 
-			console.log('[GamePage] Game state update, phase:', gameInfo.phase);
+			log.debug('Game state update, phase:', gameInfo.phase);
 
 			// Extract drawn card from events if present
 			if (message.events && message.events.length > 0) {
@@ -70,18 +71,18 @@
 						rank: transformRank(card.rank),
 						suit: transformSuit(card.suit)
 					};
-					console.log('[GamePage] Extracted drawn card from event:', drawnCard);
+					log.debug('Extracted drawn card from event:', drawnCard);
 				}
 			}
 
 			// Check for Last Turn (deck empty)
 			const deckEmpty = message.deck?.card_count === 0;
 			if (deckEmpty) {
-				console.warn('[GamePage] LAST TURN: Deck is empty');
+				log.warn('LAST TURN: Deck is empty');
 			}
 
 			// Debug: log what self data arrived
-			console.log('[GamePage] Self data from WS:', message.self);
+			log.debug('Self data from WS:', message.self);
 
 			const transformedSelf = {
 				...message.self,
@@ -89,17 +90,12 @@
 			};
 
 			// Debug: log raw server data first
-			console.log('[GamePage] RAW message.self.hand from server:', message.self.hand);
+			log.debug('RAW message.self.hand from server:', message.self.hand);
 			
 			// Debug: log hand changes with detail
-			console.log('[GamePage] Hand updated after transform:', transformedSelf.hand);
-			transformedSelf.hand.forEach((c, i) => {
-				console.log(`  [Slot ${i}]`, {
-					raw: c,
-					known: c?.known,
-					rank: c?.rank,
-					suit: c?.suit
-				});
+			log.debug('hand_updated', {
+				slot_count: transformedSelf.hand.length,
+				known_slots: transformedSelf.hand.filter((c: any) => c?.known).length
 			});
 
 			const transformedOpponents = [
@@ -114,7 +110,7 @@
 			];
 
 			// Log discard pile state
-			console.log('[GamePage] Discard pile:', {
+			log.debug('Discard pile:', {
 				count: message.discard_pile?.count,
 				total_visible: message.discard_pile?.visible_cards?.length,
 				last_card: message.discard_pile?.visible_cards?.[message.discard_pile.visible_cards.length - 1],
@@ -149,7 +145,7 @@
 				const isActive = $isActivePlayer;
 				if (isActive) {
 					setTimeout(async () => {
-						console.log('[GamePage] Active player advancing phase');
+						log.debug('Active player advancing phase');
 						await gameActions.advancePhase(gameId);
 					}, 3000);
 				}
@@ -169,24 +165,24 @@
 	}
 
 	async function handleDrawDeck() {
-		console.log('[GamePage] Deck clicked, gameId:', gameId);
+		log.debug('Deck clicked, gameId:', {gameId});
 		const result = await gameActions.drawFromDeck(gameId);
-		console.log('[GamePage] Deck draw result:', result);
+		log.debug('draw_deck_result', { success: !!result });
 		// Card info comes via WebSocket in game_state_update, not API response
 		// The drawnCard will be populated when the WS message updates gameState
 		if (!result) {
-			console.error('[GamePage] Draw action failed');
+			log.error('draw_action_failed', { source: 'deck' });
 		}
 	}
 
 	async function handleDrawDiscard() {
-		console.log('[GamePage] Discard clicked, gameId:', gameId);
+		log.debug('draw_discard_clicked', { gameId });
 		const result = await gameActions.drawFromDiscard(gameId);
-		console.log('[GamePage] Discard draw result:', result);
+		log.debug('draw_discard_result', { success: !!result });
 		// Card info comes via WebSocket in game_state_update, not API response
 		// The drawnCard will be populated when the WS message updates gameState
 		if (!result) {
-			console.error('[GamePage] Draw action failed');
+			log.error('draw_action_failed', { source: 'discard' });
 		}
 	}
 
@@ -275,7 +271,7 @@
 
 	async function handleTimeout() {
 		const phase = $gameState.phase;
-		console.log('[GamePage] Timer expired for phase:', phase);
+		log.debug('Timer expired for phase:', {phase});
 
 		if (phase === GAME_PHASES.DRAWING) {
 			await gameActions.timeoutDrawing(gameId);
